@@ -15,7 +15,7 @@ from tools.portable_basic_pitch_comparison import captured_text, check_hash, rem
 
 
 class StreamingBackend:
-    def __init__(self, model_path):
+    def __init__(self, model_path, *, disable_optimizations=False):
         remote_only()
         import numpy as np
         import onnxruntime as ort
@@ -25,6 +25,8 @@ class StreamingBackend:
         options.intra_op_num_threads = SETTINGS['intra_op_threads']
         options.inter_op_num_threads = SETTINGS['inter_op_threads']
         options.execution_mode = ort.ExecutionMode.ORT_SEQUENTIAL
+        if disable_optimizations:
+            options.graph_optimization_level = ort.GraphOptimizationLevel.ORT_DISABLE_ALL
         self.session = ort.InferenceSession(str(model_path), sess_options=options,
                                             providers=['CPUExecutionProvider'])
         if self.session.get_providers() != ['CPUExecutionProvider']:
@@ -39,7 +41,8 @@ class StreamingBackend:
         self.metadata = dict(onnxruntime_version=ort.__version__, numpy_version=np.__version__,
             providers=self.session.get_providers(), warmup='One all-zero window; excluded from service',
             warmup_ns=time.perf_counter_ns()-start, intra_op_threads=2, inter_op_threads=1,
-            execution_mode='sequential', input_name=inputs[0].name,
+            execution_mode='sequential', graph_optimizations='disabled' if disable_optimizations else 'all',
+            input_name=inputs[0].name,
             note_output='StatefulPartitionedCall:1', onset_output='StatefulPartitionedCall:2')
 
     def predict(self, window):

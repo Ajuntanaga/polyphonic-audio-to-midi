@@ -1,4 +1,84 @@
+## Exact constant-power correction prepared; no dispatch yet
+
+Active preparation: `docs/recovery/CODEX-M3-FLAT-NORMALIZATION-READY-20261122.md`; fixed specification `docs/recovery/basic-pitch-flat-normalization-20261122.json`. Codex owns the correction/paired runtime files temporarily for coordination. One CPU job will compare corrected frozen TensorFlow and ONNX with both existing weight sets on synthetics, then two recordings. No new fit, threshold/decoder change or installed/default change. Six local pure tests pass; two execution checks are remote-only. Claude continues independent support/emitter work as an equal peer, with the same in-scope authority. Eight-hour work continues through2026-11-22 18:25 UTC.
+
+## Numerical localization final: exact constant input exposes log-normalization artifact
+
+Active checkpoint: `docs/recovery/github-basic-pitch-onnx-numerics-recovery-20261122.json`. Run **45026199159** final/success; nine remote tests pass and small report collected once with verified server digest. The174-probe observation preserves final outputs. On silence all comparable CQT/power tensors agree exactly; TensorFlow Log returns two values for the same1e-10 input,1.907e-6 apart. Its min/max normalization amplifies this to0/1 features; ONNX produces0. Disabling ONNX optimizations does not fix it. Both pitched synthetic cases meet1e-4; all synthetic threshold/event decisions match. No corpus score, installed or weight change.
+
+Codex is preparing one exact constant-power normalization guard, retaining the original nonconstant calculation and all weights/decoder/gates. Claude continues independent support/emitter work as an equal peer. This numerical correction will be reported separately from original TensorFlow output, never as unchanged arithmetic. Source CI status remains unverified after a transient API failure. Completed jobs must not be polled/redownloaded. Eight-hour work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
+## Corrected numerical observation queued: 45026199159
+
+Active checkpoint: `docs/recovery/github-basic-pitch-onnx-numerics-recovery-20261122.json`. Source `1424048c3f0c4d5559e3408154bff03e04a5a90d`, worker `84d5e7e7a1d4748fa4b1fc3159ed813dd6230556`. One GitHub CPU dispatch accepted. This fixes only recording of empty/nonfinite intermediates and incremental result persistence after45025527360 aborted before saving any case. The same synthetic inputs, model, numerical limits and bounded specification remain unchanged. Small report target `build/github-results/basic-pitch-onnx-numerics-recovery-45026199159`; bulk remains remote. Eight local tests passed; the ninth requires TensorFlow on GitHub.
+
+Prior45025527360 is final/failure and collected once with verified server digest. No numerical localization conclusion was saved. Do not poll, redownload or repeat it unchanged. Claude continues independent support/emitter work as an equal active peer; neither peer is an approval gate. Installed output and scoreboard unchanged. Eight-hour work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
+## Synthetic ONNX numerical localization interrupted: 45025527360
+
+Active checkpoint: `docs/recovery/github-basic-pitch-onnx-numerics-20261122.json`. Source `58d995eb84f1943641e86c22810555290cd6ad4b`, worker `84d5e7e7a1d4748fa4b1fc3159ed813dd6230556`. One GitHub CPU job accepted after the first connection failure was reconciled to zero runs. Compare callable/frozen TensorFlow with optimized/unoptimized ONNX and exact-name intermediates on three synthetic inputs only. No recording, fitting, gate change or installed change. Small report collection target `build/github-results/basic-pitch-onnx-numerics-45025527360`; bulk remains remote. Seven local tests passed; one remote-only test awaits GitHub.
+
+Claude continues independent support/emitter work as an equal active peer; the restricted upper-note union remains rejected for false-output growth. Eight-hour work continues through2026-11-22 18:25 UTC. Earlier entries below are historical.
+
+## Frozen-input ONNX export final: numerical parity rejected
+
+Active checkpoint: `docs/recovery/github-basic-pitch-onnx-frozen-inputs-20261122.json`. Run **45023694341** final/success; source `c978f5cdc14d36db584bfb260db0f75f50f2e94c`, worker `346ee7fef8ea415ffa60973bb0eb21dc664f8acc`. Small report collected once and server digest verified. Six remote tests pass, both exact-weight graphs have the required interface, and original weights are restored. Synthetic numerical parity FAILS: maximum silence onset differences0.04916 unmodified /0.05252 adapted, versus1e-4 limit; adapted low-A onset difference0.0001119 also fails. All six cases preserve threshold decisions and decoded event sequences. Corpus inference was correctly skipped; no new timing or tracking score. Models remain remote. Do not poll, redownload or rerun this completed job unchanged.
+
+Next Codex work: synthetic-only comparison of callable TensorFlow, frozen TensorFlow and converted ONNX intermediates to locate the numerical mismatch, without relaxing the gate or changing weights. Claude continues independent support/emitter work as an equal active peer. Adaptation remains rejected for label losses and false-output growth regardless of conversion speed. Installed/default output and scoreboard unchanged. Eight-hour work continues through2026-11-22 18:25 UTC. Earlier entries are historical.
+
+## Exact-weight ONNX export interface failure: 45022754580 final
+
+Active checkpoint: `docs/recovery/github-basic-pitch-onnx-export-20261122.json`. Source `00f273c23aaa2b7c8b377eee6097bc177d4d3e59`, worker `346ee7fef8ea415ffa60973bb0eb21dc664f8acc`. Job45022754580 is terminal/failure; small report collected once and server SHA256 verified. All five focused tests passed, but the first unmodified export failed its one-input/two-output graph contract before synthetic parity or any recording inference. Actual exported names/counts were not retained, so the precise cause is not yet established. No tracking or runtime result and no bulk artifact. Do not poll/redownload or relaunch unchanged.
+
+Codex is correcting the export implementation while retaining the same weights, decoder, scientific specification and gates. Claude is independently advancing support/emitter work; the four adaptation event JSONs are verified under `build/github-results/basic-pitch-adaptation-events-45022134487/collected/selected/`. That collection is terminal/success. Neither peer needs the other's approval. Installed/default output unchanged. Eight-hour work continues through2026-11-22 18:25 UTC. Earlier entries are historical.
+
+## Pretrained adaptation final: content gain, safety rejection, slow TensorFlow runtime
+
+Active checkpoint: `docs/recovery/github-basic-pitch-adaptation-20261122.json`; result: `docs/recovery/CODEX-M3-BASIC-PITCH-ADAPTATION-RESULT-20261122.md`. Run **45016827324** final/success, report collected once and SHA256 verified. Source `7e91d692cf9ed3a89ddc50a6427b7c68d04e10f0`, worker `5e693618863578f2d1e14aa2cffa6e0b149d51c9`. Both fixed epochs and both recordings completed; all555 takes retained. Screen REJECTED. Ordinary zero-compute availability-clock pitch coverage55.81->71.88%, exact pitch sets9.98->37.59%, but extra gap voice-samples+1,811,058 and120 labels lose presence. These are causal-content diagnostics, not live or tuner/string gains. Actual TensorFlow processing takes about36.5ms per call against23.2ms arrivals, accumulating72s backlog; measured-completion coverage6.43->8.09%. Installed/default output and scoreboard unchanged.
+
+Next Codex work: collect only the four small event JSONs through the frozen remote subset collector, then exact same-weight TF-to-ONNX conversion with numerical/decoder identity before measuring the faster runtime. No additional training or threshold tuning. Claude remains an equal active peer and continues independent saved-output work. Bulk625.9MB remains remote; checkpoint weights retained there. No poll, redownload or rerun of this completed job. Eight-hour window continues through2026-11-22 18:25 UTC.
+
+## Spectral-patch recovery final and rejected: 45012604509
+
+Active checkpoint: `docs/recovery/github-harmonic-training-recovery-20261122.json`; design: `docs/recovery/CODEX-M3-TRAINING-RECOVERY-READY-20261122.md`. The prior run45006866083 exhausted its45-minute budget at63/80 epochs and retained no weights. The separate recovery envelope keeps the scientific specification and all gates identical, adds complete-epoch model/optimizer/RNG checkpoints and allows105 minutes processing within a120-minute CPU job. One read-only recovery review found no material blocker. Five local non-model checks pass; the exact interruption/resume test runs on GitHub before any recorded fit. Source `02948b1123888904ded806d0f957b80c234af55c`, worker `b06510cd904fca80310f3813dfd60f755f3f3544`; run **45012604509** dispatched once. Final/success: all80 epochs completed. Small report collected once, SHA256 verified. Training chord gate passes, calibration/test and singleton preservation fail; continuous replay correctly not executed. Do not poll, redownload or redispatch this completed job.
+
+Parallel public-model feasibility checkpoint: `docs/recovery/github-basic-pitch-trainability-20261122.json`; GitHub CPU run **45014937419**, source `c1229ab98a5fae9e538f845b57da978ebbe4b5a8`, worker `ec89b6df8693af4294203948abcb3c5a3bbe4c7e`. Final/success, small report collected once and server digest verified. Gradient/update and exact restoration pass; the frozen TF/ONNX numerical-parity gate FAILS (largest onset difference0.04916 on silence; no0.3/0.5 threshold crossings in these three synthetic inputs). Overall feasibility gate fails; no tracking gain measured. Do not poll, redownload or rerun. Any adaptation requires a separate unmodified TF baseline and retains this backend difference. Spectral-patch recovery45012604509 is now final and rejected as recorded above.
+
+The user renewed eight hours of uninterrupted work at2026-11-22 10:25 UTC, through18:25 UTC. Claude and Codex are equal active peers with the same in-scope implementation, commit/push, artifact and job authority. Codex owns the recovery files for coordination; Claude continues the lower-register work independently. No peer acknowledgement gate. Project searches remain confined by `tools/project_search.py`; never access protected archive paths. Installed/default output and recorded scoreboard remain unchanged. Earlier entries below are historical.
+
+## Harmonic spectral patches incomplete: 45006866083
+
+Active checkpoint: `docs/recovery/github-harmonic-spectral-patches-20261122.json`; result: `docs/recovery/CODEX-M3-SPECTRAL-PATCHES-RESULT-20261122.md`. Source `9504478e0165bc4fcc3af4e3f0b148218de7eed0`, worker `3cf2c5c6898c4f3340aa5c42485f968ab4c1742a`. GitHub CPU run **45006866083** is terminal/cancelled: GitHub confirms the **45-minute execution limit**. Training stopped after **63/80 epochs**; no completed fit, cutoff, training/singleton/held-out or continuous scores. The raw retained report is partial (`final:false`), preserved unchanged. This is an execution-budget failure, not a measured tracking-quality rejection. Source CI45006829101 and all112 worker tests passed. Small report collected once with server digest verified; bulk remains remote. No installed/default, label or scoreboard change. Do not poll, redownload or automatically rerun this final job.
+
+Collaboration correction (2026-11-22): Claude and Codex are active, equal collaborators with the same authority for in-scope implementation, commits, pushes, artifact collection and GitHub jobs. No Codex approval is required for Claude's work. Earlier "Claude remains paused" statements were Codex's unsupported scope statements and are superseded; watcher expiry is not a pause. See `AGENTS.md` and `docs/recovery/CODEX-M3-PEER-COLLABORATION-20261122.md`. Claude's split-pass files are published on the source branch at `6e379b59372e0db1b25c55feae14e2eaae1fab96`.
+
+Next: Codex is taking the bounded execution-recovery implementation with resumable model, optimizer and RNG checkpoints. Require synthetic interruption/resumption identity and unchanged scientific gates before any separately recorded CPU job. No automatic rerun of this completed run. Claude's lower-register work proceeds independently; coordinate overlapping files and jobs, not permission. Project recursive searches only through `tools/project_search.py`; never access protected archive paths. Broader live-readiness goal remains active; overall completion not measured. Earlier entries below are historical.
+
+## Harmonic pitch-scaled windows rejected: 45004325518
+
+Active checkpoint: `docs/recovery/github-harmonic-pitch-scaled-windows-20261122.json`; result: `docs/recovery/CODEX-M3-PITCH-SCALED-WINDOWS-RESULT-20261122.md`. Source `7f1db5a7b225d30f9eae58a3b3535b8155dcf2bc`, worker `a62ea3b7a7aacbac6f4eada15fa73a3a3b0b0289`. GitHub CPU run **45004325518** is final, workflow success, screen **rejected**: training five-pitch complete sets 1818 -> 1159/2529 (71.89% -> 45.83%); four-pitch 2177/3432 (63.43%). Singleton exact 3115 -> 3100/3132, extras 13 -> 12, misses 5 -> 21. Held-out and continuous replay skipped. Source CI passed and worker 102 tests passed. The small report was collected once and its server digest verified; bulk remains remote. All original labels/plans retained; installed/default output and scoreboard unchanged. Do not poll, redownload, rerun or tune this completed variant. Keep the fixed-window baseline and freeze a distinct design addressing source-transfer plus mixture losses before another bounded screen. Claude remains paused. Project searches must use `tools/project_search.py`; never inspect the protected archive paths. All earlier entries below are historical.
+
+## Harmonic phase motion final: rejected
+
+Active checkpoint: `docs/recovery/github-harmonic-phase-motion-20261122.json`; result: `docs/recovery/CODEX-M3-PHASE-MOTION-RESULT-20261122.md`. GitHub CPU run **45002449083** final/success, source `2a1bff2b0c748e7ff8e66f46236d18ecdc38758b`, worker `2222b5da4dea36757d0b64d0b63b96006f84f5bd`. All96 remote tests and source CI45002404794 passed. Small report collected once and server digest verified;6.90MB bulk stays remote. Do not poll, redownload or rerun this final job.
+
+Training five-pitch exact1818->1840/2529 (71.89->72.76%), TARGET1771, headroom69. Calibration283->250/639 (44.29->39.12%); test27->27/327 (8.26% unchanged): both held-out gates fail. Training singleton exact3115->3111/3132, extras13->15, missing5->7 also fail preservation. Test complete sets1749->1721/4096, singleton607->602; fewer extras2705->2662 do not accept the loss. Screen REJECTED, continuous replay skipped. All555 labels and original plan retained; installed/default output and scoreboard unchanged.
+
+Next: Choose a materially different, evidence-supported source/mixture representation before another fit; preserve all labels, singleton performance and original chord, continuous, native and host gates. No new job queued, cutoff tuning, automatic rerun, promotion or install. These are sampled sustained pitch sets, not frame/string scores or live readiness. Claude remains paused; broader live-readiness goal remains active, overall completion not measured. Earlier entries below are historical.
+
+## Paired component/mixture observation final
+
+Active checkpoint: `docs/recovery/github-paired-component-mixture-20261122.json`; result: `docs/recovery/CODEX-M3-PAIRED-COMPONENT-RESULT-20261122.md`. Corrected run **45000500192** is final/success in `Ajuntanaga/m3-offload`, source `40e14ca59422e269053ca86ff4ad55bede0ccd3a`, worker `d76a744688a84063048ec7a498f84c83be7995a2`. All49 remote tests and source CI45000464955 passed. Small report collected once with server digest verified; 23.3MB bulk paired arrays remain remote. Do not poll, redownload or rerun this final job. Earlier loader failure44999979901 remains separately recorded and measured no recorded-input behavior.
+
+All24576 original mixture probability vectors and4601 singleton outputs reproduce exactly; targets and plans identical, zero changed cutoff decisions. Exact crops/effective levels retained. Test2458 missing expected pitches split1430 already missing alone (58.18%) and1028 found alone then lost after summation (41.82%). Of2656 mixture extras,2102 also appear in at least one solo (association, not source attribution). Five-pitch:121/327 have all own pitches found alone, but only24/121 complete after summation. Original test1756/4096 exact sets and24/327 five-pitch sets unchanged; frozen model remains rejected. All555 sources/labels retained; no fit, cutoff tuning, continuous/native run or installed/default change.
+
+Next: select a distinct source-transfer and weak-pitch mixture-context mechanism before another fit, preserving original gates. No new job queued. Sampled sustained pitch sets are not labeled-frame/string scores or live readiness. Claude remains paused; no fresh review claimed. Broader live-readiness goal remains active; overall completion is not measured.
+
+Filesystem safety: read `AGENTS.md`; recursive searches only through `tools/project_search.py` under named project directories. Never access `DO NOT ENTER` / `Windows.old` or scan home/archive/volume roots. The isolated search guard passed six checks. No local audio/model/native execution.
+
 ## Saved-label sensitivity final: disputed targets cannot accept the frozen model
+
+Filesystem safety: read `AGENTS.md` before any discovery. All recursive searches must use `tools/project_search.py` with a named project directory; no home/archive/volume scans or access to `DO NOT ENTER` / `Windows.old`. The isolated guard passed all six checks, including a real namespace test. Details: `docs/recovery/CODEX-M3-SEARCH-BOUNDARY-20261122.md`. This does not change the active checkpoint below.
 
 Active checkpoint: `docs/recovery/m3-saved-label-sensitivity-20261122.json`; result: `docs/recovery/CODEX-M3-LABEL-SENSITIVITY-RESULT-20261122.md`. One saved-array analysis of run44966587324; no new audio/model/native processing, fit or remote job. All source/prediction/plan identities pass; five synthetic tests pass. The newest model result remains the separately recorded rejected run44982269805 (`github-harmonic-full-gradient-consistency-20261122.json`). Do not repeat either completed job or this analysis.
 
@@ -190,13 +270,1769 @@ Train/check/test precision99.21/86.07/69.89%, recall98.31/84.28/72.51%, exact se
 
 Next: joint distinct model/data-representation design with Claude addressing transfer across takes AND false-output safety, not a refit of this screen. No next job queued. The prior eight-hour interval is complete; full live-readiness goal remains open. Prior entries below are historical.
 
-# Current checkpoint: retained competition comparison repaired; dispatch pending
+## Temporal reliability screen final: rejected for no held-out gain
 
-Checkpoint: `docs/recovery/github-ordinary-harmonic-competition-attribution-20261116.json`; status key `portable_compute.ordinary_harmonic_competition_attribution`. Analysis attempts `43970011258` and `43971072792` failed before producing results: first on fitted-output frequency equality, then on per-run manifest equality. Both small failure logs are collected once and hash-verified. Source portable runs `43969920170` and `43971002315` passed. Do not poll or recollect these final jobs.
+Active checkpoint: `docs/recovery/github-basic-pitch-temporal-reliability-20261121.json`; result: `docs/recovery/CODEX-M3-TEMPORAL-RELIABILITY-RESULT-20261121.md`. GitHub run44942243299 final/success, source `ddd51edd7683ec9a5590a5190b54363b29341d73`, worker `ed0d97364b118900dfedc36dc03cb914609d35ec`. Source CI44942194634 and31 synthetic checks pass. Small report collected once and digest verified; model/predictions remain remote. Do not poll, redownload, rerun or retune this completed screen.
 
-The analyzer now records independently fitted frequency differences, verifies each runtime manifest against its own report/run provenance, and compares shared input file hashes and original bundle provenance. All 19 focused synthetic tests pass; the same input comparison passes on both retained small manifests. Parent identity, saved phase, timestamps, original decisions, current detector outcome, current raw MIDI and saved metric reproduction remain strict.
+All eight reference identities and context purges pass. Ordinary held-out test remains1,973,489/4,328,055 pitch-samples (45.5976%), zero gaining labels: the1pp and5-label benefit gates fail. Calibration and middle also unchanged; no wrong/gap or per-label regression. Train/full descriptive gain29,943 samples on7 labels is not held-out progress. Installed/default output and scoreboard unchanged.
 
-Next: commit/push the repaired analyzer, dispatch one saved-text comparison, and record/follow only that replacement. Compare retained tuning run `43801355401` with competition run `43958359342`: which admissions did the 44 withheld cues remove, does false74/lower62 survive, and are target75 recovery and label117 loss unchanged? No audio or native replay. Both policies remain rejected; native candidate, installed output/default and scoreboard unchanged. No threshold sweep, new audio trial, promotion, repeat ntfy, cleanup or terminal Kaggle work. All recorded-audio/native processing remains on GitHub Actions.
+Next is a joint decision on a distinct source-disjoint learning or additional-evidence design with the same per-label and false-output gates, not a cutoff change to this screen. No next run is queued. Source takes recur across mixtures, classifier overhead is unmeasured, and live readiness remains unverified. The prior eight-hour interval is complete; the broader goal remains open. Claude's69 files are already published in63416f8ed4af2535b1923304a6de2d49340d71e0; the requested event evidence and split are already complete. Earlier entries below are historical.
+
+## Rolling upstream decoder final: presence falls on the saved causal tape
+
+Active checkpoint: `docs/recovery/rolling-upstream-d2-20261121.json`; result for Claude: `docs/recovery/CODEX-M3-ROLLING-D2-RESULT-20261121.md`. Report: `build/recovery/m3-rolling-upstream-d2-20261121/report.json`. Codex recorded execution ownership before completing the previously unacknowledged D2 offer. Decode ran once at 2026-11-21 19:15:27 UTC; no audio, inference, native replay or new cloud job. All source pins, 1,192 D0 events, EOF and full/common scores reproduce exactly; all 499 labels retained.
+
+Same rolling activations, upstream retrospective decoder: nominal pitch coverage 61.6263% -> 60.4806% (-387,456 samples); wrong-pitch -68,397 and extra-gap -200,618. 198 labels lose presence, 32 become missing. Rejected as a presence-recovery route; no installed/default change. Upstream future context prevents a live-delivery claim. Rolling upstream -> offline upstream is +7.0311 points, bundling activation/context and coordinate-map differences; it does not isolate one cause.
+
+D2 is complete: do not duplicate it or treat Claude's earlier offer as still pending. Next is a joint, distinct activation/context hypothesis, preserving per-label and false-output gates; no retuning of completed screens. The prior eight-hour interval remains complete and the live-readiness goal remains open. Claude's 69 files were already pushed in `63416f8ed4af2535b1923304a6de2d49340d71e0`; requested event evidence is already collected. Older entries below are historical.
+
+## Saved native/neural consensus final: rejected
+
+Active checkpoint: `docs/recovery/native-neural-consensus-20261121.json`; result: `docs/recovery/CODEX-M3-NATIVE-NEURAL-CONSENSUS-RESULT-20261121.md`. Saved traces/event spans only; no new job, inference, audio or native execution. Frozen predicate: nonquiet direct native selector-pool support, one callback validity, intersected with neural arm A on its measured FIFO clock, then union with every CURRENT span.
+
+Ordinary expected pitch-sample match 39.9932% -> 46.5335% (+2,211,863); 99 labels gain presence, 94 gain longest hold, none loses either. Rejected: wrong-pitch samples +152,166, extra gap samples +183,069. Middle gains 20,095 expected pitch-samples but wrong output +3,580 and exact-set samples -3,580. All four complete source-score identities and seven synthetic checks pass. These are pitch-sample measurements, not installed frame/string scores; joint runtime and hybrid MIDI lifecycle are unmeasured. Full evidence remains local under `build/recovery/m3-native-neural-consensus-20261121/`.
+
+Do not retune or rerun this rejected predicate. Claude-owned rolling U/D2 remains separate and must not be duplicated; reconcile that saved-data result before the next joint design. Installed output unchanged. The previous eight-hour interval remains complete; broader live-readiness goal remains open. Earlier entries below are historical.
+
+## Fixed recent-normalization comparison final: rejected
+
+Active checkpoint: `docs/recovery/github-basic-pitch-recent-normalization-20261121.json`; result: `docs/recovery/CODEX-M3-RECENT-NORMALIZATION-RESULT-20261121.md`. GitHub run44936401812 final/success, sourcee794ed373d78ad6520b67721a6c6cb5c5b8bc6b6, worker49d6de1db7a82cf47e10004a306f21a7f8db8881. Small report collected once and digest verified; bulk remains remote. Source Portable CI44936366484 and29 synthetic/graph checks pass. Both reference activation tolerances and exact event/frame/EOF identities pass.
+
+One fixed0:172 versus144:172 normalization pair, unchanged crop164/165 and decoder. Ordinary paired FIFO pitch occupancy54.6346% ->57.4508% (+952427 expected-pitch samples);141 labels gain and none loses presence or longest hold against the paired reference. Rejected for wrong-pitch samples+776796 and extra gap voice-samples+432268. Middle has no presence gain, wrong+127368, gap+1920, exact pitch set85.2966% ->80.6668%. Comparison with saved M3 CURRENT remains separate: ordinary195 labels lose presence and30 become missing. These are pitch-sample measurements, not installed frame/string scores.
+
+No policy promotion, installed change, retuning or automatic retry. Claude-owned rolling U/D2 remains pending and must not be duplicated; reconcile that saved-data result before the next joint design. Previous eight-hour interval stays complete; the broader live-readiness goal remains open. Prior entries below are historical.
+
+## Frozen saved contour-head screen final: substitution rejected
+
+Active saved-data result: `docs/recovery/CODEX-M3-CONTOUR-HEAD-RESULT-20261121.md`; report `build/recovery/m3-contour-head-screen-20261121/report.json`. Completed once at2026-11-21T18:20:56.788530+00:00. Original offline arrays, original onset/forward decoder, one frozen three-bin contour-to-note mapping. Ordinary offline nominal pitch coverage71.6577%→67.7615%,353 labels lose presence,14 become missing; middle wrong-pitch samples+868787. Of the34 separately identified host-missing labels, nine recover from zero versus offline D and two become zero. The complete substitution is rejected; no causal claim or installed change.
+
+No new inference, native replay or cloud job. Do not rerun or tune this substitution. Claude-owned rolling upstream U/D2 remains pending; avoid duplication. Source confirms model-window min/max normalization across time and frequency; its causal contribution is unmeasured. Further normalization work requires a distinct controlled design, not automatic dispatch. The earlier eight-hour interval remains complete; the broader live-readiness goal remains active. Prior entries below are historical.
+
+## Frozen cached decoder ladder final: no accepted causal change
+
+Active saved-data result: `docs/recovery/CODEX-M3-CACHED-DECODER-LADDER-RESULT-20261121.md`; report `build/recovery/m3-cached-decoder-ladder-20261121/report.json`. Completed once at 2026-11-21T18:09:36.524739+00:00. Both recordings and both pinned caches, all four L0 identities pass; band totals and signed paths reconcile. Rolling L2 release11 improves ordinary FIFO-clock pitch coverage54.9491%→60.2542%, without label loss versus L0, but wrong-pitch samples+2924707 and gap extras+1248425 reject it. L3 onset-only makes141 previously covered labels missing. Middle safety also fails. Installed output/scoreboard unchanged.
+
+Rolling upstream U/D2 remains Claude-owned and pending; do not duplicate it. Offline U reuses collected bridge E. No new inference, native replay, dispatch or policy change. The next joint decision must account for these false-output costs; no automatic context sweep or tuning. Prior eight-hour interval is complete. Earlier entries below preserve their historical state.
+
+## Cached decoder ladder frozen; gap-band addendum complete
+
+Reply/spec: `docs/recovery/CODEX-M3-CACHED-DECODER-LADDER-20261121.md`. New L2/L3/L4 variants are frozen, not executed; rolling upstream comparator U is Claude's already offered D2, so avoid duplicate work. Reuse completed D0/D1 and A-F identities. L3 scores delivered transitions at the confirming frame; L4/upstream remain retrospective diagnostics. No new dispatch, inference or installed change. C-to-D is a cache/pipeline bundle, and a nominal-clock gain is not recovered live output.
+
+`build/recovery/m3-bridge-gap-bands-20261121/report.json` adds emitted-pitch gap bands for CURRENT/A-F on both recordings. CURRENT/A reuse Claude's split report; only B-F required new decomposition of saved event spans. All 14 rows match the frozen gap totals. The MIDI-60 split is already measured and rejected, not a pending experiment. Claude's 69 files are already published in `63416f8ed4af2535b1923304a6de2d49340d71e0`. Earlier result/provenance below remains authoritative for completed runs.
+
+## Claude analyses published; common-support delay summary added
+
+Claude's 69 documentation/analysis files were committed and pushed in one scoped commit `63416f8ed4af2535b1923304a6de2d49340d71e0`; remote verified. Include new or changed `docs/recovery/CLAUDE-*` files in future scoped result commits after public-repository screening. Reply: `docs/recovery/CODEX-M3-CLAUDE-PUBLICATION-CLOCK-20261121.md`. T4 clock-drift hypothesis is withdrawn. Saved-report summary `build/recovery/m3-common-support-delay-20261121/summary.json` includes first-present delay, presence and missing-label counts on common support; paired A-F delay is +106.630 ms across370 labels. Zero delay is annotation-clipped presence, not acoustic onset. No replay or inference; D2 remains offered to Claude as below. `docs/recovery/CODEX-M3-CAUSAL-DESIGN-REPLY-20261121.md` reconciles Claude's earlier causal-design note with the completed bridge and rejected 160/161 context screen; no new shift, curve or dispatch was started.
+
+## Saved rolling-decoder comparison: D0/D1 complete, D2 offered to Claude
+
+Local follow-up checkpoint: `docs/recovery/CODEX-M3-ROLLING-DECODER-RESULT-20261121.md`; full report `build/recovery/m3-rolling-decoder-20261121/d0-d1-report.json`. Saved arrays from run44889388628 only. D0 reproduces all1192 events and full saved measurements exactly. D1 raw .3 occupancy loses286754 present samples (54.9491% to54.1012%) and raises transitions1192 to3200; seven of18 dropouts recover only brief emission output. No installed change.
+
+D2 upstream decoding on this same rolling tape was offered to Claude in `CODEX-M3-ROLLING-DECODER-HANDOFF-20261121.md`; acknowledgment/execution not yet observed. Avoid duplicate work. The MIDI-60 split was already run and rejected for increased wrong/gap output. No new cloud job or inference, and the previous eight-hour interval remains complete. Later host provenance remains the separate final checkpoint below.
+
+## Recorded REAPER host test passed: run 44929394064
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-eof-transition-20261121.json`. Final/success; small report and 7,693-byte MIDI evidence collected once and hashes verified. Source `3384c79de8a3517477c74b0a77386c4a9a75c2f4`; worker `89657a77e47b7049b5e01acfedf29e91d93516fd`; unchanged package from run 44920404451.
+
+All 12/12 host gates pass: all 10,689,600 samples at 96 kHz/512 in 111.3815 seconds, zero discontinuities, dry identity, 596 ordinary NoteOns, saved settings, and four held notes released by Panic with no new attacks or final open notes. Live guitar, device delivery and pluck-to-MIDI latency remain unverified.
+
+Final host pitch coverage: 18,683,181/33,819,101 = 55.2445% versus saved M3 CURRENT 39.9932%; exact pitch set 9.9229% versus 0.5973%; wrong-pitch samples -4,829,066 and gap extras -130,883. All 499 labels retained: 192 lose presence, 190 lose longest hold, 34 become missing. Of the 192 presence losses, 187 are below note 60. Replacement rejected; installed note/string scoreboard unchanged. Separate uninstalled Neural Lab remains experimental.
+
+Result: `docs/recovery/CODEX-M3-EIGHT-HOUR-RESULT-20261121.md`. Package/trial guide: `docs/NEURAL-LAB-TRIAL-GUIDE.md`. Complete score: `build/github-results/neural-reaper-host-44929394064/host-pitch-analysis.json`.
+
+Do not poll, rerun or redownload this completed job. No active cloud run remains for this check. The eight-hour work interval completed at 17:38:42Z; final in-flight evidence collection and saved-array summary are now closed. The broader project is still active and unfinished. Claude and Codex are equal partners; Claude's paused session is not fresh agreement. All 34 newly missing host labels are also absent in the saved zero-compute source-availability view; host scheduling alone does not explain them. The next shared question is low-register model activation versus decoding/causal-context loss; see `docs/recovery/CODEX-M3-HOST-MISSING-STAGE-20261121.json`. Use pinned saved evidence before selecting a new observation. The original activation archive was collected once and hash-verified; see `docs/recovery/CODEX-M3-MISSING-ACTIVATIONS-20261121.json`: all34 windows have frames, 23 never reach note0.3, none reaches either existing onset/fallback admission condition within its window. This is a window-local diagnostic, not a new decoder trial. Earlier entries below are historical.
+
+## Active REAPER EOF/Panic observation: run44929394064
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-eof-transition-20261121.json`. Source `3384c79de8a3517477c74b0a77386c4a9a75c2f4`, worker `89657a77e47b7049b5e01acfedf29e91d93516fd`. One continuation changes only the observation script: EOF is detected from consumed recording samples, followed by a 0.5-second drain and explicit transport restart if needed to test Panic on held notes. Six synthetic report checks pass; worker verifies Lua syntax. No plugin/model/policy change. Run dispatched once; collect this existing run only. Work interval ends17:38:42Z.
+
+Previous44928684942 is final and collected: actual REAPER processed10689600/10689600 samples, dry audio bit-identical,1192 MIDI events/596 NoteOns, valid pairing and no final open notes. Pitch-only coverage55.2611% versus saved M3 CURRENT39.9932%;191/499 labels lose present time,189 lose longest hold,34 become missing. This is not a replacement pass. Script waited beyond transport EOF and timed out before Panic; pacing/Panic remain unverified pending the continuation. Installed tracker unchanged. Earlier entries are historical.
+
+## Active REAPER transport observation: run44928684942
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-transport-start-20261121.json`. Source `80a0c849a01c41574d3ba6e83f7863e1d663f466`, worker `89657a77e47b7049b5e01acfedf29e91d93516fd`. One bounded startup-sequence continuation, same package and audio. Synthetic checks pass; source native code unchanged from portable44927928007; path filters skip source CI for Lua/JSFX/spec-only edit. Worker checks Lua syntax. Collect only this existing run, no duplicate. Work interval ends17:38:42Z. Installed tracker unchanged. Earlier entries historical.
+
+## REAPER engine works; transport correction prepared
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-transport-start-20261121.json`. Previous44928218687 is final/failure/collected once: JACK96000/512 and569 callbacks, but transport never played,0 recording samples,0 MIDI; default/state checks pass. No musical result. Prepared deferred startup, verified media length, explicit project play and noise-free observation effects; same package and recording. No new dispatch yet. Work interval ends17:38:42Z. Installed tracker unchanged. Earlier entries historical.
+
+## Active REAPER host observation: run44928218687
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-audio-driver-20261121.json`. Source `ceb00aef2a2ece44beb8f96aebe60852b57c8efe`, worker `89657a77e47b7049b5e01acfedf29e91d93516fd`. Source portable44927928007 passed. Single continuation dispatched after correcting JACK --driver to -d; same pinned package and recording, no policy change. Collect this existing run only; do not duplicate. Work interval ends17:38:42Z. Installed tracker unchanged. Earlier entries historical.
+
+## Active REAPER host continuation: run44927358967
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-jack-cli-20261121.json`. Source `737260be1def773708c5c201d14dd33868d8082a`, worker `89657a77e47b7049b5e01acfedf29e91d93516fd`. The first attempted correction removed --no-mlock, but that option was valid; --driver remained invalid. Only --no-mlock was removed after44926698575 stopped before host start. Same package, recording and protocol. One dispatch; do not duplicate. Source portable44927238355 still pending when dispatched. Work interval ends17:38:42Z. Installed tracker unchanged. Earlier entries historical.
+
+## REAPER audio-start correction stopped before playback
+
+Run44926698575 final/failure/collected once: Initial diagnosis blamed --no-mlock; corrected: --driver is invalid, --no-mlock is accepted/ignored. Both runs stop before the host starts. Checkpoint docs/recovery/github-neural-reaper-host-audio-start-20261121.json. Remove only the unsupported startup option, retain package/recording/policy. Do not poll/redownload this completed run. Work interval ends17:38:42Z. Earlier entries historical.
+
+## Active REAPER audio-start correction
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-audio-start-20261121.json`. Source `7f3c97d302a6583f3690b0cd75d99406209c066d`, worker `89657a77e47b7049b5e01acfedf29e91d93516fd`. Source portable44926492205 passed. One bounded continuation after44925514858 produced zero audio callbacks: explicit JACK dummy engine and Audio_Init, same existing package and recording, no policy changes. Run44926698575 dispatched once and observed in progress. No duplicate dispatch. Work ends17:38:42Z. Earlier entries are historical.
+
+## REAPER host attempt final: engine never processed
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-20261121.json`. Run44925514858 final/failure/small report collected once. Plugin load, default controls and save/restore pass; all audio/MIDI counters remain zero, 180s script timeout. Playback and MIDI are unmeasured. Diagnose isolated audio startup before a bounded harness correction; no tracker policy or installed change. Do not poll/redownload completed run. Work interval ends17:38:42Z. Earlier entries historical.
+
+## Active isolated REAPER host observation: run 44925514858
+
+Active checkpoint: `docs/recovery/github-neural-reaper-host-20261121.json`. Source `4b9691b5e84d9b8a838c901284a947152f3519f4`, worker `27dea69134393f4ccb1d62e1fd8b14b5d30cdc0b`. Source portable44925312328 passed. One bounded GitHub CPU observation of the existing Neural Lab package from44920404451 in official REAPER7.86 with dummy audio. Test full ordinary playback, actual MIDI, dry identity, saved controls and explicit Panic. No plugin rebuild, tuning, installation or hardware access. Collect only the small report once; generated host MIDI remains remote. Do not duplicate dispatch. Installed scoreboard unchanged. Work interval ends17:38:42Z. Earlier entries below are historical.
+
+## Fixed quiet gate final on fourteen recordings; REAPER host check next
+
+Active checkpoint: `docs/recovery/github-neural-quiet-gate-ordinary-20261121.json`. Run44923442995 final/success/small report collected once. Source d9995cee01a0cd1ce1475da9cf12c3371835442d; worker34c2070ff2b5417d7d407356b75ee8d228e792cf. All4 component passes and2 OFF reference identities pass, callback allocations/frees/overruns0. Timing-independent ordinary output is unchanged on all499 labels; extended-middle retains all6 labels and removes16000 extra-gap pitch-samples. Scheduling-dependent delivered changes do not establish gate-created note gains. Strict lossless/replacement tests reject. Do not poll, rerun or redownload.
+
+Twelve-recording run44920404451 is final/success/collected once:24/24 component passes,12/12 OFF reference identity, callback allocations/frees/overruns0. Physical-four gap extras -43.71% with no timing-independent pitch loss; constructed pitch96.41% ->92.18%, synthetic-four95.86% ->93.70%. Optional control tradeoff is useful; strict lossless and replacement gates reject. Result:docs/recovery/CODEX-M3-NEURAL-QUIET-GATE-RESULT-20261121.md. Gate remains OFF by default. Uninstalled package:build/candidates/neural-quiet-gate-44920404451/package/M3_Neural_Lab.vst3. Trial guide:docs/NEURAL-LAB-TRIAL-GUIDE.md.
+
+Next: bounded isolated GitHub REAPER host check of this already built package; no policy tuning or local native execution. No dispatch yet. Installed tracker unchanged. Work interval ends17:38:42Z. Earlier entries historical.
+
+## Active corrected optional gate: run44920404451
+
+Active checkpoint: `docs/recovery/github-neural-quiet-gate-20261121.json`. Source7c5b8b6346b3472c9a78c3547b3f6ce342f5b25e; workerf0fe9f98501250679f6ae2350e1f6a9d23291e09. Source portable44920134135 passed. One continuation of the same fixed twelve-recording OFF/ON screen; first attempt failed UI unit testing before audio ran. Native checks precede processing. Read this existing job only. Installed tracker unchanged. Earlier entries historical.
+
+## Optional quiet gate: pre-corpus mapping failure corrected
+
+Active checkpoint: `docs/recovery/github-neural-quiet-gate-20261121.json`. First run44919112377 is final/failure/collected once. Native core passed; component test caught SDK threshold-control unit mapping before any audio input or corpus replay. Source correction `7c5b8b6346b3472c9a78c3547b3f6ce342f5b25e` uses a continuous dBFS parameter with 0.1dB DSP quantization and explicit units/display tests. Same fixed -60dBFS/+6dB/40ms/max20/80ms screen continues; no tuning or duplicate audio processing. Worker unchanged f0fe9f98501250679f6ae2350e1f6a9d23291e09. Installed tracker unchanged. Earlier entries historical.
+
+## Active optional quiet-gate run 44919112377 (2026-11-21)
+
+Single authorized OFF/ON screen dispatched. Checkpoint: `docs/recovery/github-neural-quiet-gate-20261121.json`. Source `8c823598bcadd62a68052a31fa55b0480175e62a`; worker `f0fe9f98501250679f6ae2350e1f6a9d23291e09`. Source portable 44918811077 passed. Build/native verification precedes twelve paired recordings. Installed tracker unchanged; no threshold sweep or installation.
+
+Source CI **44918810828** and portable **44918811077** are now final/success. The optional gate is OFF by default, with the one ON measurement fixed at −60 dBFS, +6 dB reopen, 40 ms dwell and max 20/80 ms power. Native/model/audio execution remains GitHub-only. Trial guide: `docs/NEURAL-LAB-TRIAL-GUIDE.md`. Claude and Codex are equal partners; interval ends17:38:42Z. Earlier entries below are historical.
+
+# Absolute input-level observation final; simple lossless gate rejected
+
+Active checkpoint: docs/recovery/github-neural-input-level-20261121.json. Run44915784865 final/success/collected once. All12 recordings pass saved-result identity, occupancy partition, full callback coverage and causal availability. The maximum zero-genuine-loss threshold is0 for all three fixed level features; no strict level gate removes the remaining gap growth. Some credited constructed tails overlap zero input, so this is a limit of the strict gate, not an audibility conclusion. No model/native replay, policy change, rerun or threshold sweep. Small report and receipt in build/github-results/neural-input-level-44915784865; bulk14712125948 remote. Result handoff: docs/recovery/CODEX-M3-NEURAL-INPUT-LEVEL-RESULT-20261121.md.
+
+Current sourcec251ce66565c460d4d08338f2c210f2c417c1dcc, workerf149c2897d18a20d6e79d1051d221d0dbdd06b1b. Installed scores unchanged. Independent Neural Lab package from44908632391 is being collected as an uninstalled experimental candidate; its quality remains rejected despite runtime success. Claude and Codex are equal partners. Work interval ends17:38:42Z. Earlier entries below are historical.
+
+# Bass-register view final: rejected; signal-level observation next
+
+Active checkpoint: docs/recovery/github-basic-pitch-bass-view-20261121.json, nested recovery. Run44913637664 final/success/collected once; source9ef0217903bdb388000c27bf8270c88b4458ce50, worker2bad0cec2a1a10fde566566f2122ed0512074615. Both identity companions pass. Ordinary low pitch coverage52.62% ->32.43% (-20.19pp), combined overall54.88% ->43.30%; safety/usefulness reject. No tuning, polling or redownload. Result:docs/recovery/CODEX-M3-BASS-VIEW-RESULT-20261121.md. Bulk remote; installed scores unchanged.
+
+Physical-four gap attribution reconciles: +5461973 samples consists of label-pitch continuation+2265788, label-pitch gap onset+538142, other-pitch continuation-75831, other-pitch gap onset+2733874. Not only release. Next: one causal absolute-level observation over saved neural events and pinned recordings on GitHub, without model/native replay, to decide whether quiet gating is useful. No level threshold has been chosen. Claude and Codex remain equal technical partners; work interval ends17:38:42Z. Earlier entries below are historical.
+
+# Bass comparison: scoring failure, completed ordinary evidence retained
+
+Active checkpoint: docs/recovery/github-basic-pitch-bass-view-20261121.json. Run44912280175 final/failure and small report collected once. Ordinary paired inference completed; reporting failed because the low-note subset retained sparse label IDs. The correction reindexes only that temporary subset. Prepare one continuation from pinned remote evidence artifact14710361704 (9764881 bytes), retaining original clocks and avoiding ordinary inference repetition. Remaining: score ordinary, process extended-middle, both original168/169 identity companions. Criteria/configuration unchanged; installed output unchanged. No verdict yet. Work interval ends17:38:42Z.
+
+# Causal bass-register comparison dispatched
+
+Active checkpoint: docs/recovery/github-basic-pitch-bass-view-20261121.json. One run 44912280175 dispatched at source f061d299582eb17841b6c2cebfd321240100f0ae and worker 32076d6daf94b6aac907f6ab0a1be69314725f8a. Source portable 44911977105 passed. Read this existing worker run; no duplicate dispatch. Frozen 2x waveform view paired with 1x on ordinary and extended-middle, original 168/169 companion, shared measured worker. 68 synthetic tests and one focused review passed. Collect the small report once into build/github-results/basic-pitch-bass-view-44912280175; keep bulk evidence remote. Installed output unchanged. Claude and Codex remain equal technical partners. Work interval ends 17:38:42Z.
+
+# Neural Lab supplemental corpus final: runtime passes, quality rejected
+
+Active checkpoint: docs/recovery/github-neural-lab-corpus-20261121.json. Run44908632391 final/success/collected once. Sourcefd8640a0ada5d01e7ac038074b867bf50065f655, workerd80d9b8dad1a6500d094df3c4eebf71337418199. No polling/rerun/redownload.
+
+All12 actual component passes consume81,507,629/81,507,629 samples; dry identity and zero drops, delivery faults, callback allocations/frees/overruns. Callback p99<=4749ns,max<=22041ns; worker p99<=11188666ns,backlog<=15555712ns. Strict quality rejects: isolated-08 coverage97.32% to80.11%; physical-four gap extras+5461973. Constructed pitch coverage90.59% to96.41%, exact pitch-set67.78% to91.04%; these collapse same-pitch unisons and do not measure strings. Full result:docs/recovery/CODEX-M3-NEURAL-CORPUS-RESULT-20261121.md; report and collection receipt in build/github-results/neural-lab-corpus-44908632391. Bulk/package remote. Installed scores unchanged.
+
+Next active local work: fixed causal2x bass-view experiment, docs/recovery/CODEX-M3-BASS-VIEW-20261121.md. No dispatch yet. Claude and Codex are equal technical partners. Authorized eight-hour interval ends17:38:42Z.
+
+# Neural Lab crop final: runtime passes, note quality still rejected
+
+Active checkpoint: docs/recovery/github-neural-lab-crop-20261121.json. Run44905197832 is final/success/collected at source353647f882c011d7dbad23c81b465c837fbf1f62, worker9d3aeeabcdc9f2bc102377ecbce54f93285d8797. Source portable44904983647 and CI44904983523 passed. Do not poll, rerun or redownload completed jobs.
+
+The frozen graph crop preserves original note/onset activations EXACTLY on every recorded window (ordinary4792, extended-middle1002); cached Python errors <=5.67e-7 within1e-5. Generated events, frame mapping and EOF state are identical. Actual uninstalled VST3 passes all4 recording/sample-format combinations: full input consumed, dry audio identical, no dropped input/output, no delivery faults, callback allocations/frees/overruns0. Callback p99 <=3326ns,max<=13320ns; worker service p99<=7103057ns and max queued backlog<=7293466ns. Earlier sustained overflow is resolved in these measured component passes. This is not external DAW/device acceptance.
+
+Actual callback-delivered ordinary pitch coverage CURRENT13525345/33819101(39.9932%) ->18514124(54.7446%,float32) /18541446(54.8254%,float64). Wrong-pitch decreases4769582/4777201 and gap extras decrease12376/38050. Exact pitch-set53249 ->877974/883127. However199/198 of499 labels lose present time,197/196 lose longest hold,33 become zero. Middle coverage97.4879% ->97.8466%/97.8960%, fewer false/gap outputs, but5/6 labels lose. Strict replacement REJECTED; experimental integration is successful. Installed scores/defaults unchanged.
+
+Small artifact14707842749 collected once; archive SHA2564ecda0b49165dd53d40bf00822a27549a4e04a70a1d35e0792413a2b929cfd83 verified. Report:build/github-results/neural-lab-crop-44905197832/artifact/neural-lab-result/report/report.json, SHA2560222178a88040d3111563db28c0f89a854d803ac34bcbb6696b7850d1cb3e8df. Compact summary beside it. Bulk14707922211 and uninstalled package14707902435 remain remote, expireDec5.
+
+Claude and Codex are equal technical partners. Claude's frozen CURRENT<60 / causal Basic Pitch>=60 script was executed unchanged once by Codex while its session was paused. Ordinary coverage39.9932% ->63.1056%, all286 lower labels unchanged, but wrong+229571 and gap+1036617; rejected. Extended-middle6 labels unchanged with fewer false outputs. Separate portable_compute.claude_pitch_split; handoff CODEX-M3-SPLIT-EXECUTION-20261121.md. Continue coordinated quality work; broad corpus expansion requires matching references, not new recordings. Authorized work interval ends2026-11-21T17:38:42Z. Earlier entries below are historical.
+
+Saved-event onset-confirmed variant of the same split is now final/rejected too: ordinary39.9932% ->56.9209%, lower286 labels unchanged, but wrong+75333/gap+886759. Frozen stop condition met; no loss diagnosis or tuning. Report `build/github-results/basic-pitch-onset-44894686144/onset-split/report.json`; portable_compute.onset_pitch_split and CODEX-M3-ONSET-SPLIT-20261121.md. This adds no remote job.
+
+# Neural ORT diagnosis final: keep two threads; component throughput unresolved
+
+Active checkpoint: docs/recovery/github-neural-ort-diagnosis-20261121.json. Synthetic run44902943232 is final at source9c8b0abe93c2ae77f05725adfc7eac944b3487fb, worker37e4a47a7994f01673184203611e6c661b29cedb. All four cases ran. Two-thread main/worker construction and one thread reproduce reference activations exactly; four threads FAIL numerical identity (max activation difference0.208934). Native exit2 reflects that failure. Two-thread worker median/p99 model time14.382/15.141ms; single-thread median23.731ms. Synthetic timing is not paced component acceptance. Source portable44902927691 and CI44902927771 passed.
+
+Captured workflow result is build/github-results/neural-ort-diagnosis-44902943232/result-from-log.json. Small report artifact14706961326 (6734bytes) is now collected once with verified digest. CPU Intel Xeon6975P-C,4 logical/2 physical cores,no cgroup throttling. Top convolution Relu__38 averages5.814ms of16.724ms profiled total; full downstream CNN cropping is the next compute candidate. Preserve global CQT normalization and causal readout164/165. Bulk14706951372 remains remote. Do not rerun processing, repoll or redownload.
+
+Lab run44901520488 remains final/collected/failed: build, native mechanics and package activation pass; model median24.2ms exceeds23.22ms arrival cadence and all four recorded passes overflow input once. Callback allocations/frees0,max16,320ns. Investigate component/diagnostic execution difference and optimize measured compute; no queue expansion or quality claim. Installed output unchanged. Claude has equal design authority and owns the independent fixed pitch-split analysis; inputs supplied, session resumption pending. Work interval ends2026-11-21T17:38:42Z.
+
+Earlier entries below are historical.
+
+# Neural Lab VST3 integration dispatched
+
+Active checkpoint: docs/recovery/github-neural-lab-20261121.json. One GitHub run44901520488 dispatched at sourcefea2fcbbec3ba26c27721a2f57861efaa1790bf5 and worker42c7b67e5c78da1cf8c775dc7de16f4111b49d87. Source portable44901467833 and CI44901467818 are recorded. Read those existing runs; no duplicate dispatch.
+
+Separate uninstalled M3_Neural_Lab component around the native causal worker. Same model, decoder and96kHz inputs; mono/stereo dry passthrough, float32/64, variable host blocks32/512/1024, fixed queues, epoch/Panic and accepted MIDI ownership. Eleven synthetic Python checks, three source-policy regressions, source scan and workflow syntax pass locally. One focused review passed after fixing failed component gates to produce a nonzero CLI exit. Native/model/audio execution remains on GitHub; component acceptance is pending.
+
+Collect m3-neural-lab-report-44901520488-1 once into build/github-results/neural-lab-44901520488. Keep bulk evidence and uninstalled package remote. Current native quality remains rejected; installed output and scoreboard unchanged.
+
+Claude and Codex are equal design partners. Claude owns the fixed pitch-split analysis; supplied event files are ready. The last observed relay was expired and its session paused; resumption request remains pending. Work interval ends2026-11-21T17:38:42Z. Earlier checkpoints below are historical.
+
+# Native causal neural worker final: implementation feasible, replacement rejected
+
+Active checkpoint: docs/recovery/github-basic-pitch-native-20261121.json. Run44897917751 succeeded at source270a61914ac811777043ac224fae461e2c3471bb, worker06bea6737686006f739590348cdaef4bda787a4c. Source portable44897329492 and CI44897329508 passed. Small report collected once; archive SHA2561280b41d8618d756ce0845b86028d09fa6be258ef2406c84dd9e77758cbad469 verified. Bulk14704798008 stays remote. No poll, rerun or redownload.
+
+Actual ONNX Runtime C++ worker, forward resampler/decoder and paced640-sample callback pass native feasibility on ordinary and extended-middle: reference resampling bit-identical; activation error <=5.67e-7 within1e-5; generated event sequences and frame mapping identical; delivery/cleanup/dry identity pass. Callback allocations/deallocations/processing overruns0; ordinary p99/max1896/46073ns, middle1528/9631ns. Worker service p99 19.275/18.156ms; maximum queued backlog19.623/16.269ms, within20ms/26.667ms gates. This is a standalone callback/sink test, not external DAW/device verification.
+
+Actual callback-delivered ordinary expected-pitch samples13525345 ->18362643/33819101 (39.9932% ->54.2967%); exact pitch-set53249 ->875460/8914836. Wrong-pitch7808309 ->3082519, gap3629163 ->3718937 (+89774). However202/499 labels lose present time,200 lose longest hold,33 newly zero. Extended-middle2021510 ->2026524/2073600 (97.4879% ->97.7297%); wrong/gap decrease268105/71372, but5/6 labels lose. Strict replacement REJECTED; retain the native implementation as feasible experimental infrastructure. Installed output/scoreboard unchanged.
+
+Report: build/github-results/basic-pitch-native-44897917751/artifact/basic-pitch-native-result/report/report.json, SHA2568d5b458df7de2a188c97ff1a80bd9b956d81073baff5cb0bc3de1ee5edb4a043. Compact summary and collection receipt beside it. First attempt44896619173 stopped at SDK HTTP404 before measurement, retained under prior_attempts; corrected SDK route is official same-version1.20.1 CPU NuGet.
+
+Claude and Codex are equal design partners. Claude owns fixed CURRENT<60 / causal Basic Pitch>=60 saved-event fusion, not duplicated by Codex. Inputs are at build/github-results/basic-pitch-cached-44891340815/claude-event-evidence/files; handoff CODEX-M3-SPLIT-EVIDENCE-READY-20261121.md. Their session was last observed paused at its old download prompt with expired relay; a user-facing resume request is pending. Native result handoff: CODEX-M3-NATIVE-RESULT-20261121.md. Work interval ends2026-11-21T17:38:42Z. Latest ntfy attempt timed out ambiguously and was not retried; prior confirmed receipt preserved. Earlier entries below are historical.
+
+# Onset decoder final: fewer false notes, substantial coverage loss
+
+Active checkpoint: docs/recovery/github-basic-pitch-onset-decoder-20261121.json. Run44894686144 succeeded at source0862c6995cdafa19c174188590d9fbb4b35384cd, worker1d2d2f5c9b8a8ac50aa85e560bd20f8605c9ad59. Source portable44894450591 passed. Small report collected once and server digest verified; bulk14703213405 stays remote. No poll, rerun or redownload.
+
+All full-record reference event/clock/cleanup/measurement identities pass. Onset-confirmed start ordinary expected-pitch samples18583289 ->12240838/33819101 (54.9491% ->36.1950%); wrong-pitch3008188 ->1260281 and gap3568575 ->2140412. Exact pitch-set882053 ->225266. Extended-middle present2031528/2073600 unchanged; wrong-pitch reduced32019, with gap and per-label holds unchanged against the causal reference. Strict and incremental screens REJECTED; installed tracker unchanged. Saved FIFO clocks reused: candidate worker service/native timing/host delivery unmeasured.
+
+Report:build/github-results/basic-pitch-onset-44894686144/basic-pitch-onset-result/report/report.json; compact summary and collection receipt beside it. Claude independently owns fixed CURRENT<60 / causal Basic Pitch>=60 fusion. Joint next decision: use the two results to select a concrete implementation; native-path discussion in CODEX-M3-NATIVE-PATH-DISCUSSION-20261121.md. Equal design authority, eight-hour work interval ends17:38:42Z. Earlier entries below are historical.
+
+# Paired context final: coverage gain, safety rejected
+
+Active checkpoint: docs/recovery/github-basic-pitch-context-20261121.json. Run44893248706 succeeded at source47ef7de0cbaa7ec9ed1d4c3955aa774621ff451d, worker0b8c3556591c761551907b73b5b9383d732e2b25. Small report collected once and server digest verified; bulk14702383378 remains remote. No poll, rerun or redownload. Both datasets reproduce saved reference activations, frame mapping, event sequence/availability and cleanup exactly.
+
+Readout160/161 adds46.44ms context versus164/165. Same-pass measured-FIFO ordinary pitch coverage18333802 ->19953381/33819101 (54.2114% ->59.0003%); exact pitch-set samples875443 ->1209353/8914836. However wrong-pitch+1693527, gap extras+1177309,192 labels lose coverage,206 lose longest hold and one becomes zero. Extended-middle97.7242% ->96.4295%; all6 labels lose and false/gap outputs grow. REJECTED; installed tracker unchanged. Zero-compute deltas have the same direction, so worker service does not explain the rejection. Shared worker p99 service21.741/21.118ms; ordinary max queued backlog37.871ms fails feasibility. This is a paired experimental worker, not native callback timing.
+
+Report:build/github-results/basic-pitch-context-44893248706/basic-pitch-context-result/report/report.json; result-summary.json and collection-receipt.json beside it. Claude is independently finishing the fixed CURRENT<60 / causal Basic Pitch>=60 comparison. Codex and Claude remain equal design partners; continue selecting concrete, falsifiable improvements within the authorized eight-hour interval ending17:38:42Z. Earlier entries below are historical.
+
+# Paired causal Basic Pitch context test: GitHub run44893248706 active
+
+Active checkpoint: docs/recovery/github-basic-pitch-context-20261121.json. Source47ef7de0cbaa7ec9ed1d4c3955aa774621ff451d and worker0b8c3556591c761551907b73b5b9383d732e2b25 are committed/pushed under standing job authorization. Source portable44893061260 passed. One basic-pitch-context.yml run44893248706 is active. Next: query this existing run read-only; collect its small report once when final. Bulk evidence remains remote. Do not dispatch again.
+
+Frozen comparison: causal readout160/161 against164/165 from the SAME model calls, separate forward decoders, shared measured FIFO completion including both decoders. Adds46.44ms context; full recording/labels retained. Reference activations/frame mapping/event sequence must reproduce run44889388628 exactly, except measured worker completion. Report whole-label losses and false/gap tradeoffs even if the strict screen rejects. Design:docs/recovery/CODEX-M3-STREAMING-CONTEXT-20261121.md; spec:docs/recovery/basic-pitch-context-20261121.json. Synthetic checks and one independent review pass; native/model execution remains on GitHub CPU. Installed scores unchanged.
+
+Claude is an equal design partner and owns the fixed CURRENT<60 / causal Basic Pitch>=60 saved-event comparison and derived-event artifact14701937371 collection. Codex owns this complementary readout experiment. Eight-hour work window ends2026-11-21T17:38:42Z. Earlier entries below are historical.
+
+# Cached Basic Pitch bridge final: activation and decoder effects separated
+
+Active checkpoint: docs/recovery/github-basic-pitch-cached-diagnosis-20261121.json. Run44891340815 succeeded at source79ef779371a5dbe4c537e28cc13b6571e2794357, workerd4f82456ec10451a9c5624fe5cf571d46d6456a8; source portable44891270779 passed. Small report collected once and server digest verified. All CURRENT, measured-streaming, zero-compute-streaming and offline saved measurements, event clocks and cleanup reproduce exactly on both datasets. No inference or recorded audio processing in this job.
+
+Ordinary nominal-clock pitch coverage with the SAME forward decoder: rolling activations61.6263% ->offline activations71.6577% (+3392528/33819101 present samples); wrong-pitch +1182476, gap extras +203301. This bundles resampling/context/windowing/readout; it does not isolate context alone. Replacing that decoder with the saved upstream decoder reduces wrong-pitch by1842300 and present by1402143, while exact pitch-set samples improve564452. Worker completion accounts for only0.8573pp; timestamp convention only-0.0021pp. Nominal arms are diagnostic, not causal MIDI or attack-latency results. No promotion or installed-score change.
+
+Report:build/github-results/basic-pitch-cached-44891340815/basic-pitch-cached-result/report/report.json; result-summary.json and collection-receipt.json beside it. Derived event artifact14701937371,m3-basic-pitch-cached-evidence-44891340815-1 (44129bytes) was subsequently collected once for Claude at build/github-results/basic-pitch-cached-44891340815/claude-event-evidence/files; its digest is verified and model activation arrays remain remote. No poll, rerun or redownload of completed jobs.
+
+Shared next work: Claude leads fixed CURRENT below60 plus causal Basic Pitch at/above60 saved-event candidate; Codex works on the complementary streaming activation/decoder implementation. Both have equal design authority under the user's explicit eight-hour authorization (ends2026-11-21T17:38:42Z). Coordinate ownership and dispatches; native/model execution on GitHub CPU only. Handoff:CODEX-M3-SPLIT-CANDIDATE-20261121.md. Earlier entries below historical.
+
+# Basic Pitch streaming final: upper-note gains retained, replacement rejected
+
+Active checkpoint: docs/recovery/github-basic-pitch-streaming-20261121.json. Run44889388628 succeeded; the small report was collected once and its server digest verified. Source046cb6ec7ab00cb54302376f1bcb691d27dc31b9; worker08c1d84782b351a4bd9fbab64a066115797e991d. Source portable44889201362 passed native/contracts/buffer checks; all55 remote synthetic/scoring/lifecycle tests passed. One fixed ordinary + extended-middle pass; no local recorded-audio/model/native execution.
+
+Ordinary expected-pitch duration CURRENT -> streaming:13525345 ->18583289/33819101 (39.9932% ->54.9491%). Exact pitch-set duration:53249 ->882053/8914836 (0.5973% ->9.8942%). Wrong-pitch samples:7808309 ->3008188; gap extras:3629163 ->3568575. However197/499 labels lose present duration,195 lose longest hold,34 become zero. Extended-middle gains aggregate97.4879% ->97.9711%, but5/6 labels lose present/longest. Strict replacement REJECTED; installed exact-string scoreboard unchanged.
+
+Upper bands60-71/72+ retain88.4543%/88.3789% of offline Basic Pitch coverage, above the frozen75% feasibility indicators. Inference-block service p99=12.775/12.307ms, max queued backlog15.650/6.987ms on ordinary/extended-middle. These pass CPU worker indicators only, not native callback, physical attack latency or host acceptance. Valid event pairing and zero EOF-active pitches on both recordings. Primary timestamps use replay FIFO completion driven by measured service. Zero-compute ordinary coverage55.8064% is only0.8573pp higher; the gap to offline67.5096% cannot be explained by worker service alone.
+
+Report:build/github-results/basic-pitch-streaming-44889388628/basic-pitch-streaming-result/report/report.json; result-summary.json and collection-receipt.json in that run directory. Bulk artifact14701597272,m3-basic-pitch-streaming-evidence-44889388628-1 stays remote (7.45MB,expires2026-12-05T09:25:37Z). Do not poll,rerun or redownload completed jobs. Claude handoff:docs/recovery/CODEX-M3-STREAMING-RESULT-20261121.md. Next:one saved-report loss diagnosis with Claude to choose a concrete follow-up; no tuning,second dispatch,promotion or installation from this completed experiment. Earlier entries below are historical.
+
+# Basic Pitch comparison final: substantial pitch gain, strict screen rejected
+
+Standing job approval verified directly: docs/recovery/m3-standing-job-authorization-20261121.json. The human mid-turn instruction at 2026-11-21T08:18:54.367Z is “Always approve the job, just keep working tandem to codex”. Codex treats this as ongoing authorization for bounded M3 CPU-only GitHub comparison/analysis jobs and their necessary scoped commits/pushes using existing inputs. No repeated permission request for that scope. Preserve frozen results and avoid duplicate jobs; paid compute, new input uploads, promotion, installation/default changes and unrelated operations are not inferred. Coordination reply: docs/recovery/CODEX-M3-STANDING-APPROVAL-20261121.md.
+
+Active checkpoint: docs/recovery/github-basic-pitch-comparison-20261121.json. Run44884737134 succeeded and the small report was collected once with its server digest verified. Source e596838f2402e7fc0113dca50d78dddad43892b7; worker b110980502b11ce7b1696f3f370b28151055d53f. Source portable44884699943 passed native tests, replay contracts and buffer smoke; the comparison's 48 scoring/runner tests passed. Exactly one upstream-default ONNX CPU inference each on ordinary and extended-middle; no laptop model/audio processing.
+
+Ordinary saved CURRENT -> Basic Pitch expected-pitch duration: 13525345 -> 22831126/33819101 (39.9932% -> 67.5096%, +27.5163pp). Exact pitch-set duration: 53249 -> 1941366/8914836 (0.5973% -> 21.7768%). Wrong-pitch samples during labels: 7808309 -> 2419601; gap extras: 3629163 -> 1437513. However 99/499 labels lose present duration and 96/499 lose longest hold; the frozen direct replacement screen is REJECTED. Extended-middle improves 97.4879% -> 99.9490%, with all six labels gaining and no measured pitch safety regression. These are offline pitch-duration measures, not installed exact-string frame scores or live readiness.
+
+Literal Basic Pitch + CURRENT union covers 75.7771% of ordinary expected-pitch duration, but adds 1510868 wrong-pitch samples and 821769 gap-pitch samples versus CURRENT. This diagnostic supports complementarity; it does not validate indiscriminate fusion. Installed output, scoreboard and promotion remain unchanged. String assignment, unison multiplicity, raw retriggers, real-time timing and DAW/device delivery remain unmeasured for this model.
+
+Report: build/github-results/basic-pitch-comparison-44884737134/basic-pitch-result/report/report.json; compact result-summary.json in that run directory. Small artifact m3-basic-pitch-report-44884737134-1 is final/collected; bulk m3-basic-pitch-evidence-44884737134-1 (14699373041, 17265097 bytes, expires2026-12-05T08:25:24Z) stays remote. Do not poll, rerun or redownload final jobs. No second dispatch, tuning, threshold sweep, promotion or installed change is authorized by this job. Claude handoff: docs/recovery/CODEX-M3-BASIC-PITCH-RESULT-20261121.md. Next: interpret the saved per-label losses and Claude relief attribution before a concrete follow-up design; use the standing job approval above for justified bounded CPU experiments. Earlier entries below are historical.
+
+# Independent pitch tracker comparison prepared; approval pending
+
+Active checkpoint: docs/recovery/basic-pitch-comparison-20261121.json. Handoff: docs/recovery/CODEX-M3-BASIC-PITCH-READY-20261121.md. One Basic Pitch offline comparison is prepared locally for ordinary and extended-middle using existing staged inputs and saved collision-enabled CURRENT MIDI. No new inference, commit, push or dispatch; source/worker SHAs and run ID are not yet assigned. Previous approval covered the completed relief screen only.
+
+Shared pitch-duration scoring, pinned model/input/baseline hashes and remote-only runner are implemented. 48 synthetic scoring/runner and lifecycle tests pass; YAML, five Bash bodies, pin and whitespace checks pass. Saved ordinary pitch presence is 13525345/33819101 (39.9932%); this differs from exact-string labeled-frame matches. Complete four-pitch output exists in the saved recording; this does not establish broad chord readiness. Extended-middle is a one-pitch multi-string false-upper control. Installed scoreboard unchanged.
+
+Reporting addition: every label's present-duration/longest-hold deltas and the literal Basic Pitch + saved CURRENT union are retained even on rejection. Union coverage, holds and false/gap costs are report-only; the frozen direct-detector acceptance gates are unchanged. Baseline schema2 adds derived occupancy spans; all prior baseline measurements are identical. The 48 tests pass after this addition; no model inference or additional job.
+
+Next: obtain approval for the scoped source/worker commits and pushes and ONE basic-pitch-comparison.yml dispatch. Research screen requires ordinary pitch-duration coverage +5pp with no per-label hold loss, chord-completeness loss or false/gap-pitch growth on either recording. Model inference, dependency installation and real-time suitability remain unverified. Retain model bulk evidence remotely. Relief run44881108478 remains final/rejected/collected; do not poll or rerun it. Earlier entries below are historical.
+
+# Upper-fretted relief: final, rejected, collected
+
+Active checkpoint: docs/recovery/github-upper-fretted-relief-20261120.json. Run 44881108478 completed successfully as a workflow; the frozen offline relief is REJECTED. Source 3fc69995c83ea6e7b96664c72dd80c86599af554; worker 5b64e184d91d26c83e8874da2a3d58c7fd61a61f. Small report collected once and digest verified at build/github-results/upper-fretted-relief-44881108478. Bulk evidence was subsequently collected once for named attribution; see evidence-collection.json in that directory. Do not poll, rerun or redownload.
+
+Ordinary block 512 CURRENT-to-trial matches 145400 -> 158812/528632 (27.505% -> 30.042%); 13052 gained matches in notes 61-71 exceed the 5000 usefulness target. Safety fails: seven labels lose 29 frames; wrong-note +454, wrong-string +7810, unlabeled-gap extras +3704; four labels lose 768 held samples; fourteen labels increase retriggers (+149 gross, +142 net over all labels). Both measured ordinary OFF and CURRENT snapshots/raw MIDI are bit-identical to saved references. Installed output and scoreboard unchanged. Screen stopped before the other six datasets, block 32 timing/allocations, and block 1024 parity: those gates are unmeasured, not passed.
+
+Source portable 44880697487 and CI 44880697441 passed native tests, contracts, buffer smoke and production VST3 build/package; this is distinct from runtime acceptance. Result summary: build/github-results/upper-fretted-relief-44881108478/result-summary.json. Claude handoff: docs/recovery/CODEX-M3-PENALTY-RELIEF-RESULT-20261120.md. Next: use this causal result with v5 findings for a concrete replacement design. No tuning of this rejected rule, second dispatch, promotion or installed change. Earlier entries below are historical.
+
+# Upper-fretted relief screen prepared locally
+
+Active checkpoint: docs/recovery/github-upper-fretted-relief-20261120.json. Frozen Claude patch integrated; bounded seven-dataset worker prepared. 34 Python contracts and YAML/shell/diff checks pass. No native execution, commit, push or dispatch; direct user confirmation for external action pending. Details: docs/recovery/CODEX-M3-PENALTY-RELIEF-READY-20261120.md. Installed output unchanged. Earlier entries below are historical.
+
+# V5 observation final and collected
+
+Active checkpoint: docs/recovery/github-unfiltered-observation-20261120.json. Run44835727027 succeeded. All untraced/v4/v5 snapshot and raw MIDI identities pass; legacy trace identical. Report and compressed evidence collected once; v5 decompressed hash verified. Claude notified to run analysis gates first. No tracking improvement or policy promotion claimed. Do not rerun or redownload.
+
+# Unfiltered v5 observation dispatched
+
+Active checkpoint: docs/recovery/github-unfiltered-observation-20261120.json. Run44835727027 at source0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0, worker903e08a82b92a6e7b0f0b4864a9b821b07e4356d. Source portable44835402912 passed native tests, replay contracts and buffer smoke. Three companions untraced/v4/v5 check saved output identity; no DSP policy change. Collect small m3-report-44835727027-1 once into build/github-results/unfiltered-observation-44835727027; collect named compressed v5 trace for Claude analysis when successful. Do not duplicate dispatch. Relief patch queued after v5. Earlier entries historical.
+
+# Unfiltered v5 observation: approved, source validation running
+
+Active checkpoint: docs/recovery/github-unfiltered-observation-20261120.json. Source0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0 and worker903e08a82b92a6e7b0f0b4864a9b821b07e4356d committed and pushed with user approval. Portable44835402912 and CI44835402712 running; observation dispatch follows portable success. No policy or installed change. Claude relief patch stays staged behind v5. Earlier entries below historical.
+
+# Octave common-estimator observation: final and collected
+
+Active checkpoint: docs/recovery/github-octave-common-estimator-20261120.json. Run44819908319 succeeded at source581af79d8b0f004d6db4cfc3db6ad36cc1b00b95, worker37d3ccd3fd74bec414212767ea44d3b455dd9005. Small report collected once and digest verified; bulk stays remote. All21 retained parent takes +6 controls available,6480/6480 ratio ticks per channel,54/54 trace snapshot/raw MIDI identity comparisons pass. Summary: build/github-results/octave-common-estimator-44819908319/octave-common-estimator/summary.json. Weak annotated60 remains within parent-only range; historical false74 is inactive/below threshold240/240 ticks, so this fresh default protocol does not reproduce its false-output behavior. No amplitude threshold accepted, no installed or corpus-score gain. Source portable44819621331 passed. Next: use saved report to prioritize below-threshold genuine-note cases separately from assignment instability; no follow-up replay selected. Do not poll, rerun or redownload these final jobs. Earlier entries below are historical.
+
+# Octave common-estimator replacement dispatched
+
+Active checkpoint: docs/recovery/github-octave-common-estimator-20261120.json. Worker44819908319 at source581af79d8b0f004d6db4cfc3db6ad36cc1b00b95, worker37d3ccd3fd74bec414212767ea44d3b455dd9005. Source portable44819621331 passed. Reuses21 verified parent observations from final partial44819076437; only six controls/18 replays run remotely. Collect m3-report-44819908319-1 once. No duplicate dispatch or parent rerun. Installed unchanged. Earlier entries below historical.
+
+# Octave common-estimator input failure fixed
+
+Active checkpoint: docs/recovery/github-octave-common-estimator-20261120.json. Run44819076437 is final, failed and collected once:21 parent takes completed,42/42 trace snapshot/raw MIDI identities pass; ordinary PCM16 rejected by float-only reader before any control. Fixed PCM16 scaling and prepared pinned parent-report reuse; follow-up processes only six controls (18 replays). Source581af79, worker37d3ccd. Source validation pending; no replacement dispatched yet. Installed unchanged. Earlier entries below historical.
+
+# Common-estimator octave observation: GitHub44819076437 queued
+
+Active checkpoint: docs/recovery/github-octave-common-estimator-20261120.json. Source b8268b9bdb95db87a263896e9f311ad370210498, worker 3fcee82b0ba31e6f9024d4b3e128d9abb5e5cfe7. Fixed 21 parent-only takes and six octave controls; 81 short remote replays with reference/parent-trace/upper-trace snapshot and MIDI identity. Same default settings, corrected energy channels, 250ms pre-roll and label-relative320..480ms window on both sides. Selection-independent note72 observation requires no native edit. Source portable44818761781 passed. Worker44819076437 queued; collect m3-report-44819076437-1 once into build/github-results/octave-common-estimator-44819076437. Bulk stays remote; do not launch a duplicate. Existing remote inputs only. 24 focused Python tests and YAML/shell/diff checks pass. No local audio processing or installed change. Earlier checkpoint entries below are historical.
+
+# Octave-parent runtime measurement: final and collected
+
+Latest saved-trace follow-up: `build/recovery/cross-pitch-independent-20261120/octave-pair-controls.json` and its compressed per-tick rows cover all five annotated octave pairs with measured parent cells, plus false74. Three additional pairs: labels245/244 have260/1123 paired ticks (raw median-8.166dB), labels354/351 have1062/1122 (-4.234dB), labels113/112 have0/786 because note72 is absent from the saved candidate rows. Original three summaries reproduce exactly; all6365 selected rows retained. Source is existing v4 trace44752010601; no replay or download. Raw cross-candidate energy still cannot be subtracted from corrected within-parent templates as calibrated excess; the proposed band and false-output-rate inference remain unsupported. All96 template takes retained,95 eligible; checkpoint extremes have target-pitch uncertainty. Reply: `docs/recovery/CODEX-M3-ACK-20261120.md`, section "Section 7 reply: additional saved octave controls". Narrow missing observation: common-estimator parent-only/chord energies with matching window convention, including pre-filter note72 coverage. No new experiment selected, job launched, installed change or measured corpus gain.
+
+Active checkpoint: docs/recovery/github-octave-parent-measurement-20261120.json. GitHub44811182398 succeeded at sourcec411d6d1b4ab0cde2375f9a9ee3eea40ca602399, worker2687ef7996ef949aea893165ef95ca82fea5931e. Small report collected once and archive digest verified; bulk remains remote. Report: build/github-results/octave-parent-measurement-44811182398/octave-parent-measurement/report.json; compact statistics: build/github-results/octave-parent-measurement-44811182398/octave-parent-measurement/summary.json. All96 takes retained,95 fixed-window eligible;95/95 snapshots and raw MIDI bit-identical. Same-note/same-lane whole-pass prediction has h2 median/max errors(dB):44=1.21/10.47,48=2.46/36.66,60=4.52/55.20,62=1.65/6.02,69=4.61/10.97. Notes62/69 have one training example per prediction. Hard harmonic veto unsupported; no installed change or measured corpus gain. Claude result is in CODEX-M3-ACK-20261120.md. Next: saved-report-only uncertainty analysis before selecting a genuine/false octave comparison; no duplicate run. Source portable44810046421 and CI44810266757 passed. Earlier pending/running notes below are superseded.
+
+# Octave-parent short-label failure fixed before dispatch
+
+Active checkpoint: docs/recovery/github-octave-parent-measurement-20261120.json. Metadata check found string-01 label50/note60 lasts only27600 samples at96kHz (287.5ms), shorter than the fixed320–480ms measurement window. Runner now retains this take as unavailable, with no replay or identity claim, instead of aborting or shifting the window. All96 takes remain in the report;95 have sufficient labeled duration. Eighteen Python tests pass, including this boundary. No recorded audio decoded or replayed locally.
+
+Upload approval remains pending for the prepared40,578,149-byte raw-string-2 archive to public Ajuntanaga/m3-offload. No upload, commit, push or dispatch. Worker and inputs otherwise prepared locally; installed scores unchanged.
+
+# Octave-parent input and worker prepared locally
+
+Active checkpoint: docs/recovery/github-octave-parent-measurement-20261120.json. Exact raw string 2 hash verified against pinned provenance; existing file archived without signal processing at build/recovery/octave-parent-inputs-20261120/string-02-input.tar.gz (40,578,149 bytes). Package manifest records hashes. Not uploaded. Worker task octave-parent-measurement is implemented locally in build/recovery/m3-offload-worktree: three pinned input bundles, 96 takes, enabled runtime bins versus independent six-frequency projections, identity checks and bounded report artifacts. YAML parse and diff check pass. No native/audio execution, commit, push or dispatch this step.
+
+Next: stage this additional raw input through m3-offload, then scoped source/worker commits and source GHA validation before one bounded measurement dispatch. No installed score or policy change.
+
+# Octave-parent measurement: input coverage gap before dispatch
+
+Active checkpoint: docs/recovery/github-octave-parent-measurement-20261120.json. Inventory and raw source pins are now saved in docs/recovery/octave-parent-inventory-20261120.json and docs/recovery/octave-parent-sources-20261120.json. All 96 takes retained. The two recorded staged bundles cover raw strings 1 and 3–8, but not string 2; eight takes at notes 60/62/69 depend on that input. Do not silently omit them or substitute corrected audio. The checked older recovery inventories also contain no matching raw-string-2 hash.
+
+Runner/helper validation: 17 relevant Python tests passed, plus py_compile. No local recorded-audio extraction or native execution. No source commit, workflow dispatch, installed change or note-quality gain from this step. Next: locate the exact pinned raw string 2 in existing remote inputs or stage it through the authorized input route, then wire the bounded worker task and source validation before dispatch. Isolated repeatability still needs genuine/false octave controls before any DSP policy.
+
+# Octave-parent GHA runner implemented; not dispatched
+
+Added tools/portable_octave_parent_measurement.py. Requires GITHUB_ACTIONS=true before any input I/O; validates all96 inventory takes against pinned labels, raw hashes and rates; stages fixed label-relative clips remotely; compares reference/traced snapshot and raw MIDI; reports enabled runtime bins separately from six-frequency Hann projections and whole-pass prediction errors. Five synthetic/guard tests pass; py_compile passes; saved metadata validates96 takes. No recorded audio read or native execution locally.
+
+Next: create the raw source-pin manifest from existing provenance and wire this runner into the authorized m3-offload workflow, then run source checks before one bounded dispatch. Runner has not executed on corpus; no live or note-quality claim. Isolated repeatability still requires the genuine/false octave control comparison before any DSP policy.
+
+# Octave-parent observation arithmetic implemented
+
+Added tools/octave_parent_measurement.py and tests/test_octave_parent_measurement.py. The observation-only helper computes six fixed-frequency Hann projection energies separately from production enabled-bin counts. Whole-pass same-note/same-lane prediction retains unavailable takes and reports training counts; no threshold or policy is fitted. Three synthetic tests passed with python3 -m unittest tests.test_octave_parent_measurement: enabled-bin selection, known-tone amplitude-squared recovery, and whole-pass exclusion/unavailable retention. No recorded audio read, native build, dispatch or installed change.
+
+Next: integrate these helpers into the bounded GHA runner using octave-parent-input-inventory.json and existing remote inputs, with source hashes, fixed label-relative windows and snapshot/raw-MIDI identity. The runner is not yet implemented or dispatched; isolated repeatability alone cannot establish octave discrimination.
+
+# Octave-parent inventory and enabled-harmonic contract
+
+## Octave-parent measurement contract corrected
+
+Source inspection found harmonic_limit(note): six through52, four for53..75, three from76. corrected_harmonic_energy returns zero for disabled cells. Parents44/48 expose six production harmonics;60/62/69 only four. A six-positive-bin rule rejects the latter by construction. Do not dispatch that invalid experiment or enable extra production cells to satisfy it.
+
+Metadata-only inventory: build/recovery/cross-pitch-independent-20261120/octave-parent-input-inventory.json. All96 labeled takes retained (44:19,48:24,60:33,62:12,69:8), with label hashes, pass, lane and bounds. No audio read or processing dispatched. Report enabled-bin coverage separately; six-harmonic comparison at60/62/69 requires an observation-only estimator and snapshot/raw-MIDI identity. Hold out whole passes; no post-result exclusions.
+
+Next: implement the bounded runner with this enabled-bin contract and independent six-frequency observation, using existing remote inputs. Preserve production settings. Compare uncertainty across held takes before any octave policy.
+
+# Held-pass harmonic amplitude stability measured
+
+Active checkpoint: docs/recovery/github-paired-residual-20261120.json, template_amplitude_stability. Saved-JSON-only report: build/recovery/cross-pitch-independent-20261120/template-amplitude-stability.json; reproducible script alongside it.
+
+87/91 clips eligible and evaluated using same-note/same-lane training with the entire held pass excluded. Harmonic2/3/4 energy-ratio prediction median absolute errors1.904/1.250/1.101dB; maxima12.435/14.850/12.050dB. Correct lane supplied, so this is optimistic template repeatability, not classification. Notes52..56 and four harmonics do not cover the octave parents or six-harmonic residual. Hard template rejection unsupported; adaptive/probabilistic constraints remain unmeasured. No audio read, dispatch, runtime change or installed gain.
+
+Locate existing calibration or isolated-source six-harmonic evidence for octave parents44/48/60/62/69. If absent, prepare one bounded observation-only GHA measurement at those pitches with held-out takes and genuine/false octave controls; do not extrapolate notes52..56 templates or introduce a hard template veto.
+
+# Residual model limitation confirmed from source
+
+Active checkpoint: docs/recovery/github-paired-residual-20261120.json. Source review: build/recovery/cross-pitch-independent-20261120/residual-identifiability.json.
+
+The six-harmonic residual fits each frequency freely; it has no amplitude-shape constraint. Upper-octave harmonics 1/2/3 coincide with lower harmonics 2/4/6. The existing native test explicitly expects a real octave tone to have independent energy below 1e-6. This explains why reduction is not a safe absence signal; it does not establish the actual recorded decomposition. No rerun or DSP change.
+
+Assess whether saved isolated harmonic vectors provide a stable, held-out amplitude constraint for octave competition; use existing reports only. Reject a constrained-fit proposal if cross-take variability defeats its control separation. Do not repeat unconstrained residual, phase-only or envelope-only screens. Installed output unchanged. Run44770068740 and all seven bounded traces remain final and collected; do not redownload.
+
+# Paired residual matched-row analysis complete
+
+Matched-row result: false74 retains median 0.0009849048 of original gain (63 rows); real missing72 retains 0.0037524344 (5 rows), with overlapping ranges. Genuine56/60 ratios exactly 1 because parent already present in every available row, so they do not test newly added competition. Scalar reduction veto unsupported.
+
+Seven bounded traces collected once, hashes verified, 52850 bytes retained. Download session10480 completed; do not redownload. Analysis: build/recovery/cross-pitch-independent-20261120/paired_rows.py; output build/github-results/paired-residual-44770068740/paired-row-comparison.json. Next: Inspect residual model harmonic degrees of freedom against recorded harmonic templates: determine whether free parent harmonics can absorb real octave-note energy. Use source and saved traces first; do not introduce reduction veto. Installed output unchanged.
+
+# Paired trace download in progress
+
+Existing download process gh PID846875, exec session10480, artifact14647512405, started this turn. Do not duplicate download: poll existing session/process first. It downloads archive into memory and retains only seven hash-verified compressed traces under build/github-results/paired-residual-44770068740/bounded-traces. Analysis script prepared at build/recovery/cross-pitch-independent-20261120/paired_rows.py; run once traces exist. No local audio processing.
+
+# Paired residual seven-control result collected
+
+Run 44770068740 completed successfully; small report collected once. All seven saved snapshot/raw MIDI identities pass. Parent competition reduces false74 residual evidence, but its paired range overlaps genuine60: no safe scalar admission threshold established. Installed output unchanged. See docs/recovery/github-paired-residual-20261120.json and CODEX-M3-ACK-20261120.md. Next: matched-row comparison before policy changes; unavailable means unknown.
+
+# Paired residual seven-control replay dispatched
+
+Both source checks passed for42eb4c0c9ef6c087a0dd85fb8a915612604446c6: portable44769219694 and CI44769219529. Worker44770068740 dispatched once on Ajuntanaga/m3-offload, task weak-note-residual-trace, ordinary. Follow this run; do not redispatch. Checkpoint docs/recovery/github-paired-residual-20261120.json. Require saved snapshot/raw MIDI identity on all seven cases before interpreting the paired lower-octave fits. No installed policy or score change.
+
+# Paired residual trace contract corrected; source validation running
+
+Source42eb4c0c9ef6c087a0dd85fb8a915612604446c6. Portable44769219694 in progress; CI44769219529 pending. Previous portable44768775249 compiled successfully but failed the stale 36-column expectation and its dependent row checks. Updated to50 columns and checked unavailable paired fits remain invalid. No detector policy change or local native/audio execution. Worker not dispatched. Follow these source checks before dispatching the seven-control task once. Checkpoint docs/recovery/github-paired-residual-20261120.json.
+
+# Paired residual source validation running
+
+Source673b0a10dcf62d63675bdfb5509b6f4293469b1b pushed. GHA portable44768775249 and CI44768774982 confirmed in progress. Worker not dispatched. Checkpoint docs/recovery/github-paired-residual-20261120.json; seven controls now include genuine56 label29 samples489855..561599 and genuine60 label42 samples653055..724799, from saved outcome coverage. Five synthetic parser tests pass. Next follow existing source checks, then dispatch bounded task once on success, requiring saved snapshot/raw MIDI identity for every control. Installed output unchanged.
+
+# Paired octave competitor diagnostic implemented locally
+
+Uncommitted changes: native/offline/replay.cpp, tools/portable_weak_note_residual_trace.py and tests/test_portable_weak_note_residual_trace.py. Bounded target capture now records an additional base/base-plus-target fit including note-minus-12 when direct fundamental and local-or-candidate evidence exist, independent of ownership. Original fit and recovery behavior are retained; labels do not choose the competitor. Capacity/correlation failures remain unavailable. Report schema v2 separates paired availability and validity, rejecting malformed evidence. Five synthetic parser tests pass; git diff --check passes. No native build, audio replay, commit, dispatch or installed change this step.
+
+Next: add genuine octave labels29/42 windows from saved label evidence; inspect the focused diff, then source validation and bounded replay on GHA requiring complete saved snapshot/raw MIDI identity. No claim of improved tracking yet. Do not duplicate completed44766211489.
+
+# Residual false-control omission identified
+
+Saved join: build/recovery/cross-pitch-independent-20261120/residual_base_context.py and .json. All328 sampled rows join the saved outcome trace. False74 labels are40,60,62,67 throughout69 samples, but60/62/67 are absent from every base fit. Its octave parent62 is an existing below-threshold candidate in63/69 rows (median score/threshold0.39750); it is never owned. In45 note40-only fits, false74 residual gain median0.03044447. Note74 fundamental coincides with62 second harmonic. This identifies an omitted competing explanation, not proven acoustic source attribution.
+
+Next implementation: observation-only paired residual fit with the existing lower-octave candidate included when its independent direct/local evidence is present, regardless of ownership, alongside the original fit. Record availability and both validities; no fallback admission or parent veto. Keep missing81/72 and genuine70/74 controls, and add genuine octave labels29/42 before considering any policy. Candidate-derived competition only; labels must never choose the fit. Require saved snapshot/MIDI identity remotely. This tests whether the omitted competitor explains false74; it cannot alone justify rejecting real octave pairs. No installed output change.
+
+# Selective residual traces collected
+
+Selective trace collection completed: five compressed traces (29359 bytes total), all report hashes verified, retained under build/github-results/weak-note-residual-44766211489/bounded-traces. Base-note counts saved there in base-note-counts.json. False74 uses only note40 in45/69 fits; genuine70 uses only42 in27/47. Missing81/72 most often use32,43,44,55 (27/71), and never include the other weak target. Thus residual strength is conditional on an incomplete and sometimes spurious ownership set; these results do not establish independent-note discrimination. Next: compare false74's saved candidate/label context with the note40-only fits to identify the unmodeled contributor before choosing a replacement evidence term. No additional audio processing or policy change performed.
+
+# Weak-note residual result: diagnostic passed, scalar rescue unsupported
+
+GHA44766211489 is final success at source104167005bbc2295c74aca43b8aa873a7278182c. All five captures retain saved snapshot and raw MIDI identity. Small report collected at build/github-results/weak-note-residual-44766211489/weak-note-residual-trace/report.json; checkpoint docs/recovery/github-weak-note-residual-20261120.json.
+
+Residual-gain medians: missing81 0.00000171346, missing72 0.00114463, false74 0.02820256, genuine70 0.02748712, genuine74 0.07096279. False74 minimum0.00337761 exceeds missing81 maximum0.00269298. All fits valid; none of these target candidates emitted in sampled windows. A scalar residual threshold cannot admit these weak notes while excluding this false control. Residual gain and independent energy are the same nested-fit contribution, not independent evidence. Installed output unchanged.
+
+Next: inspect base_notes from the five small compressed traces requested selectively from the evidence archive; do not repeat the completed replay or report download. The fits cover currently owned pitches, not necessarily the complete chord. No new admission policy is justified by this result.
+
+# Weak-note residual diagnostic dispatched
+
+GHA44766211489 at source104167005bbc2295c74aca43b8aa873a7278182c, worker8f6a5272bf736b0e0c0586b22b59e5b17bf43b13. Source portable44765784492 passed build, native tests, replay contracts and synthetic parity. Separate CI44765784337 also passed. Worker44766211489 is confirmed running the bounded residual controls. Follow this existing worker run; do not redispatch. Collect small report once, requiring all five saved snapshot/raw MIDI identities before interpreting fits. Checkpoint: docs/recovery/github-weak-note-residual-20261120.json. No installed output or score change.
+
+# Weak-note residual capture: source validation running
+
+Source104167005bbc2295c74aca43b8aa873a7278182c and worker8f6a5272bf736b0e0c0586b22b59e5b17bf43b13 pushed.
+GHA source portable44765784492 is confirmed in progress compiling diagnostic replay;
+CI44765784337 also started. Worker residual task is NOT dispatched yet.
+Checkpoint: docs/recovery/github-weak-note-residual-20261120.json.
+Three synthetic report-parser tests passed. Next poll existing source validation,
+then dispatch weak-note-residual-trace on ordinary once if passed. Five bounded
+cases: missing81/72, false74, genuine70/74. Every replay requires saved snapshot/raw
+MIDI identity. No installed policy or score change. Do not repeat completed diagnostics.
+
+# Bounded residual target capture implemented; remote validation pending
+
+Working-tree changes in native/offline/replay.hpp, replay.cpp and replay_main.cpp add
+--residual-admission-note/start/end with required finite bounds and trace output.
+Target mode bypasses admission eligibility only for observation, excludes the target
+from the base fit even when owned, and rejects combination with residual recovery.
+Default capture eligibility and DSP recovery predicates remain unchanged. Diff whitespace
+check passed; no compilation or audio replay performed. No commit or dispatch yet.
+Next: wire bounded GHA capture for missing81/72, false74 and genuine octave controls;
+require saved collision-only snapshot and raw MIDI hashes before interpreting fits.
+Inspect base/added validity and capture coverage; invalid fits are not negative evidence.
+
+# Residual capture excludes the weak-note population
+
+Source inspection and saved trace coverage: `build/recovery/cross-pitch-independent-20261120/residual-capture-coverage.json`. Existing residual-admission capture requires DP eviction and score/threshold >=1; the retained ordinary trace has1733 rows, minimum ratio1.001579, and zero target-window rows for missing81, missing72 or false74. Existing diagnostic recovery independently requires above-threshold evidence. Earlier residual results therefore do not establish discrimination for these weak candidates.
+
+Next concrete change: add an explicit bounded, observation-only target override to residual capture; keep recovery/admission predicates unchanged. Capture base and base-plus-target fits, validity, independent energy, overlap and base notes for81/72 and false74, retaining genuine octave controls. Require current collision-only snapshot/raw-MIDI identity on GHA before interpretation. No local audio, native execution, threshold policy or installed change this step.
+
+# Weak-note discrimination: simple evidence gates insufficient
+
+Saved-only comparison: build/recovery/cross-pitch-independent-20261120/weak_note_evidence.json and reproducible weak_note_evidence.py. Fundamental fraction medians: missing81 0.812452, missing72 0.983614, false74 0.998624. Existing octave-phase report44755918838 confirms independent phase valid1090/1090 false74 ticks; missing81 valid637/1123 and missing72 valid1115/1123. These quantities do not justify a high-fundamental-share or valid-phase-only threshold rescue. Ordinary phase validity is zero for these unselected candidates and must not be confused with selection-independent phase.
+
+Next implementation requirement: any weak-note admission proposal must distinguish independent note evidence from overlapping harmonics, protecting genuine octave labels29/42 and false74. Compare a residual/local-noise evidence term against these controls before a DSP trial; do not repeat phase-only, parent-veto, or blanket threshold screens. No new replay, audio extraction, policy or installed score change.
+
+# Component probe completed: source imbalance measured
+
+GHA44764589081 succeeded; small report collected once at build/github-results/mixture-component-44764589081/mixture-component/report.json. Saved labels and reconstructed PCM are identical. Missing81 RMS0.00058267 and missing72 RMS0.00061462 are respectively -25.05dB and -24.59dB relative to strongest55 RMS0.01042728 (17.90x and16.97x amplitude differences). This establishes weak source contributions in this five-note passage; it does not isolate runtime detector attenuation or establish a tracking gain. Fixed-frequency projections are not runtime resonator energy. Installed output unchanged.
+
+Next: bounded pitch-local evidence comparison retaining false74 as a negative control; no blanket scalar threshold reduction. Checkpoint: docs/recovery/github-mixture-component-20261120.json. Do not rerun or redownload completed44764589081.
+
+# Component probe dispatched
+
+Checkpoint: docs/recovery/github-mixture-component-20261120.json. GHA44764589081 at source8df98c3380fceb312f74f7166910172317ed43f2 and workerc55e3bd0d69c0253c8d24c47a5c73aecd55c8749. Input upload complete; server size/hash match. Follow this run and collect small report once; require label and PCM identity before component-level interpretation. No installed change.
+
+# Component probe wired; input upload active
+
+Checkpoint: docs/recovery/github-mixture-component-20261120.json. Source 8df98c3380fceb312f74f7166910172317ed43f2 and worker c55e3bd0d69c0253c8d24c47a5c73aecd55c8749 pushed. Workflow YAML, shell syntax and exclusions checked. Existing upload session9866/PID739773 remains live; release mixture-component-20261120 created, asset upload pending. Do not restart upload or dispatch before completion. No job launched yet. Next poll existing handle, verify asset, dispatch once and collect small report. Installed unchanged.
+
+# Component passage mapping verified
+
+Saved five-note labels match the raw calibration catalog exactly (pitch, mask, pass, detuning, interval). Mapping: case33, start2692800, hold72000, frets[21,-1,20,-1,11,3,8,-1]. tools/mixture_component_probe.py now requires --mixture-labels and rejects mismatches; wrong pitch, detuning and pass checks passed. Report: build/recovery/cross-pitch-independent-20261120/component-source-mapping.json. No audio processed. Next stage missing raw string1 and catalog on the authorized m3-offload route and wire GHA; both checked existing archives lack string1. PCM reconstruction remains unmeasured; do not interpret component levels before identity passes.
+
+# Component probe input prerequisite
+
+The existing runtime-profile-multipitch-20261120 archive contains raw strings 3–8 only. The target five-note mixture requires strings 1,3,5,6,7; string 1 is absent from this checked archive. No job dispatched. Next resolve an authorized exact source for string 1 and the matching label catalog, then require saved-label agreement and PCM reconstruction identity before interpreting component levels. Archive inventory only; no local audio extraction.
+
+# Component probe prepared for GHA
+
+`tools/mixture_component_probe.py` reconstructs a bounded PCM16 mixture before measuring individual source levels. Synthetic unequal-level and one-sample mismatch checks passed; no recorded audio read locally. Not committed or dispatched. Next wire the existing authorized GHA inputs, verify the case mapping and labels, and collect the small report. Runtime harmonic energies remain a separate measurement. Checkpoint: docs/recovery/github-uncaptured-admission-trace-20261120.json.
+
+# Simple threshold rescue fails the saved negative control
+
+Saved ordinary false74 control (samples2939903..3009599) passes direct/local/evidence jointly on1090/1090 ticks, with score/threshold min0.20126428,median0.31804461,max0.48772265; no labeled74 or snapshot74 output. Its minimum exceeds missing81's maximum0.0572975; its median exceeds missing72's maximum0.209320. Thus a scalar threshold low enough to admit either missing note's typical score, even with all three flags, also admits this unwanted candidate. This is an eligibility comparison, not a replayed false-MIDI count. Evidence: build/recovery/cross-pitch-independent-20261120/admission-negative-control.json.
+
+Mixture provenance: tools/generate_note_combination_corpus.py mix_real_excerpts sums source excerpts, applies one common 1/sqrt(note-count) gain and optional common peak scaling; it does not equalize individual note loudness. The threshold uses whole-waveform fast energy, so relative source levels are a material unresolved explanation for weak components. No local audio extraction or new processing performed; no policy or installed score changed.
+
+Next: a bounded GHA measurement of the five source contributions for the saved81/72/55/43/44 mixture, reproducing its existing render mapping and reporting component RMS/peak and target harmonic energy over the labeled interval. Require reconstruction identity before interpreting levels. This distinguishes genuinely weak input components from detector attenuation before designing any pitch-local normalization; keep false74 as a required negative control. Do not dispatch another same-gate missing-note trace or repeat the rejected phase/parent veto screens.
+
+# Co-occurring missing notes both fail score threshold
+
+Run44761835713 completed successfully and report/evidence collected once. Note72 label148:1123/1123 below-threshold frames, median score/threshold0.0154258,max0.209320; joint direct/local/evidence1059,quiet0. Snapshot and raw MIDI bit-identical. Note81 in the same window also below threshold throughout (median0.000642,max0.0572975). Saved labels identify a five-note mixture81/72/55/43/44, not a four-note chord. Expected cents81:+13.535156,72:+6.980469 are label metadata, not newly measured detector tuning. No admission policy or installed score changed.
+
+Checkpoint: docs/recovery/github-uncaptured-admission-trace-20261120.json. Next compare saved false-note controls and mixture provenance before a threshold change; evidence flags alone do not provide a safe rescue. Note67 remains undispatched; no need for a third same-gate trace yet.
+
+# Missing note81 is far below admission threshold
+
+Run44760812749 final and collected once: label147/note81 has1123/1123 below-threshold frames, score/threshold median0.000642,max0.0572975; direct248,local420,evidence391. Snapshot and raw MIDI bit-identical; installed unchanged. This excludes assignment eviction and onset-energy as the first failure for this passage, not acoustic pitch presence. Follow-up44761835713 dispatched at same source/worker for co-occurring label148/note72; collect once, do not duplicate. Note67/label163 remains undispatched. Checkpoint: docs/recovery/github-uncaptured-admission-trace-20261120.json.
+
+# Uncaptured admission trace dispatched
+
+Active checkpoint: docs/recovery/github-uncaptured-admission-trace-20261120.json. GHA44760812749 queued at source e33f941e37ad120bd2a25fd81d925faef383568c, worker efd8332f4e39d85ee77ce255f94c13743d7198f8. Existing activation-gates route, ordinary note81 label147, current collision-only ON. Require full snapshot/raw-MIDI identity. Collect small report once and bounded candidate evidence for admission analysis; do not redispatch. Labels148/note72 and163/note67 remain undispatched pending the first result. No installed change.
+
+# Uncaptured missing pitches ranked for bounded follow-up
+
+Saved analysis: build/recovery/cross-pitch-independent-20261120/uncaptured-ranking.json. Exact192321 omitted missing-pitch label-frames ranked by label. Existing historical note65 activation trace overlaps623 missing frames:618 captured fields agree, only5 uncaptured (historical direct=0); it cannot explain the bulk population. Do not repeat label451 activation work.
+
+Concrete next targets: co-occurring labels147/note81 and148/note72 at samples2692991..2764799, each1123 omitted missing frames, plus label163/note67 at2937791..3009599,1123 omitted frames. All within configured32..84 range. Use existing bounded candidate-decision trace on GHA with current collision-only reference and snapshot/raw-MIDI identity; inspect score/direct/local/evidence before proposing a policy. The local ordinary candidate traces inspected cover other pitches/windows; isolated profile traces are not substitutes. No new job dispatched.
+
+# Missing-pitch trace omission identified
+
+Outcome capture in native/offline/replay.cpp:1045 filters inactive/unrescued/non-emitted candidates unless score/threshold>=0.20 AND direct fundamental AND (local peak OR candidate evidence); selected/coasting are included. Thus192321 uncaptured missing-pitch label-frames cannot distinguish these failing gates. Detector already computes selection-independent preselection energy/ratios. Existing bounded candidate-decision trace at replay.cpp:3683 bypasses the weak-direct capture filter for its requested pitch; no new DSP instrumentation is required. Next reuse matching saved decision traces, then only if unavailable select bounded GHA windows to resolve the failed predicates. Do not infer acoustic absence or lower admission thresholds from missing rows. Coordination details appended to docs/recovery/CODEX-M3-ACK-20261120.md. No processing, policy or installed-score change.
+
+# Missing-pitch attribution: penalty relief is already rejected
+
+Current saved analysis: build/recovery/cross-pitch-independent-20261120/current-eviction-decision.json and current-missing-pitch-attribution.json. Strong DP eviction is predominantly no-positive-option, not capacity exhaustion; exact partition is in the decision report. Source native/src/polyphonic_pitch_detector.cpp computes option.score minus fretted penalties before DP. Existing state-local open-prior replay loses physical-long1886 matches and adds2426 wrong strings; fixed small-fret-relief screens also reject. Do not repeat either policy.
+
+Next actionable uncertainty:192321 missing-pitch label-frames have no captured candidate. Inspect the replay capture filter and existing selection-independent diagnostics to obtain the earliest failing eligibility stage; absence from the trace is not acoustic absence. Reuse existing records before dispatch, and keep labels out of detector decisions. Below-threshold53019 and selected-but-not-rendered6748 are separate populations; do not conflate them with penalty eviction. No source policy, installed score or live-readiness change.
+
+# Prioritize missing-pitch output over another lane-cost-only trial
+
+Active evidence: build/recovery/cross-pitch-independent-20261120/pitch-routing-decomposition.json, derived from collected run44752010601 report (no replay). Current-ON expected-pitch-weighted sample durations: exact string8580917/33819101 (25.37%); pitch present but not exact string4944428 (14.62%); pitch absent20293756 (60.01%). Missing pitch is80.41% of non-exact duration. Group/interval bounds and pitch membership were checked; all499 groups have single source labels and denominators reconcile. These are raw MIDI durations, not snapshot scores, live chord success or project completion.
+
+Contradicted-retention trial raises exact duration291784 but pitch presence only36800; it remains rejected for passage losses. Existing supported/combined/coasting renewal trials44326368327,44412041462,44413488077 already lose valid holds. Reserved-assignment counterfactual44417227738 shows freeing lane0 alone still misassigns49/52. Do not repeat those fixes or diagnose label367 again.
+
+Next implementation decision: use existing saved candidate outcomes to attribute missing-pitch intervals to absent candidates, below-threshold admission, selection eviction, or lifecycle/output gating before selecting the responsible code path. Prioritize recurring loss across pitches/passages, preserving genuine octave controls and false-output safety. Existing ordinary pitch-presence by polyphony is45.13% for two pitches,41.19% for three,40.14% for four,38.50% for five. A strict string metric explains part, not all, of low coverage; these settings and corpus do not invalidate earlier successful live chord examples. Installed scores unchanged; no new processing dispatched.
+
+# Reuse existing stale-owner diagnosis for label367
+
+Active checkpoint: docs/recovery/github-note42-correction-trace-20261118.json. Latest corroboration: build/recovery/cross-pitch-independent-20261120/lost-label367.json. All12288 lost exact-held samples retain note49 on lane2; note42 occupies lane0 for12224. These are MIDI sample durations, not208 lost snapshot frames.
+
+Existing paired trace44350765385 already shows note42 correctly moves lane2 to lane0 at7038783 when retention changes -1024 to -4. Label364 expects that lane until7089600; new label367 expects note49 there from7099417. Saved lifecycle evidence identifies unsupported selection resetting note42 release125 to0 at7100927. Do not reject the useful earlier correction or dispatch duplicate tracing.
+
+Next: reuse existing supported-sustain trial regressions to select a scoped stale-ownership change that preserves correct lane transfers, genuine octave controls and false-output safety. No new processing, DSP policy or installed-score change. Coordination: docs/recovery/CODEX-M3-ACK-20261120.md, final section.
+
+# Octave control is an admission negative, not an output defect
+
+Active checkpoint: docs/recovery/github-octave-phase-trace-20261120.json, admission_context. Saved control false74 has0 snapshot outputs and0 active ticks across1090 ticks; all1090 are below threshold. It is a safety control for weak-candidate rescue, not a demonstrated current false-output failure. Genuine label42/note60 has705 snapshot outputs and687 coasting candidate observations despite median score/threshold0.0925; genuine label29/note56 has1003 snapshot outputs and1001 selected observations. These output counts are not exact-string match counts.
+
+Source selector only compares against already spectrally eligible stronger candidates; harmonic shadow additionally requires upper fundamental <0.70*lower. False74 median upper/lower fundamental1.716 means adding a below-threshold parent alone does not provide harmonic attribution. Genuine60 median0.0117 demonstrates why energy-ratio suppression would threaten useful held notes. No new blanket veto, suppression trial, source change or installed gain is justified. Report: build/recovery/cross-pitch-independent-20261120/octave-admission-context.json.
+
+Next: Return to missed-note admission: inspect the existing candidate-rescue and contradicted-retention trial passage losses before changing a gate. Preserve genuine octave labels29/42 and keep false74 at zero output. Do not spend another replay on a standalone octave suppression rule.
+
+# Full ordinary trace rejects standalone octave-parent veto
+
+Active checkpoint: docs/recovery/github-octave-phase-trace-20261120.json, full_parent_screen. Saved v4 trace screened across167025 ticks. Direct non-coasting lower-octave evidence coincides with1279 correct snapshot outputs and1279 matched label-frames (distinct units; coincident totals), including966 matched frames in genuine octave pairs. Concrete controls: label42/note60 over48 has508 matched frames with the proposed veto; label29/note56 over44 has441. The same evidence accompanies16990 wrong-note and1448 gap-extra snapshot outputs, but these are associations, not safely removable outputs. Reject a standalone parent veto. Missing candidate remains unavailable. No audio processing, dispatch, policy or installed-score change.
+
+Next: Inspect existing harmonic-overlap/admission implementation against genuine octave labels42 and29 and false74. Require upper-note evidence beyond parent presence; do not implement a blanket parent veto or repeat phase/envelope-only screens.
+
+# Joint parent context exposes admission failure
+
+Active checkpoint: docs/recovery/github-octave-phase-trace-20261120.json, joint_parent_context. False octave74 parent62 is direct on967/1090 ticks but never active:966 below-threshold and1 DP-evicted. Genuine70 parent58 is observed146/760 ticks, all coasting, only10 direct. Active-parent gating would miss this negative and could reject genuine70. Rising energy plus no active parent also admits125 false74 observations and24 gap70 observations. Next screen direct, non-coasting lower-candidate evidence across the saved ordinary trace, including genuinely annotated octave pairs, before defining an admission change. Saved-JSON/trace analysis only; installed output unchanged.
+
+# Bounded octave phase diagnostic collected
+
+Active checkpoint: docs/recovery/github-octave-phase-trace-20261120.json. Worker44755918838 completed successfully at source e33f941e37ad120bd2a25fd81d925faef383568c. Small report collected once; bulk remains remote. All six complete snapshot/raw-MIDI identities preserved. Phase alone does not separate fixed controls: genuine70 median -1.586 cents versus false octave74 +4.342 cents; genuine74 +22.894 cents. Gap70 has no valid parent phase. Do not use missing parent observations as absence or phase agreement as an octave veto. Use existing saved observations to evaluate joint causal onset and harmonic-parent evidence across the fixed positive/negative controls before any narrow default-off admission trial; preserve genuine octaves and gap safety. No single phase threshold is supported. Installed unchanged.
+
+# Phase comparison requires existing candidate trace
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace.harmonic_source_review. Saved v4 trace has zero valid target production-phase observations in all four controls (760/363/1107/1090 ticks); no paired phase comparison available. Artifact inventory contains no candidate trace. Next use existing independent-phase candidate-trace instrumentation in a bounded GHA replay, with target and parent, preserving controls/references. No new DSP instrumentation needed. Installed unchanged.
+
+# Harmonic source distinction narrowed
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace.harmonic_source_review. Existing +19 guard does not cover octave controls. Independent phase means selection-independent observation, not independent-source proof. Next locate saved phase trajectories for genuine74 and false-octave74; reuse evidence before instrumentation. Frequency agreement cannot reject a genuine octave. No policy or installed change.
+
+# Saved envelope comparison complete
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace.saved_envelope_analysis. Fixed 10ms adjacent energy means evaluated on saved v4 trace (no audio). Gap70 max rise0.97%, genuine70 47.26%, genuine74 95.09%, false octave74 48.00%. Therefore smoothing suppresses tail fluctuation but an envelope-rise threshold alone cannot separate these positive/negative cases. Octave-parent windows are unavailable in genuine74 and gap70, and incomplete elsewhere; never interpret that as absent parent. Synthetic step/missing-data checks passed. No admission policy or installed change. Next inspect existing harmonic-conflict evidence and saved paired-fit controls for independent-note evidence, without an envelope threshold sweep. Report: build/recovery/cross-pitch-independent-20261120/energy-envelopes.json.
+
+# Preselection energy comparison collected
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace. Run44752010601 final, small report and required v4 outcome collected once; outcome hash verified. Saved energy comparison: annotated70 longest segment max relative tick rise81.78%, gap70 tail39.06%, genuine74 96.33%, false octave74 55.86%. All have frequent rises. Gap70 tail ends at24.78% of starting energy, yet is not monotonic. Thus positive tick rise alone is insufficient admission evidence. Existing contradicted-retention policy remains rejected; installed output unchanged. Next evaluate a causal sustained envelope with competing-harmonic context using saved trace; no new audio extraction or dispatch. Evidence: build/recovery/cross-pitch-independent-20261120/energy-comparison.json.
+
+# Energy comparison final; trace collection in progress
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace. Worker44752010601 completed successfully; small report collected once. Existing contradicted-retention policy remains REJECTED: seven labels lose matches despite aggregate gains. Both reference snapshots and frozen v2 outcome fields retain identity. Bulk artifact14635902243 is downloading in existing exec session85673; do not restart it. Next verify extracted current-on v4 outcome hash and analyze contiguous observed energy segments. Installed output unchanged.
+
+# Pre-selection energy comparison dispatched
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace.recorded_comparison. Native validation44751512798 passed all steps. One worker44752010601 dispatched at source a6836fe3c586559d00b386f70c0ef63c4039a710 using ordinary-harmonic-fixed-competition / contradicted-retention. Collect small report once into build/github-results/preselection-energy-44752010601, then only needed current-on v4 outcome evidence. Analyze consecutive observed energies; missing rows unavailable. No policy or installed change.
+
+# Energy comparison prepared; native build running
+
+Current source a6836fe; portable validation44751512798 confirmed running at native build. Earlier44751335599 cancelled/superseded. Saved-only energy_segments.py staged under build/recovery/cross-pitch-independent-20261120; synthetic missing-observation check passed. No recorded v4 measurement or corpus dispatch yet. Next observe44751512798, then one ordinary contradicted-retention replay using validated source. Checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace. Installed unchanged.
+
+# Energy trace runner compatibility published
+
+Source a6836fe3c586559d00b386f70c0ef63c4039a710 preserves frozen v2 outcome identity while retaining new v4 diagnostic fields. Nineteen runner tests pass, including legacy field mutation rejection. Native energy-trace validation44751335599 and CI44751335627 remain in progress; new portable validation44751512798 is pending. No corpus dispatch. Next observe validations, then one ordinary replay using recorded contradicted-retention route for the pre-selection energy comparison. Installed unchanged. Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace.
+
+# Pre-selection energy trace published
+
+Active checkpoint: docs/recovery/github-short-window-identity-20261120.json, preselection_energy_trace. Source baf75dffede87b86cc7b59768ad24fcd7c003ed2 published. Outcome v4 appends raw pre-selection score/fundamental energy and observation validity. All 71 relevant Python tests pass; native validation pending. Prior source validation44750653416 and CI44750653600 completed successfully. No policy or installed change. Next observe new source validation, then bounded GHA trace comparison. Missing candidate ticks must remain unavailable; do not interpolate them as zero.
+
+# Pre-selection energy observation required
+
+Selected-only onset cannot diagnose missed note70. Saved trace confirms all771 label318 and354 nearby-gap candidate observations are below threshold. Source assignment loop computes posterior onset only for selected candidates; harmonic profile memories also accumulate only selected candidates (unselected inactive memories decay). Neither is a pre-admission attack history. Therefore do not dispatch a v3-only corpus rerun to answer this question.
+
+Next implement an offline-only pre-selection observation of current candidate harmonic energy, then derive causal rise/decay from consecutive ticks without resetting on selection. Compare annotated70, nearby gap70 and missed74/octave-negative controls before any admission policy. Existing native validation44750653416 and CI44750653600 are still in progress. Installed unchanged. Evidence: build/recovery/cross-pitch-independent-20261120/note70-onset-reachability.json.
+
+# Onset validity source validation running
+
+Source5e2cb13960748d710675a6e6b3b3cbe7726ad682 published. Portable native validation44750653416 and CI44750653600 confirmed in progress. Seventy relevant Python tests passed. Next observe existing validation; no corpus worker dispatched yet. Trace v3 adds validity only; installed behavior unchanged.
+
+# Onset validity implemented locally
+
+Outcome trace v3 now appends onset_observed; parser supports v1/v2/v3 and represents legacy validity as null. All 44 candidate outcome analysis tests pass, including observed/unobserved zero, legacy unknown, invalid validity rejection, and v3 population parity. Native serializer change reviewed; native GHA build and actual trace verification remain pending. No detector policy or installed output changed.
+
+Next: scoped source publication and GHA native validation, then a bounded trace observation without enabling posterior policy.
+
+# Onset trace interpretation corrected
+
+candidate outcome v2 serializes string_fret_onset_strength but omits string_fret_onset_observed. Diagnostics reset each decision; onset is assigned only in the non-fixed assignment context when all playable profiles are learned and learned_count > 0. That condition is not simply the posterior feature switch. The computed value also includes a first/pending-attack prior reset, so it is not an unconditional acoustic onset measurement.
+
+Accordingly, the earlier note70 onset=0 finding is a serialized value with unknown validity, not evidence of no acoustic attack. The saved label/gap frame counts and score overlaps remain unchanged. Persistence-only and residual-only admission remain unsupported by the broader screens. Next: expose validity in the trace and parser without enabling a production policy or changing detector output; then choose a bounded GHA observation if needed. No new audio processing or dispatch occurred for this correction.
+
+# Saved fit and lifecycle diagnosis
+
+Saved-only diagnosis: note71 overlaps harmonic4 of47 and harmonic2 of59; small added residual is not evidence against a genuine octave note. Annotated75 raw46 cannot reach annotated47 within35 cents; annotated74 also omits60. Note70 lifecycle screen over samples5950000..6030000:771/786 annotated frames and354/464 pooled nearby gap frames contain candidate70; onset=0, direct=local=1, active=attack=release=0 throughout candidate-present frames. Gap group includes pre/post gaps and is not contiguous. Score/fundamental ranges overlap. No onset/persistence-only rescue supported. Next inspect onset semantics and available causal envelope/change evidence, not another residual threshold sweep. Reports: build/recovery/cross-pitch-independent-20261120/fit-diagnosis.json and note70-lifecycle.json. No audio extraction, dispatch or production change.
+
+# Independent passage comparison collected
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.independent_passages`. Run44749814391 final success, small report collected once. Four of11 comparisons available; five frequency-bound abstentions and two silent-training abstentions. Annotated71 reduction0.000189925; annotated70 0.143043395; constant-gap70 0.114533219; mixed unannotated71 0.008297704. Gap70 exceeds original missed74 reduction0.088634322, so no scalar residual rule accepted. Three windows cross label boundaries; all passages are from the same recording. No installed score or runtime policy change. Next diagnose saved fit failures and temporal gap evidence before proposing replacement admission; do not tune a threshold to these cases.
+
+# Independent passage comparison dispatched
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.independent_passages`. Run44749814391 dispatched once at unchanged validated source daf9c0b490fb1f7fa33674f3d45047fb06d6be1a; worker51b8be3. Eleven windows, three mixed-label windows. Next collect m3-report-44749814391-1 once and evaluate every case/abstention. Installed unchanged.
+
+# Frozen-competitor comparison collected
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frozen_competitors`. Run44749388671 final success, small report collected once. Genuine missed74 residual0.10053545 ->0.01190113; octave-negative0.01855308 ->0.01803005. All paired fits converged, interior/full rank; competing frequencies fixed exactly. Diagnostic separation, not runtime gains. Next: Stage independent annotated-positive and octave/gap-negative passages using saved causal raw-candidate membership; apply unchanged paired fit on GHA before selecting any admission rule. No threshold fitted to these two cases; no runtime promotion. Installed unchanged.
+
+# Frozen-competitor paired fit dispatched
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frozen_competitors`. Source validation44748823274 passed. Worker44749388671 dispatched once at source daf9c0b490fb1f7fa33674f3d45047fb06d6be1a. Next observe existing run and collect m3-report-44749388671-1 once into build/github-results/cross-pitch-frozen-44749388671. Installed unchanged.
+
+# Frozen-competitor source validation running
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frozen_competitors`. Source daf9c0b490fb1f7fa33674f3d45047fb06d6be1a and worker e08193a published; metadata release cross-pitch-frozen-20261120 published. Source validation44748823274 in progress. No worker dispatched. After success dispatch one cross-pitch-shape/ordinary run at recorded source. Sixteen local synthetic tests pass; installed unchanged.
+
+# Frozen-competitor paired fit ready locally
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frozen_competitors`. Added training-only paired fit: refine competitors, freeze their frequencies, optimize candidate74 only; refit amplitudes on training and evaluate frozen validation. Invalid baseline/augmented fits abstain. Sixteen synthetic contracts pass, including frequency freezing and validation isolation. Two-window metadata staged in build/recovery/cross-pitch-frozen-20261120. Not published/dispatched. Next scoped review/publication and source validation before one GHA run. Installed unchanged.
+
+# Candidate-only octave comparison collected
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.candidate_counterexample`. Run44748547533 final success, small report collected once. Genuine missed74 validation residual0.10053545 ->0.01189771; both interior/full rank. Octave negative0.01855308 ->0.01521183, but augmented fit pushes note52 to -35c bound: inconclusive, no policy accepted. Next freeze competing frequencies from without74 training fit before adding74, to separate added-note evidence from nuisance retuning. Installed unchanged.
+
+# Candidate-only octave comparison dispatched
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.candidate_counterexample`. GitHub run44748547533 dispatched once at validated source d0ecff87ff320d7c15367a8d00524841afc8df0c. Four paired windows; metadata-only release published. Next observe existing run and collect m3-report-44748547533-1 once. Installed unchanged.
+
+# Candidate-only octave comparison staged
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.candidate_counterexample`. Four windows prepared in build/recovery/cross-pitch-counterexample-20261120: genuine49/52 +/-74 and counterexample40/52/60/62 +/-74. Membership uses saved direct/local candidates, no annotation fill. Metadata archive2516 bytes; no audio copied or processed. Next publish a separate small release, change worker input tag/hash, and dispatch the validated source once. Not yet published/dispatched. Installed unchanged.
+
+# Persistence screen rejected; octave counterexample retained
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. Full saved ordinary trace screen (167025 frames) rejects persistence-only replacement for calibration margin. At128 qualifying frames:2966 annotated/correct-lane,1526 annotated/wrong-lane,1328 unannotated-note and634 unlabeled-gap candidate-frames. These are candidate screen counts, not emitted MIDI or replay gains. Unannotated note74 persists with annotated note62 at sample2948031, providing an octave-related negative control. Next: Stage the preserved octave counterexample for the same training-only joint fit: compare detector frequencies with and without raw candidate74 against the genuine missed74 window. Test whether additional independent energy distinguishes pitch presence; keep pitch detection separate from string identity. No persistence-only policy trial. Installed unchanged.
+
+# Persistent note74 admission exclusion confirmed
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. Saved label365/note74 admission history: 1110/1122 frames contain the candidate, all below threshold, zero matches. Direct/local run lasts1107 consecutive frames; neighboring subthreshold notes73/75 last at most7. Calibration margin remains0.01094314..0.01210885 against0.02 required. Evidence ticks alone are not consecutive direct/local persistence: unannotated note51 reaches99 evidence ticks despite only2 qualifying frames. Next: Evaluate consecutive direct/local persistence plus existing band-rescue predicates across the saved ordinary trace, scoring annotated and unannotated candidates separately before implementing a diagnostic-only admission change. Do not infer safety from this one passage. Installed unchanged; no new cloud job launched.
+
+# Refined joint fit collected; note74 admission lead
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frequency_refinement`. Run44747583796 succeeded; small report collected once, 14 remote tests passed. Training-only detuning refinement: label366 oracle validation residual 0.01189770719 versus detector 0.10053546294, both interior to bounds; useful missing-note74 lead, not runtime acceptance. Label54 hits bounds and remains inconclusive. Installed unchanged. Inspect saved note74 admission history around label365/366 and distinguish legitimate subthreshold fundamentals from false candidates before a narrow admission trial; do not lower thresholds broadly.
+
+# Refined joint fit dispatched
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frequency_refinement`. Source validation44747287024 passed. Worker44747583796 dispatched once at source d0ecff87ff320d7c15367a8d00524841afc8df0c. Next observe this run and collect small artifact m3-report-44747583796-1 once into build/github-results/cross-pitch-refined-44747583796. Inspect convergence/bounds and isolated controls before interpreting chord residuals. Installed unchanged.
+
+# Refinement source validation running
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frequency_refinement`. Source d0ecff87ff320d7c15367a8d00524841afc8df0c and worker b3b82d377ca80e2955c4b95d4aefc2a7651d64d6 published. Source run44747287024 in progress; no worker dispatched yet. After success dispatch one cross-pitch-shape/ordinary run at this source. Fourteen synthetic tests pass; installed unchanged.
+
+# Training-only frequency refinement ready locally
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner.frequency_refinement`. Separate module preserves existing prototype; optional runner flag refines supplied frequencies within +/-35 cents using older half only, capped at60 optimizer evaluations. Fourteen synthetic contracts pass, including validation isolation, detuning recovery, missing-pitch preservation and boundary/silence checks. Not dispatched; installed unchanged. Next wire flag/tests into worker, scoped review and source validation before one four-window GHA run.
+
+# Joint-fit diagnostic collected
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner`. Run44746866057 succeeded; small report collected once under build/github-results/cross-pitch-shape-44746866057. Completed diagnostic; no promotion. Nominal-frequency validation residuals are high even for isolated controls. Detector versus oracle sets differ in tuning and membership, so their residual difference cannot isolate missing-note effects. Next separate tuning from pitch-set membership with training-half-only frequency refinement and frozen validation, preserving isolated controls; no runtime change.
+
+# Joint-fit diagnostic dispatched
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner`. Source validation44746628876 passed. Worker44746866057 dispatched once: task cross-pitch-shape, ordinary, source dbd8572dd00cd2eb36c826570d652b76006e1d7a, worker2678790d18ba3402febcff0094b89d4e6bd5aec1. Next observe and collect m3-report-44746866057-1 once into build/github-results/cross-pitch-shape-44746866057. Installed unchanged.
+
+# Joint-fit source validation running
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner`. Source `dbd8572dd00cd2eb36c826570d652b76006e1d7a` and worker `2678790d18ba3402febcff0094b89d4e6bd5aec1` pushed. Evidence release `cross-pitch-shape-20261120` published. Portable run44746628876 confirmed in progress at native build. Next observe that run; if successful dispatch exactly one `cross-pitch-shape` task, dataset ordinary, source above. No worker dispatched yet. Four pinned windows; installed unchanged. ntfy HTTP200 inline receipt saved.
+
+# Joint-fit controls and worker wiring ready locally
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner`. Four pinned windows: chord labels54/366 with separate oracle/detector sets, and lane0/lane1 note52 isolated oracle-only controls. Worker task `cross-pitch-shape` wired locally; skips native builds. Eleven synthetic tests, workflow YAML/shell syntax and evidence hashes pass. Tiny evidence bundle2592bytes staged, not uploaded; no commit/push/dispatch this turn. Next scoped diff review, publish/commit and source checks before one GHA dispatch. Installed unchanged.
+
+# Joint-fit chord inputs staged
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner`. Two pinned 160ms chord windows at labels54/366 are staged in `build/recovery/cross-pitch-shape-20261120/manifest.json`, with saved causal detector frames and separate annotation-oracle frequencies. Labels stay constant through both windows. PCM16 ordinary input mismatch fixed; eleven synthetic checks pass. Next stage isolated control, then wire GHA. No audio processing, dispatch, or installed change.
+
+# Joint harmonic-fit runner prepared
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`, `joint_fit_runner`. New `tools/portable_cross_pitch_shape.py` runs only on GHA, pins waveform and frequency evidence, separates oracle/detector inputs, and bounds 32 windows to 320ms each. Ten synthetic checks passed. Existing prototype untouched. Next prepare labels54/366 and isolated-control manifest from saved provenance/frequencies, then wire worker; no recorded execution or dispatch yet. Installed unchanged.
+
+# Temporal profile feature rejected; return to chord overlap
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, `ungated_phase_generalization.temporal_feature_diagnosis`. Fixed half-window-change addition worsens held-pass56->55/91 and held-pitch51->44/91;4 abstentions unchanged. No profile promotion or further weight tuning. Next prepare bounded GHA joint-fit runner using existing `tools/cross_pitch_shape_fit.py` and target labels54/366 per `docs/recovery/github-short-window-identity-20261120.json`. Do not modify the existing prototype or process recorded audio locally. Installed unchanged.
+
+# Profile margin-only safety gate rejected
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, `ungated_phase_generalization.confidence_margin_diagnosis`. Same-pitch held-pass classifier has19 wrong/87 eligible, including a wrong prediction with0.947 relative margin and nearest squared distance0.0234. Margin is not probability; no threshold/weight promotion. Next evaluate fixed temporal harmonic-change features from saved half-window vectors with held-out splits, exploratory only. Installed unchanged; no new job.
+
+# Note54 profile variation measured
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, `ungated_phase_generalization.note54_repeatability`. Saved-vector analysis: lane4 cross-pass distance0.936 versus within-take half distances0.166/0.165; both takes closer to same-pass lane5. More settling alone unsupported. Next examine held-out correct/wrong distance margins before any profile-weight change; no threshold tuning or promotion from these outcomes. All91 snapshot/MIDI identities preserved; installed unchanged. No new job launched.
+
+# Saved-vector diagnosis: pitch pooling contributes
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, `ungated_phase_generalization.saved_vector_diagnosis`. Within-pitch held-pass comparison gives68/91 correct versus pooled56/91, both4 abstentions; lane4 improves1/14 to8/14. Exploratory only, no promotion. Both lane4 note54 takes still predict lane5. Next inspect their saved half-window profiles and pass variation; no new audio processing needed. Run44744371102 remains final/collected; do not poll or redownload.
+
+# Independent phase result collected
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `ungated_phase_generalization`. Worker44744371102 final, small report collected once; bulk remote. Eligible87/91 (previous74), snapshot/MIDI identity91/91. Held-pass56/91 correct with4 abstentions (previous41/91,17); held-pitch51/91 with4 abstentions (previous24/91,40). Isolated classification only, no installed tracking gain or promotion. Next inspect report confusion by lane/pitch before choosing targeted evidence improvement.
+
+# Independent phase diagnostic dispatched
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `ungated_phase_generalization`. Source320cd6724ac3057ccc1343f327d5b33d387505ae passed Portable44743678016 and CI44743678051. Exactly one worker44744371102 dispatched at worker8cafc2df using existing pinned runtime-profile-multipitch-20261120 inputs. Next monitor and collect small report once into build/github-results/runtime-profile-generalization-44744371102; require all91 snapshot/MIDI identities and retain all takes/fixed windows. Installed unchanged.
+
+# Independent phase correction: source validation running
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `ungated_phase_generalization`. Source320cd6724ac3057ccc1343f327d5b33d387505ae pushed; portable44743678016 and CI44743678051 observed in progress. Diagnostic observer now independent of production signal floor; production gates unchanged. New native regression test awaits GHA;17 Python tests pass. Next require source success, then dispatch one runtime-profile-generalization using existing pinned release and worker. No new worker dispatched yet.
+
+# Phase traces collected: signal-floor reset identified
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, corrected_generalization.phase_diagnosis. Download session65758 completed exit0; do not repeat. Saved traces separate15 zero-history and2 settled out-of-range rejections. Lane0 note53 label21 resets at sample63231 as fast energy crosses below the configured -62dB floor. Next assess diagnostic-only independent phase below production gating using saved evidence; no production change or new job yet. See latest CODEX-M3-ACK-20261120.md.
+
+# Lane0 phase diagnosis: existing trace download active
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `corrected_generalization.bulk_download`. Bulk artifact m3-evidence-44741545988-1 download started once; session65758/PID412576 confirmed live. Poll this handle, do not restart. Source phase validity requires both240 accepted updates at96k and cents within +/-50; small report merges these causes. After download inspect candidate.tsv via prepared build/github-results/runtime-profile-generalization-44741545988/diagnose-phase.py. No replay/DSP change.
+
+# Runtime profile generalization collected: not ready for promotion
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `corrected_generalization`. Run44741545988 is final; small report collected once. All91 snapshot/MIDI references bit-identical;74 eligible. Held-pass41/91 correct (17 abstentions), held-pitch24/91 (40 abstentions). Lane0 eligible3/15, only note52; note52 pitch holdout lacks lane0 training. Next diagnose lane0 phase eligibility for notes53–56 from existing traces/source. Bulk remains remote; do not rerun or redownload small report. Installed unchanged.
+
+# Corrected runtime profile diagnostic dispatched
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `corrected_generalization`. Source38457d58c47d24933b1d4fed47342b42e8369f90 passed portable44741245650. Worker44741545988 dispatched once at worker8cafc2df1fc6fc4009f97eff8146681e0e2a0b6c using existing pinned runtime-profile-multipitch-20261120 release. Fixed320–480ms, four common harmonics, strict phase eligibility, all91 takes. Next monitor this run and collect small report once into build/github-results/runtime-profile-generalization-44741545988; do not duplicate dispatch. Installed unchanged.
+
+# Corrected runtime diagnostic: source validation pending
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`, key `corrected_generalization`. Source38457d58c47d24933b1d4fed47342b42e8369f90 pushed; portable validation44741245650 queued. Next wait for success then dispatch exactly one runtime-profile-generalization diagnostic using existing worker8cafc2df and pinned runtime-profile-multipitch-20261120 release. No corrected worker dispatched yet. Installed unchanged.
+
+# Runtime profile harness corrected; pending GHA validation
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Run44739727240 final and both artifacts collected. Confirmed silent pre-roll from staging generator; phase cannot settle within original160ms. Uncommitted harness now uses fixed320–480ms label-relative window and four common enabled harmonics, preserving strict phase validity and all91 takes. Nineteen synthetic/vector tests passed. Next scoped commit/source GHA validation and one corrected diagnostic on existing pinned release. Installed unchanged.
+
+# Multi-pitch diagnostic collected: eligibility failure
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Run44739727240 final success, small report collected once; bulk remote. All91 snapshot/MIDI identities pass, but zero eligible measurements and both holdouts abstain91/91. All independent-phase eligibility checks fail; notes53..56 additionally lack six positive energies. Next diagnose measurement path before rerun or policy change. Installed unchanged.
+
+# Multi-pitch runtime diagnostic dispatched
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Worker run44739727240 dispatched once at source fbb38d0599d7f253339cbcd0e711ede116cc3512, worker 8cafc2df1fc6fc4009f97eff8146681e0e2a0b6c. Source validation44734773154 passed. Input release runtime-profile-multipitch-20261120 uploaded; remote size240835373 and SHA256 f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69 verified. Repository Ajuntanaga/m3-offload is public. Next monitor this run and collect small report once; do not duplicate dispatch. Installed unchanged.
+
+# Multi-pitch GHA extraction prepared
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Added `tools/prepare_runtime_profile_clips.py`: GHA-only extraction, pinned raw hashes, fixed label bounds and 250 ms pre-roll, exact samples retained. Ten synthetic/vector tests pass. No recorded audio processed, upload, commit or dispatch. Next package private raw inputs and wire the worker workflow. Installed unchanged.
+
+# Multi-pitch runtime runner prepared
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. New uncommitted runner `tools/portable_runtime_profile_generalization.py` uses fixed91-take manifest, notes52..56, all6 lanes, raw runtime shares and independent-phase eligibility; pass/pitch holdouts fit training-only transforms. Traced/untraced snapshot and MIDI identity required per clip. Eight synthetic/vector tests passed. No native replay/audio processing, upload, commit or dispatch this turn. Next prepare authorized private GHA input staging/workflow task. Installed unchanged.
+
+# Multi-pitch input coverage selected
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Input plan `docs/recovery/runtime-profile-multipitch-input-plan-20261120.json` selects all 91 raw-excerpt takes for common notes52..56, lanes0..5, from saved labels/manifests only. Existing releases lack this overlap; no audio read/upload or job dispatched. Next prepare GHA input staging and runtime extraction with pass/pitch holdouts and output/MIDI identity. Installed unchanged.
+
+# Runtime profile generalization evaluator prepared
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Local evaluator tools/runtime_profile_generalization.py and four synthetic tests added. Saved note52 pass split reproduces21/28, six abstentions; pitch holdout correctly abstains28/28 because no other training pitch exists. No source commit/job or production change. Next select existing authorized multi-pitch inputs for GHA feature extraction.
+
+# Paired harmonic measurement collected
+
+Active checkpoint: `docs/recovery/github-paired-harmonic-measurement-20261120.json`. Worker44733520367/sourcec2b9708 final success; small report collected once, bulk remote. All28 output/MIDI identities;22 eligible clips and six retained abstentions. Median runtime/spectral-peak h2 share ratio: lane0 51.55, lane1 3.48; lanes4/5 near1. Measurement mismatch, no tracking gain. Saved-vector fixed-fold control: spectral-trained/runtime-tested cosine12/28, log8/28; runtime-trained cosine16/28, log21/28, six abstentions throughout. Next prepare runtime-matched calibration with held-out pitch/pass tests; do not repeat completed complex comparisons or promote profile weight alone. Installed unchanged.
+
+# Runtime Q15 sensitivity measured
+
+Active checkpoint: `docs/recovery/github-signal-window-20261120.json`. Saved-vector Q15 rounding: raw21/28 to20/28, six abstentions retained, pair6/8 to5/8. No zeros in264 eligible harmonic bins; half-step floor alone unchanged. This is not a bank rebuild or production gain. Next trace factory-bank construction versus runtime measurement semantics before storage/scoring edits. Claude retains label provenance. No new jobs or installed changes.
+
+# Common-support control: no complex-estimator gain
+
+Active checkpoint: `docs/recovery/github-signal-window-20261120.json`. Saved-feature comparison holds training clips and eligibility identical: raw runtime21/28, phase21/28, FFT20/28, nominal19/28, all six abstentions retained. Post-hoc diagnostic, no production change. Claude owns label/extraction provenance; Codex next assesses raw log-shape calibration representation. No jobs pending for this diagnostic; do not rerun/download completed44731936195.
+
+# Fixed-window signal diagnostic collected
+
+Active checkpoint: `docs/recovery/github-signal-window-20261120.json`. Run44731936195/source5391eaa final success; small report collected once, bulk remote. All28 output/MIDI identities pass. Six abstentions mix off-target spectral content, weak/fading signal and late settling. No policy or score change. Next inspect saved extraction/label provenance for s0 attack3 and s4 attack2; do not change labels or exclude clips. Portable44731929813 passed.
+
+# Independent phase abstentions diagnosed
+
+Active checkpoint: `docs/recovery/github-independent-phase-20261120.json`.
+Run 44731078177 is final and collected, including bulk traces once. Six trace hashes verified. Independent phase remains 21/28 with six abstentions; all 28 output/MIDI identities pass. Two clips have settled estimates outside +/-50 cents throughout; two have zero updates; one loses its phase state; one settles for only the final 16/240 ticks. These are estimator observations, not verified played pitches. Next check frequency/label alignment and signal eligibility from saved evidence before proposing another GHA measurement. Installed output unchanged.
+
+# Independent phase result unchanged
+
+Active checkpoint: `docs/recovery/github-independent-phase-20261120.json`. Worker44731078177 and source CI44730757776 passed; small report collected once. Independent phase remains21/28, six abstentions; pair6/8. All28 output/MIDI identities. Bulk trace download is active session84755; do not duplicate. Next inspect invalid pitch values; installed unchanged.
+
+# Independent phase recorded comparison dispatched
+
+Active checkpoint: `docs/recovery/github-independent-phase-20261120.json`. Portable44730757500 passed; CI44730757776 pending. Follow worker44731078177, source170ade0 / worker04f9d44, same28 clips with independent diagnostic phase. Collect small report once; no duplicate dispatch. Installed unchanged.
+
+# Independent diagnostic phase source validation
+
+Active checkpoint: `docs/recovery/github-independent-phase-20261120.json`. Source170ade0 pushed; Portable44730757500 running. Twelve vector checks passed. Continuous diagnostic phase is candidate-trace-only, separate from production/discarded state. Follow existing source validation, then one same28-clip worker diagnostic. No worker dispatched; installed unchanged.
+
+# Phase abstentions explained from saved traces
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Six phase abstentions: five note52 candidates inactive throughout; sixth activates too late for160ms phase evidence. All complex cells valid. Bulk44729681894 now collected once for TSV diagnosis; do not redownload. Next diagnostic-only admission-independent pitch evidence; production gates/output unchanged. See CODEX-M3-ACK-20261120.md.
+
+# Recorded complex diagnostic collected: mixed result
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Worker44729681894 final success, small report collected once. All28 identities pass. Nominal pair7/8 vs baseline5/8, all-six18/28 vs20/28. Runtime-phase pair6/8 with2 abstentions; all-six21/28 with6 abstentions. FFT8/8 and20/28. No production promotion. Next inspect phase abstentions and remaining errors; bulk remains remote, installed unchanged.
+
+# Corrected recorded complex diagnostic dispatched
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Source9a7fc90: CI44729104074 and Portable44729104231 passed. Follow worker44729681894, task runtime-harmonic-identity note52, worker04f9d44. Collect small report once; bulk remote. Same28 clips; no duplicate dispatch or installed change.
+
+# Candidate trace test parsing corrected
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Source9a7fc90 fixes newline handling in the trace test. Portable44729104231 passed (native tests, replay contracts, buffer parity); CI44729104074 still running. Follow these checks before one corrected recorded diagnostic dispatch. Prior Portable44728653154 failed only three identical header assertions. Installed output unchanged.
+
+# Recorded complex diagnostic trace field fixed
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Worker44728377518 failed on missing phase_cents; small logs collected once. Native trace now appends current tracking.phase_cents with header/value contract. Fix9d7ec65 pushed; follow new source checks then dispatch corrected task once. No complete recorded result or installed change.
+
+# Recorded complex identity dispatched
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Portable44728046683 passed. Follow worker44728377518 at source423031d / worker04f9d44, runtime-harmonic-identity note52. Collect small report once; bulk remote. Same28 clips, nominal and runtime-phase complex recovery; installed unchanged. Do not duplicate dispatch.
+
+# Recorded complex identity source validation
+
+Active checkpoint: `docs/recovery/github-runtime-complex-identity-20261120.json`. Source423031d pushed; Portable44728046683 running. Twelve vector checks passed. Follow existing source checks then dispatch runtime-harmonic-identity once, note52. Worker unchanged04f9d44; no worker dispatched yet. Installed unchanged.
+
+# Recorded complex-cell diagnostic prepared
+
+Uncommitted tools/portable_runtime_harmonic_identity.py v2 now reports nominal and valid-runtime-phase complex recovery, input-referred through exact15Hz DC transfer. Same28 clips, fixed160ms windows, held-pass evaluator; invalid ticks retained as abstentions. Twelve vector contracts pass. Next inspect scoped two-file diff, commit/push via authorized route, validate source checks, then dispatch existing runtime-harmonic-identity worker once. No recorded execution or new dispatch yet. Active scientific checkpoint remains docs/recovery/github-complex-harmonic-unmix-20261120.json; installed unchanged.
+
+# Complex-cell settled synthetic gate resolved
+
+Active checkpoint: `docs/recovery/github-complex-harmonic-unmix-20261120.json`. Collected worker44727449290: all12 identities. Raw comparison16/24 passed; source-derived15Hz DC-filter transfer explains bias. Input-referred reanalysis24/24 within original1e-6 tolerance, max2.312e-7. No fit or replay. See dc-transfer-reanalysis.json. Next bounded recorded28-clip diagnostic with explicit frequency hypotheses; onset and real-note discrimination remain unverified. Installed unchanged; do not rerun completed worker.
+
+# Complex-cell result collected: measurement gate failed
+
+Active checkpoint: `docs/recovery/github-complex-harmonic-unmix-20261120.json`. Worker44727449290 final success, small report collected once. All12 identities pass; 16/24 settled windows meet1e-6 error. Stronger harmonic bias ~0.62-0.63% fails gate. Next inspect preprocessing transfer; no recorded probe or promotion yet. Bulk remote, installed unchanged.
+
+# Complex-cell synthetic probe dispatched
+
+Active checkpoint: `docs/recovery/github-complex-harmonic-unmix-20261120.json`. Source CI44726870412 and Portable44726870416 passed. Follow worker44727449290 at source662e713 / worker04f9d44. One bounded harmonic-leakage-probe, note52; no duplicate dispatch. Collect small report once; bulk remote. Known-frequency synthetic separation only; installed unchanged.
+
+# Complex-cell source validation running
+
+Active checkpoint: `docs/recovery/github-complex-harmonic-unmix-20261120.json`. Source662e713 pushed. CI44726870412 and Portable44726870416 confirmed in progress. Follow these existing runs; after pass dispatch one harmonic-leakage-probe at pinned source with note52. Worker unchanged04f9d44; no worker dispatched yet. Three vector tests pass; native validation pending. Installed unchanged.
+
+# Complex runtime probe wired locally
+
+Active checkpoint: `docs/recovery/github-harmonic-leakage-probe-20261120.json`. Uncommitted replay trace now appends complex validity/decay and six frequency/real/imag triples using the existing read-only accessor. Native trace contract updated; native execution pending GHA. Probe v2 reports oracle-frequency unmixing eligibility, h2 ratio range/median and condition per window. Three vector tests and Python syntax/diff checks pass. Next review scoped diff, commit/push through authorized route, run source CI then one new bounded harmonic-leakage-probe. No dispatch yet; do not confuse new preparation with completed run44726200291. Installed unchanged.
+
+# Complex-cell diagnostic prepared
+
+Active checkpoint: `docs/recovery/github-harmonic-leakage-probe-20261120.json`. Offline `tools/harmonic_cell_unmix.py` and three passing synthetic-vector contracts are prepared, uncommitted. No native/recorded-audio execution or installed change. Next reuse/expose complex correlations plus cell frequencies/decay in the bounded replay trace and evaluate on GHA synthetic controls before recorded clips. Source hypotheses remain explicit; square-fit residual is not evidence of correct hypotheses. Completed worker44726200291 stays final/collected.
+
+# Synthetic runtime leakage confirmed
+
+Active checkpoint: `docs/recovery/github-harmonic-leakage-probe-20261120.json`. Worker44726200291 final success and small report collected once. All12 output/MIDI identities pass. Pure fundamental settled h2/h1 about0.00065 at0cents: exceeds weak2e-5 input by over30x. See leakage-summary.json under collected directory. Next inspect/use complex cancellation for a diagnostic estimator; scalar power subtraction is invalid. Recorded causal contribution and tracking gains unmeasured; installed unchanged. Do not repoll/redownload.
+
+# Synthetic runtime leakage probe dispatched
+
+Active checkpoint: `docs/recovery/github-harmonic-leakage-probe-20261120.json`. Follow worker44726200291, source78c76ab / worker04f9d44; source Portable44726169854. Twelve generated controls, no recording download or DSP policy change. Collect small report once; bulk remote. Installed unchanged.
+
+# Synthetic runtime leakage probe prepared
+
+`tools/portable_harmonic_leakage_probe.py` prepares12 synthetic actual-replay cases: note52 at0/-20cents, h2 power0/2e-5/1e-3, two harmonic phases. Reports160ms windows at0/400/800ms after generated onset, split by runtime phase validity; requires traced/untraced snapshot and raw MIDI identity. Syntax and tiny float-WAV vector round-trip passed locally. No native/audio replay, commit or dispatch yet. Next wire this runner into the existing GHA worker route and execute there. Active checkpoint remains `docs/recovery/github-runtime-harmonic-identity-20261120.json`. Installed unchanged.
+
+# Runtime selectivity mechanism narrowed
+
+Active checkpoint: `docs/recovery/github-runtime-harmonic-identity-20261120.json`. Analytic one-pole transfer (no audio/native execution) predicts pure note52 fundamental leakage h2/h1=0.000647..0.001209 for0..-20cents, comparable in scale to recorded0.0010. Saved `build/github-results/runtime-harmonic-identity-44725208675/analytic-resonator-response.json`; not measured causal attribution. Next bounded GHA synthetic check: actual cells with pure fundamental versus known weak partials, finite windows and phase validity; inspect existing complex cancellation route before any shape-policy change. Claude asked complementary source-only cancellation-path question. Installed unchanged.
+
+# Runtime harmonic result collected
+
+Active checkpoint: `docs/recovery/github-runtime-harmonic-identity-20261120.json`. Worker44725208675 final success, small report collected once; bulk remote. Runtime log shape pair5/8 (1/2,1/2,3/4) versus FFT8/8; both all-six20/28 with different errors. All28 numerically eligible, zero abstentions, all28 snapshot/MIDI identities pass. Default bank and label-relative isolated windows only. Next inspect resonator selectivity/correction and weak-partial leakage before a policy trial. Installed unchanged. Do not repoll/redownload.
+
+# Runtime harmonic diagnostic dispatched
+
+Active checkpoint: `docs/recovery/github-runtime-harmonic-identity-20261120.json`. Source CI44724560684 and Portable44724560757 passed. Follow worker44725208675, source b89c83e / worker0b1e53f, runtime-harmonic-identity. Collect small report once into build/github-results/runtime-harmonic-identity-44725208675; keep bulk remote. All28 clips retained; default replay bank; no installed change.
+
+# Runtime harmonic diagnostic source checks pending
+
+Active checkpoint: `docs/recovery/github-runtime-harmonic-identity-20261120.json`. Source b89c83e and worker 0b1e53f pushed. Follow existing CI44724560684 and Portable44724560757; do not duplicate. Eight vector checks pass. Next dispatch one runtime-harmonic-identity task after source checks pass. No worker dispatched yet; installed unchanged.
+
+# Runtime harmonic trace prepared
+
+Added diagnostic-only corrected_harmonic_energy_1..6 columns to the bounded per-note replay trace, with a read-only detector accessor. Native trace contract now checks column alignment and finite nonnegative energies. This measures the runtime estimator directly rather than substituting FFT shares. Native build/test and traced-versus-untraced identity remain pending on GHA; no dispatch or installed change. Next validate and collect the staged note52 clips through the existing offload route, retaining all takes and reporting per-pass eligibility. The cross-pitch prototype remains synthetic-only. Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`.
+
+# Cross-pitch diagnostic prototype prepared
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. New `tools/cross_pitch_shape_fit.py` fits supplied-frequency harmonic sources jointly on the older half and scores frozen coefficients on the newer half. Five synthetic contracts pass, including overlap recovery, shared-harmonic abstention, omitted-source residual and held-out isolation. No recorded audio or DSP changes. Next wire bounded GHA target/regression windows with oracle versus detector inputs and isolated references; frequency/decay mismatch remains untested.
+
+# Narrow-band alternative screened geometrically
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. See `resolution_geometry`: label54 has0 nonoverlapping Hann mainlobes at80ms;2 at160ms, reduced to1 under a +/-10cent sensitivity scenario. This does not measure audio contamination, but does not support a simple narrower-band shape trial. Next prepare cross-pitch joint spectral explanation with oracle and detector-candidate roles separate; existing joint fit tools cover same-note sources only. No new audio processing or DSP policy.
+
+# Chord transfer limitation identified
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. Exact early-probe integration bands contain competing annotated harmonic centers in6/6 bands for label54 and5/6 for label366. Saved chord-band-overlap.json is geometry, not audio contamination measurement. Do not transfer isolated8/8 pair result into a chord bonus. Next resolve extraction overlap with resolution-aware peaks or joint explanation; Claude has the complementary runtime representation comparison request. No additional audio processing or policy change.
+
+# Early-label identity result collected
+
+Active checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. Worker44723230792 final success, small report collected once. Shape pair8/8; all-six20/28 (folds6/6,5/6,9/16). Combined features worse:7/8 and16/28. Evidence supports early shape discrimination in isolated note52, not a chord policy or live gain. Next compare this representation and training provenance with runtime profile handling before a bounded chord diagnostic. Installed unchanged. Do not poll or redownload completed run.
+
+# Short-window identity diagnostic dispatched
+
+Active diagnostic checkpoint: `docs/recovery/github-short-window-identity-20261120.json`. Worker44723230792 queued at source3d2f328 / worker0fe53f3. Follow this existing run; collect small report once into build/github-results/short-window-identity-44723230792. No duplicate dispatch. Fixed160ms label-relative note52 features, existing remote inputs; installed output unchanged. No measured tracking gain yet.
+
+# Short-window identity worker route prepared
+
+`tools/portable_short_window_identity.py` now retains runtime source/input provenance and reports per-fold correct/total/abstained counts. Four durable vector-only contracts in `tests/test_portable_short_window_identity.py` pass: repeated takes, ties, training-only scaling and missing classes. Worker checkout `build/recovery/m3-offload-worktree` has an uncommitted `short-window-identity` task using existing `partial-identity-note52-20261109` inputs, skipping native builds. YAML parsing and all workflow shell syntax pass. No recorded audio processing, commit, push or dispatch in this preparation. Next publish the scoped source/worker changes through the established route and run one bounded diagnostic. Installed output unchanged; acoustic onset remains unverified. Active scientific checkpoint remains `docs/recovery/github-reserved-assignment-costs-20261118.json`.
+
+# Short-window identity probe prepared locally
+
+Active checkpoint remains `docs/recovery/github-reserved-assignment-costs-20261118.json`; shared-confidence screen rejected. New diagnostic `tools/portable_short_window_identity.py` measures fixed 160ms label-relative harmonic shape/change/width, pass-held-out lane0/1 and six-lane comparisons, using existing remote release `partial-identity-note52-20261109`. Syntax and vector-only leakage/fold checks passed. No recorded audio processed, no dispatch, commit or push. Next wire this bounded diagnostic into the worker and validate there; retain onset-unknown wording and all original acceptance gates. Installed unchanged.
+
+# Shared-confidence screen rejected
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`, confidence_trial_design. Worker44721049174 small report collected once. Incremental comparison against44417227738: matches+501, wrong-note+211, gap outputs+161; rejected. See build/github-results/common-assignment-confidence-44721049174/incremental-comparison.json. Installed unchanged. Next compare note52 loss and target before replacing policy.
+
+# Shared-confidence ordinary trial dispatched
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`, confidence_trial_design. Portable44720429648 and CI44720429657 passed, including native tests, contracts, synthetic parity and production VST3 package. Worker44721049174 dispatched once at source dc83c97 / worker da9c329, common-assignment-confidence mode. Collect small report once and compare against44417227738. Installed unchanged; no measured note gain yet.
+
+# Shared-confidence assignment experiment building
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Source dc83c97 pushed; Portable44720429648 and CI44720429657 queued. Worker route da9c329 prepared; no replay dispatched. Follow existing builds, then one common-assignment-confidence ordinary screen if checks pass. Native tests cover equal/distinct fingerprints, incomplete-bank identity and allocations. Installed unchanged.
+
+# Common assignment confidence experiment prepared
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Default-off assignment-only shared confidence implemented locally with replay CLI and ordinary runner. All playable profiles must be measured; common weight is minimum reliability. 18 mocked orchestration tests pass; native validation and worker route pending. No new dispatch or installed change. Next add native behavioral coverage, then GHA build and bounded comparison against44417227738.
+
+# Reserved-cost trace collected: freeing lane alone is insufficient
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Worker44417227738 final success; report/evidence collected once. Both full snapshot/MIDI identities pass; hashes and367 DP frames per mode verified. Freeing trial lane0 still chooses49/lane2 and52/lane0 at7103807/7105023. Next inspect cost contributions before release policy. Installed unchanged.
+
+# Corrected reserved-cost trace dispatch
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Follow worker44417227738 at tested source0a5726b with assignment_diagnostic=contradicted-retention-trace. Previous44416296898 completed but used non-tracing mode; small report collected, no cost trace. Do not collect its bulk. Installed unchanged.
+
+# Reserved assignment cost trace dispatched
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Portable44415918206 passed build/native tests/contracts/synthetic parity. Worker44416296898 dispatched once for source0a5726b. Follow existing worker, collect small report once, inspect real reserved costs only after trace output identity passes. Installed unchanged.
+
+# Trace-window contract corrected
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Source0a5726b pushed; portable44415918206 queued. Previous native build/tests passed; Python contract failed only on stale73.30-73.48 window. Corrected to73.90-74.20;17 mocked tests pass. Follow new build then one bounded worker. Installed unchanged.
+
+# Reserved cost diagnostic isolates pending preview
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Source9060101 pushed with schema/cost-isolation checks. Counterfactual reserved costs are separate from actual solver terms to preserve pending preview. Follow latest source builds only, then one bounded trace. Installed unchanged.
+
+# Reserved assignment costs diagnostic building
+
+Active checkpoint: `docs/recovery/github-reserved-assignment-costs-20261118.json`. Source 6c4947c2e9056dcc7924ada5d5f50c7a4f98dde5 pushed. Rejected coasting veto removed; diagnostics compute reserved-lane costs while actual ownership remains reserved. Follow source builds then one bounded trace. Installed unchanged.
+
+# Positive replacement evidence needs joint assignment
+
+Active checkpoint: `docs/recovery/github-coasting-sustain-renewal-20261118.json`. Saved-window generic screen also nominates wrong pitches41/35 before desired49; desired52 prefers same lane despite another annotated string. Independent best calibration cannot safely choose replacement. Next inspect joint49/52 costs at7103551/7103807 under stale42 reservation. Evidence: `build/modal/positive-replacement-screen.json`; no processing launched, installed unchanged.
+
+# Coasting-only sustain renewal rejected
+
+Active checkpoint: `docs/recovery/github-coasting-sustain-renewal-20261118.json`. Worker44413488077 final success, small report collected once; bulk remote. Versus c016cbb: matches+4321, false outputs-25362, but49 held losses totaling399445 samples. Label30647105->2176;36450817->0;367 unchanged28481. Both references identical. Missing direct evidence during coasting is insufficient to identify stale notes. Next compare valid sustain364 with next-chord stale ownership using saved traces; require positive replacement/onset evidence before another policy. CI44413168424 completed successfully. Installed unchanged.
+
+# Coasting-only sustain screen dispatched
+
+Active checkpoint: `docs/recovery/github-coasting-sustain-renewal-20261118.json`. Portable44413168252 passed build/native tests/contracts/parity. Worker44413488077 dispatched once at acbf972; CI44413168424 last observed running. Follow existing runs. Require reference identity and no passage/held losses or false-output growth. Installed unchanged.
+
+# Coasting-only sustain renewal building
+
+Active checkpoint: `docs/recovery/github-coasting-sustain-renewal-20261118.json`. Source acbf972 pushed. Portable44413168252 and CI44413168424 queued. Follow these existing runs, then one ordinary screen after tests pass. Narrow guard prevents unsupported reselection restarting an already-running release; uninterrupted selected sustains preserved. Installed unchanged; no measured gain yet.
+
+# Combined sustain renewal rejected
+
+Active checkpoint: `docs/recovery/github-combined-sustain-renewal-20261118.json`. Worker44412041462 final success, small report collected once; bulk remote. Versus prior trial: matches+5921, false outputs-26790, but27 held losses; label30647105->3840, label36450817->0, label367 unchanged28481. Both references identical. Broad renewal does not fix next-chord loss. Next inspect narrower already-coasting renewal rule using saved evidence; do not widen or promote. Installed unchanged.
+
+# Combined sustain renewal screen dispatched
+
+Active checkpoint: `docs/recovery/github-combined-sustain-renewal-20261118.json`. Portable44411686966 passed build/native tests/contracts/parity. Worker44412041462 dispatched once at d52f841. Follow existing run and compare held losses/passages/false outputs. Installed unchanged.
+
+# Combined sustain renewal build
+
+Active checkpoint: `docs/recovery/github-combined-sustain-renewal-20261118.json`. Source d52f841e64ed924d4ed9465e36df9ddda508db83 pushed. Default-off assignment diagnostic now includes existing supported-sustain renewal, preserving release grace. Follow Portable44411686966 and CI44411686956, then one ordinary screen. Installed unchanged; no measured gain yet.
+
+# Unsupported selection restarts note42 release
+
+Active checkpoint: `docs/recovery/github-note42-correction-trace-20261118.json`. Hash-verified paired outcome traces: at7100927 note42 release125->0, selection4, direct0/evidence0; final release7118015. Trial correctly owns lane0 but stale ownership blocks next chord. Existing supported-sustain experiment addresses renewal but previously failed through lane transfers; inspect integration with current assignment/preview fixes before choosing a bounded trial. Do not shorten global release or revert correct assignment. Installed unchanged.
+
+# Note42 move is correct; stale ownership blocks next chord
+
+Active checkpoint: `docs/recovery/github-note42-correction-trace-20261118.json`. Worker44409321814 and Portable44408982581 final success, evidence collected. Hash-verified annotation: label364 expects note42 lane0 until7089600; next chord starts7099417 with note49 lane0 and no note42. Do not revert the correct lane0 move to reproduce reference wrong-string ownership. Next inspect retained support/release evidence across the chord boundary and bound stale-owner replacement. Installed unchanged; combined trial still rejected.
+
+# Note42 missed correction trace running
+
+Active checkpoint: `docs/recovery/github-note42-correction-trace-20261118.json`. Source b1dbb21; Portable44408982581 passed build/native tests/contracts/parity. Worker44409321814 is running the ordinary screen; follow this existing run, do not dispatch another. New window73.30-73.48 captures shared lane0 acquisition7038783 and reference correction7040063 missing in trial. Require full snapshot/MIDI identity before interpreting. Analysis helper: `python3 build/modal/analyze_correction_assignment.py OUTPUT_DIR 42 2`. Installed unchanged.
+
+# Note42 reservation inherits an earlier assignment difference
+
+Active checkpoint: `docs/recovery/github-label367-assignment-trace-20261118.json`. Both outcome hashes verified. All450 ticks have identical parsed note42 lifecycle fields except assigned/committed mask (reference4, trial1). At first loss7105023 both coast with release64, direct0 and evidence0. Wrong lane exists before window. Next locate earlier note42 lane acquisition from retained full MIDI/prior traces; do not tune release or costs without that cause. Installed unchanged.
+
+# Label367 trace collected: correct lane excluded by reservation
+
+Active checkpoint: `docs/recovery/github-label367-assignment-trace-20261118.json`. Worker44406452835 final success; both artifacts collected once. Full snapshot/MIDI identity passes in both modes. At7105023 reserved_coasting=11 excludes note49 annotated lane0; rendered note42 owns lane0. Reservation predates first traced assignment7099775, so origin remains unresolved. Next inspect retained lifecycle before policy changes. Installed unchanged.
+
+# Label367 assignment trace dispatched
+
+Active checkpoint: `docs/recovery/github-label367-assignment-trace-20261118.json`. Portable44406014944 passed build/native tests/contracts/parity. Worker44406452835 dispatched once at source6d1f511. Follow existing run, collect small report once, require full snapshot/MIDI identity, then analyze lane competition. Installed unchanged.
+
+# Label367 loss is a note42/note49 string swap
+
+Active checkpoint: `docs/recovery/github-joint-validity-admission-20261118.json`. Saved prior-trial MIDI hashes verified; all12288 lost held samples are exact-to-wrong-string ownership, not missing pitch or duplicate ownership. Reference note42/lane2 and note49/lane0 become trial note42/lane0 and note49/lane2; first loss7105023. Latest label367 metrics identical, latest event identity not assumed. Evidence: `build/github-results/joint-validity-admission-44404463699/label367-midi-diagnosis.json`. Next bounded latest-source assignment trace73.9-74.2s, require full output/MIDI identity. No new processing launched. Installed unchanged.
+
+# Joint-validity guard improves trial; combined policy still rejected
+
+Active checkpoint: `docs/recovery/github-joint-validity-admission-20261118.json`. Worker44404463699 final success; small report collected. Versus prior trial: matches+19, wrong-note-14, wrong-string-19, gap-112; label91 held+1280 and attacks-2; no held losses vs prior trial. Both references retain identity. Combined policy still has held losses36/329/357/367 versus reference; largest367 loses12288 samples. Next diagnose367 from retained evidence, preserve gains. Bulk remains remote. Installed unchanged.
+
+# Joint-validity admission screen dispatched
+
+Active checkpoint: `docs/recovery/github-joint-validity-admission-20261118.json`. Portable44404112352 passed build/tests/contracts/parity. Worker44404463699 dispatched once at c016cbb. Follow existing job and compare with previous trial; installed unchanged.
+
+# Joint-validity admission guard building
+
+Active checkpoint: `docs/recovery/github-joint-validity-admission-20261118.json`. Source c016cbbccc0eaeb066bb051ae1f2d7d0cb0d47af pushed. Portable44404112352 and CI44404112435 are in progress. Follow these existing runs then one ordinary screen. New profile-only owners require valid joint assignment; existing groups and independent paths preserved. No measured gain yet; installed unchanged.
+
+# Duplicate admission bypasses failed joint assignment
+
+Active checkpoint: `docs/recovery/github-duplicate-owner-tail-trace-20261118.json`. Saved trace shows trial note49 expands8->24 at6275071 with valid=0/dp_primary255, profile origin3, beat/fine invalid. infer_m3_unison_strings executes after failed assignment using retained lane. Next test a default-off guard against NEW profile-only ownership on failed joint assignment; preserve existing groups and independent fine/beat paths. No measured fix yet. Installed unchanged.
+
+# Duplicate-owner lifecycle analyzed
+
+Active checkpoint: `docs/recovery/github-duplicate-owner-tail-trace-20261118.json`. Evidence50120579 bytes collected; download56881 complete. Two outcome hashes verified,300 frames each. Trial pair mask24 commits6275071, coasts from6276287 and survives unsupported frames until assignment collapses6286015. Next inspect saved assignment/group evidence; current-on is original baseline, not prior capacity-off. No new native run needed yet. Installed unchanged.
+
+# Duplicate-owner tail trace report collected
+
+Active checkpoint: `docs/recovery/github-duplicate-owner-tail-trace-20261118.json`. Worker44401378011 final success; small report collected once. Both full snapshot and MIDI parity checks pass. Evidence download56881 active; poll existing handle, extract bounded traces, run build/modal/analyze_duplicate_owner_tail.py. Installed unchanged; policy still rejected.
+
+# Duplicate-owner tail trace dispatched
+
+Active checkpoint: `docs/recovery/github-duplicate-owner-tail-trace-20261118.json`. Portable44400858315 passed build, native tests, replay contracts and synthetic buffer parity. Worker44401378011 dispatched once at source45ca06f. Follow existing job; require full snapshot/MIDI identity. Installed unchanged.
+
+# Duplicate-owner tail trace building
+
+Active checkpoint: `docs/recovery/github-duplicate-owner-tail-trace-20261118.json`. Source45ca06f pushed; Portable44400858315 queued. Follow existing build then dispatch one bounded trace. Installed unchanged.
+
+# Duplicate-owner tail trace prepared
+
+Active checkpoint: `docs/recovery/github-preview-profile-capacity-20261118.json`. Both policies retain pitch49; latest trial retains a second owner from6275071 through6286015. Prepared 65.3-65.5s trace in tools/portable_ordinary_harmonic_admission.py; 17 focused tests pass. Not committed/dispatched yet. Next run bounded GHA trace, require full replay/MIDI identity. Installed unchanged; trial rejected.
+
+# Preview profile capacity collected; rejected
+
+Active checkpoint: `docs/recovery/github-preview-profile-capacity-20261118.json`. Worker44394937156 final success; small report and complete 45,228,939-byte bulk artifact collected once. Versus previous trial: label329 +3008 exact held samples; matches +59, wrong-note +14, wrong-string -30, gap outputs +105. Reference identity passes; installed unchanged. Causal MIDI comparison locates added false outputs in the later note49/lane4 tail at samples6276159-6286015; inspect retention/release next. Evidence: all-changed-midi-intervals.json in the recorded output directory. Do not repoll completed runs.
+
+# Preview profile capacity screen dispatched
+
+Active checkpoint: `docs/recovery/github-preview-profile-capacity-20261118.json`. Portable44394591450 passed build/native tests, replay contracts and synthetic buffer parity. Worker44394937156 dispatched once at source114d123. Follow existing worker and collect small report once; compare holds and false outputs against previous ownership trial. Installed unchanged.
+
+# Preview profile capacity building
+
+Active checkpoint: `docs/recovery/github-preview-profile-capacity-20261118.json`. Source114d123 pushed; Portable44394591450 in progress, CI44394591612 queued. Default-off experiment separates physical lane release from speculative profile admission capacity, preserving independently supported groups. Native checks run on GHA only; no measured gain yet. Follow build then one ordinary screen. Installed unchanged.
+
+Latest capacity diagnosis: At the first two commits baseline fills all five slots; excluding preview33 lets trial36 use the same lane0 and leaves one extra slot. At the third commit neither mode has a preview and both have one free slot; divergence is inherited pending evidence (16 versus 7 ticks). Evidence: build/github-results/pending-ownership-trace-44388029422/capacity-diagnosis.json. Next bounded screen must preserve physical lane release and supported four-string groups while testing speculative admission dwell. No native change or new run yet. Installed unchanged.
+
+Latest focused trace: evidence collected (53,172,178 bytes); four trace hashes verified. Reproduced 695 baseline and 684 trial DP frames. Diagnosis and next step: docs/recovery/github-pending-ownership-trace-20261118.json. Download session37202 is finished; do not restart or repoll. Trial remains rejected; installed output unchanged.
+
+# Pending ownership trace report collected
+
+Active checkpoint: `docs/recovery/github-pending-ownership-trace-20261118.json`. Worker44388029422 final success, small report collected once. Both full snapshot/MIDI identity checks pass. Evidence download37202 active to recorded evidence.zip; poll handle, do not duplicate. Then run prepared cost and lifecycle analyzers. Trial remains rejected; installed unchanged.
+
+# Label329 MIDI regression isolated
+
+Active checkpoint: `docs/recovery/github-unsupported-pending-ownership-20261118.json`. Both MIDI raw hashes verified. Exact-mask comparison reproduces -3840 held samples: first wrong-lane switch at sample6226431; later extra same-pitch ownership also breaks exact hold. Next bounded assignment/lifecycle trace around64.8-65.3s, preserving full snapshot/MIDI parity. Bulk download session91430 still active; do not duplicate. Installed unchanged.
+
+# Label329 diagnostic evidence downloading
+
+Active checkpoint: `docs/recovery/github-unsupported-pending-ownership-20261118.json`. First bulk retrieval returned HTTP503, not evidence. Exact artifact retry is active in session91430 to evidence-retry.zip; poll existing handle, do not duplicate. Prepared analyze_pending_losses.py compares prior pair-release and current trial. Latest ntfy HTTP200 inline418 bytes idZaa9mef5zvK5. Installed unchanged.
+
+# Unsupported tentative ownership result collected
+
+Active checkpoint: `docs/recovery/github-unsupported-pending-ownership-20261118.json`. Worker44383352306, portable44383029253 and CI44383029045 final success; do not poll or redownload. Offline screen rejected: 149909/528632 frame matches, false outputs311697; reference identity passes. Compared with previous pair-release: +1158 matches, all false counts lower; label79 holds64257/71801 with one attack, but label329 loses3840 held samples. Small report and comparison collected; bulk remains remote. Next diagnose label329 and new snapshot losses before any promotion. Installed unchanged.
+
+# Unsupported tentative ownership screen running
+
+Active checkpoint: `docs/recovery/github-unsupported-pending-ownership-20261118.json`. Portable44383029253 passed native build/tests, replay contracts and synthetic buffer parity. Worker44383352306 dispatched once at source105e505. Follow existing run; collect small report once, then use prepared compare_previous.py against prior pair-release screen. Installed unchanged.
+
+# Unsupported tentative ownership trial building
+
+Active checkpoint: `docs/recovery/github-unsupported-pending-ownership-20261118.json`. Source `105e505dae02b314cf2fd2045903f7b10ba70c7e` pushed. 29 focused Python tests pass; native verification pending on GHA. Follow recorded build, then ordinary screen once if passed. New policy uses current signal support, not trace fields. Installed output unchanged; prior trial remains rejected.
+
+# Unsupported tentative ownership conflict confirmed
+
+Active checkpoint: `docs/recovery/github-pair-release-assignment-trace-20261118.json`. New pending-conflict.json: frozen removal of35 restores41 lane0 while47 stays2. Pending35 stays inactive with attack0/direct0/evidence0 in observed rows; it still displaces a sounding owner. Next default-off narrow unsupported tentative ownership intervention, preserving candidate evidence observation. Previous broad/forced preview rejected; avoid repeating it. No DSP change or new run this step; installed unchanged.
+
+# Pair-release costs analyzed; two separate causes
+
+Active checkpoint: `docs/recovery/github-pair-release-assignment-trace-20261118.json`. Download73619 completed0,57260113 bytes; eight diagnostic traces extracted once. Cost hashes verified and1910 native DP frames reproduced. Label36 switch596031 is cents-cost driven (223.6875 penalty advantage;208.0801 net). Label79 switch1411071 is infeasible to retain because age0 inactive phase-invalid note35 occupies lane0 before attack. Next inspect pre-attack assignment participation and cents reliability; do not restore false pairs. Installed unchanged.
+
+# Pair-release trace report collected; evidence downloading
+
+Active checkpoint: `docs/recovery/github-pair-release-assignment-trace-20261118.json`. Small report44377058857 collected once; four full replay/MIDI trace identity checks pass. Bulk artifact14462382486 download active in session73619 to `build/github-results/pair-release-assignment-trace-44377058857/evidence.zip`; poll existing handle, do not duplicate. Then extract traces and run prepared analyze_assignment_costs.py for36/79. Installed unchanged.
+
+# Pair-release assignment trace dispatched
+
+Active checkpoint: `docs/recovery/github-pair-release-assignment-trace-20261118.json`. Portable44376551352 passed. Worker44377058857 dispatched once at sourcefdcf7ef; follow and collect small report once. Two windows capture wrong-lane losses36/79; require four full replay/MIDI identity checks before interpreting costs. Installed unchanged.
+
+# Pair-release wrong-lane trace building
+
+Active checkpoint: `docs/recovery/github-pair-release-assignment-trace-20261118.json`. Sourcefdcf7ef48ffa04e3988906509861a1e55df86589 pushed;17 focused Python tests pass. Saved MIDI hashes verified: losses36/79 are wrong-lane switches after stale false pairs release, not absent pitch. Portable44376551352 observed in progress; follow then dispatch recorded trace once. Bulk download42213 completed0,45236622 bytes; do not redownload. Installed unchanged.
+
+# Pair-loss MIDI evidence download active
+
+Active checkpoint: `docs/recovery/github-unsupported-pair-release-20261118.json`. Bulk artifact14459236290 download active in session42213; poll existing handle, do not duplicate. CI44369911412 completed SUCCESS. Prepared analyze_pair_losses.py validates saved MIDI hashes, compares previous/new voice spans and exact ownership loss intervals at labels36/79 plus improved controls144/165. Download observed advancing; do not restart. Trial remains rejected; installed unchanged.
+
+# Unsupported pair release collected; rejected
+
+Active checkpoint: `docs/recovery/github-unsupported-pair-release-20261118.json`. Worker44370589731 completed successfully, small report collected once; bulk remains remote. Comparison verified identical input file hashes/settings. False outputs improve but labels36/79 gain new held losses; do not promote or widen. Next diagnose these losses; stale singleton367 remains separate. Portable44369911301 passed; CI44369911412 still in progress. Installed output and scoreboard unchanged.
+
+# Unsupported pair release worker dispatched
+
+Active checkpoint: `docs/recovery/github-unsupported-pair-release-20261118.json`. Portable44369911301 passed build, native tests, replay contracts and buffer parity. Worker44370589731 dispatched once at source19bb579; follow and collect small report once. CI44369911412 last observed in progress. Installed output unchanged.
+
+# Unsupported pair release experiment building
+
+Active checkpoint: `docs/recovery/github-unsupported-pair-release-20261118.json`. Source19bb579 pushed; portable44369911301 and CI44369911412 observed in progress. Follow existing builds, then dispatch worker once with recorded inputs if portable passes. No worker dispatched. Default-off experiment limits unsupported retained pairs to ordinary release, preserves supported pairs and larger groups. Stale singleton ownership remains a separate issue. Installed output and scoreboard unchanged.
+
+# Lifecycle causes isolated; narrow replacement next
+
+Active checkpoint: `docs/recovery/github-contradicted-retention-lifecycle-20261118.json`. All evidence collected and analyzed; do not redownload or poll completed jobs. Label165 receives 408 extra coasting ticks from retained multi-string ownership; label367 has unchanged lifetime but stale lane0 ownership competing with note49. Preserve useful label306 correction. Next prepare a narrow offline replacement, then GHA build/replay; installed plugin and scoreboard unchanged. ntfy HTTP200 inline591 bytes id D3PFaru7OpdT.
+
+# Paired lifecycle evidence collected and compared
+
+Active checkpoint: `docs/recovery/github-contradicted-retention-lifecycle-20261118.json`. Download46215 completed0; all evidence collected once, do not redownload. compare_lifecycle.py passed hash and sample-clock checks. Label165 trial keeps two assigned lanes and coasts408 extra ticks (release674 vs266); label306 useful correction retains the same release state. Inspect367 ownership and release next before replacement. Installed unchanged. Latest ntfy succeeded HTTP200 inline497 bytes iddkc1HnPrkSc1.
+
+# Lifecycle diagnostic passed; evidence collecting
+
+Active checkpoint: `docs/recovery/github-contradicted-retention-lifecycle-20261118.json`. Worker44360542888 completed successfully; small report collected, six output/MIDI identity checks pass. Bulk download active in session46215; poll existing handle. Then compare_lifecycle.py. Installed unchanged. Latest ntfy attempt timed out (28); do not retry ambiguous send.
+
+# Paired retention lifecycle worker dispatched
+
+Active checkpoint: `docs/recovery/github-contradicted-retention-lifecycle-20261118.json`. Portable44360039895 passed. Worker44360542888 dispatched once at source2469789; follow and collect report once. Compare paired selected/coasting/release states across boundaries; installed unchanged.
+
+# Paired retention lifecycle capture source pushed
+
+Active checkpoint: `docs/recovery/github-contradicted-retention-lifecycle-20261118.json`. Source2469789 pushed; 21 Python tests pass. Capture adds selected/coasting/release data for both policies while requiring full output/MIDI parity. Portable44360039895 observed in progress. Follow it, then dispatch once. No worker dispatched. Installed unchanged.
+
+# Retention origin evidence collected and analyzed
+
+Active checkpoint: `docs/recovery/github-contradicted-retention-origin-trace-20261118.json`. Worker44350765385 final, small and bulk artifacts collected once; download42058 completed. Six trace identity checks pass. Initial corrections in all three windows match labels: samples2877503,5655295,7038783. Later unwanted persistence remains the issue; next compare release/selection across passage boundaries. Installed unchanged; rejected trial not promoted.
+
+# Retention origin trace completed; evidence collecting
+
+Active checkpoint: docs/recovery/github-contradicted-retention-origin-trace-20261118.json. Worker44350765385 success; small report collected once, all six trace output/raw MIDI identity checks pass. Bulk download active in exec session42058; poll it, do not duplicate. Installed unchanged. ntfy sent HTTP200 inline488 bytes, idVbLz8dCKgQsv. Next analyze first paired divergence after download.
+
+# Retention origin trace dispatched
+
+Active checkpoint: docs/recovery/github-contradicted-retention-origin-trace-20261118.json. Portable44350444136 passed build, native tests, replay contracts and buffer parity. Worker44350765385 dispatched once at source3163e1f, workerf40998c. Follow this run and collect report once. Earlier paired traces start after inherited divergence; expanded windows capture origin. Installed unchanged.
+
+# Retention origin trace source pushed
+
+Active checkpoint: docs/recovery/github-contradicted-retention-origin-trace-20261118.json. Source3163e1f pushed,17 runner tests passed. Automatic build not yet visible on initial read; find by exact SHA, do not manually duplicate. Worker not dispatched. Windows29.9-31.4,58.6-59.5,73.1-74.8 include earlier MIDI divergence. Existing workerf40998c supports route. Installed unchanged.
+
+# Retention correction captured; regression origins precede trace windows
+
+Active checkpoint: docs/recovery/github-contradicted-retention-trace-20261118.json. All evidence collected and analysis complete. paired-first-divergence.json shows306 direct policy divergence at5655295 (retention1024 to4), but165 false47 and367 routing differences have divergent prior state already. Do not infer causal regression fix from downstream small margins. Next locate earlier47/42 lane changes in collected raw MIDI, then shift bounded trace windows upstream. No rerun/download of completed44345770507. Installed unchanged.
+
+# Paired retention cost analysis collected and complete
+
+Active checkpoint: docs/recovery/github-contradicted-retention-trace-20261118.json. Download session91305 completed0; bulk collected once, do not download again. analyze_assignment_costs.py completed: hashes and frozen native DP verified. See assignment-cost-diagnosis.json in build/github-results/contradicted-retention-trace-44345770507. Desired306 correction has strong cost margin; several367 wrong-lane switches have small margins. This is diagnostic evidence, not policy acceptance; inspect paired eligibility and stale competitors before a selective replacement. Installed unchanged.
+
+# Paired retention trace completed; evidence downloading
+
+Worker44345770507 succeeded; small report collected once, all six output/MIDI parity checks pass. Bulk download active in exec session91305 to build/github-results/contradicted-retention-trace-44345770507/evidence; poll it, do not duplicate. Then run prepared analyze_assignment_costs.py. Checkpoint docs/recovery/github-contradicted-retention-trace-20261118.json. Installed unchanged.
+
+# Paired retention trace dispatched
+
+Active checkpoint: docs/recovery/github-contradicted-retention-trace-20261118.json. Portable44345270709 passed build, native tests, replay contracts and buffer parity. Worker44345770507 dispatched once at source f298872, worker f40998c. Collect report once; compare current/trial windows165/306/367 with complete output/MIDI identity required. Installed unchanged.
+
+# Paired retention trace build running
+
+Active checkpoint: docs/recovery/github-contradicted-retention-trace-20261118.json. Source f298872 and worker f40998c pushed; 17 runner tests pass. Portable44345270709 observed in progress. No trace worker dispatched yet. Follow this build, then one recorded-input paired trace. Installed output unchanged.
+
+# Retention losses isolated to routing and false sustain
+
+Active checkpoint: docs/recovery/github-contradicted-retention-20261118.json. Bulk44341580932 collected once, session9273 completed0; no repeat download. MIDI compressed/raw hashes verified. Label367 pitch49 present66177 samples unchanged but loses12288 lane0 samples while stale42 gains18598 lane0 samples. Interval162-165 false47 gains70464 voice-samples; interval246-249 false48 gains6144. Focus pitch presence otherwise unchanged. Evidence in pitch-presence-diagnosis.json and output-span-diagnosis.json under run directory. Next inspect correction eligibility versus stale competitors, preserving real gains306/355/364. Policy rejected, installed unchanged.
+
+# Contradicted retention evidence collection active
+
+Active checkpoint: docs/recovery/github-contradicted-retention-20261118.json. Bulk artifact m3-evidence-44341580932-1 download is active in exec session9273 (verified live); poll that handle, do not duplicate. Destination build/github-results/contradicted-retention-44341580932/evidence. Prepared analyze_pitch_presence.py there for losses168/357/367 and gains245/306/355/364; run after transfer completes. Small report already collected; policy rejected, installed unchanged.
+
+# Contradicted retention screen rejected
+
+Active checkpoint: docs/recovery/github-contradicted-retention-20261118.json. Worker44341580932 final success, policy rejected; small report collected once, bulk remains remote. Matches145400->147358/528632; target306 held46529->47105/71783 and attacks3->1. However labels168/357/367 lose231 frames, two held losses total13376 samples, wrong-note outputs+651. Both saved references identical. CI44341082797 still in progress; portable44341082902 passed. Next compare those losses and wrong-note growth against gains306/355/364 before replacement. Installed unchanged.
+
+# Contradicted retention replacement dispatched
+
+Active checkpoint: docs/recovery/github-contradicted-retention-20261118.json. Worker44341580932 replaces44341454845, which failed selection before processing because dispatch omitted required note75/label10 routing inputs. Corrected inputs supplied; actual diagnostic target remains306/note42 in runner. Source77bd721 portable build passed. Follow replacement only; collect small report once. Installed unchanged.
+
+# Contradicted retention recording screen dispatched
+
+Active checkpoint: docs/recovery/github-contradicted-retention-20261118.json. Portable44341082902 passed native tests, contracts and buffer parity. Worker44341454845 dispatched once at source77bd721680c543b61f21cdbb6c87f21d80bb2cf5, worker52512e98b808ed227a3eec64c7a46c42a3962eb6. CI44341082797 pending. Collect small report once into build/github-results/contradicted-retention-44341454845; reject passage/held/false-output regression. Installed unchanged.
+
+# Contradicted provisional retention build running
+
+Active checkpoint: docs/recovery/github-contradicted-retention-20261118.json. Source77bd721 and worker52512e9 pushed. Portable44341082902 and CI44341082797 running; worker not dispatched. Sixteen local runner tests passed. Follow existing builds, then one bounded contradicted-retention screen. Installed unchanged.
+
+# Retention diagnostic eligibility checked
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. target306-retention-eligibility.json captures CURRENT state at three decisions. Use current spectral_lane (computed before costs), not prior state spectral mask: first correction has prior0/current1. Posterior agrees with lane0 above0.95 at the blocked corrections. Next implement default-off contradicted provisional retention diagnostic with unison protections, then GHA build and bounded replay. No runtime changes yet; installed unchanged.
+
+# Physical retention cost isolated
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. target306-projected-lane-costs.json reproduces three CURRENT DP decisions. Correct joint mapping blocked by1024 physical retention bonus; margins401.85/367.50 despite profile and peer cents favoring correction. Frozen arithmetic only, not replay. Next narrowly inspect contradicted provisional retention while preserving admission/collision safety. Installed unchanged.
+
+# Current routing disagreement isolated
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. target306-current-routing-attribution.json joins existing CURRENT trace: projection corrects42 to lane0, active46 claim forces it back2, then physical assignment corrects42/46. Persistent trial physical trace unavailable. Next narrow routing fix preserving admission and collision safety; no new native execution launched. ntfy HTTP200 inline526bytes idZfFsgNYBBljN.
+
+# Persistent admission losses separated
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. Bulk44337171313 collected once; download session66890 completed0. CURRENT/TRIAL compressed and raw MIDI hashes verified. pitch-presence-diagnosis.json: target306 pitch present71783/71783 in both, exact routing46529->64; label225 pitch unchanged but routing59471->1230. Labels47/327/361 pitches vanish entirely. Rejected policy harms acquisition and routing separately. Next isolate target306 physical assignment versus projection using existing evidence, preserving current admission. Installed unchanged.
+
+# Persistent candidate admission rejected
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. Worker44337171313 final success; small report collected once. Policy REJECTED: matches145400->117527/528632; false outputs319757->219686, but target306 exact hold46529->64/71783, attacks3->5. Both saved references identical. Installed unchanged. Next distinguish admission loss from routing loss in retained report before replacement; do not widen this policy or redownload completed report. Bulk download active in exec session66890 (artifact m3-evidence-44337171313-1); poll existing handle, do not duplicate. Aggregate pitch-presence falls13525345->11684677, proving loss includes absent pitches. Prepared analyze_pitch_presence.py beside report for per-label attribution after transfer.
+
+# Persistent admission recording screen dispatched
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. Portable44336691238 passed native build/tests, replay contracts and synthetic buffer parity. Worker44337171313 dispatched once at source71e6ec34eb94cb9d21b2a315a0fd308048888bbe, workerb927ecde5174774c135eb8551230b5bd7ecf344b. Collect small report once into build/github-results/persistent-admission-44337171313. Target306 exact hold must improve without fragmentation/retrigger or passage/false-output loss. Installed unchanged.
+
+# Persistent admission test compile correction pushed
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. Source71e6ec34eb94cb9d21b2a315a0fd308048888bbe; portable44336691238 in progress, CI44336691071 queued. Prior44336355178 compiled replay but failed test constant scope; fixed namespace qualification. Prior CI44336355338 cancelled by new push. Worker not dispatched. Follow replacement builds, then one bounded persistent-admission screen if successful. Installed unchanged.
+
+# Persistent candidate admission build running
+
+Active checkpoint: docs/recovery/github-persistent-candidate-admission-20261118.json. Source b9da6e8a898ac3231a730d33c78b625bb6094c82 and worker b927ecde5174774c135eb8551230b5bd7ecf344b pushed. Portable44336355178 and CI44336355338 in progress; worker not dispatched. 27 local comparison tests passed. Independent 40ms preselection clock preserves maturation across capacity resets; target306 exact hold gain with no fragmentation, retriggers or corpus losses. Additional onset delay is a risk. Follow existing builds, then one ordinary-harmonic-fixed-competition worker with assignment_diagnostic=persistent-admission. Installed unchanged.
+
+# Output transfers traced to competing lane ownership
+
+Active checkpoint: docs/recovery/github-supported-sustain-assignment-trace-20261118.json. render-transfer-diagnosis.json now includes all selected peer context. Eight non-DP note42 transfers are four lane1->0->1 round trips. Every return coincides with active50 physically claiming lane0, consistent with collision fallback. First three departures have inactive41/38 occupying lane0 and active50 on lane3; fourth has50 absent from selected trace, voices lists lane3. Target assignment remains lane1. Do not remove collision safety: address admission/assignment displacement without repeating rejected pending preview. Next inspect candidate admission alternatives that preserve maturation/evidence. Installed unchanged; no replay launched.
+
+# Supported sustain output-stage transfers isolated
+
+Active checkpoint: docs/recovery/github-supported-sustain-assignment-trace-20261118.json. Saved render-transfer-diagnosis.json joins all13 label306 TRIAL transfers:5 coincide with DP changes,8 occur with unchanged physical assignment. At5651007 spectral projection changes output lane1 to0; subsequent transfers include reconciliation overriding projected output. Next inspect collision reconciliation for these8 transfers. Prior pending preview already rejected; do not repeat. Installed unchanged; no new replay launched. ntfy sent HTTP200,530bytes,id4qeQzry5bBJc.
+
+# Supported sustain paired costs collected and diagnosed
+
+Active checkpoint: docs/recovery/github-supported-sustain-assignment-trace-20261118.json. Worker44329911929 final; both artifacts collected once; session56619 finished0; four compressed/raw trace hashes verified. assignment-cost-diagnosis.json reproduces complete selected DP decisions. Label252 trial18 swaps include cents-driven55/53 chatter at4589375 (margin4.3796). Label306 inactive32 at0/10 attack ticks, no MIDI, consumes lane0 at5633087/5633407 and forces active42 away. Only5 of13 raw transfers are DP target changes; rendering/continuity remainder still to attribute. Next inspect existing attack-maturity preview route and prior results before replacement; no production policy selected. Installed unchanged; sustain trial rejected.
+
+# Supported sustain paired trace completed
+
+Active checkpoint: docs/recovery/github-supported-sustain-assignment-trace-20261118.json. Worker44329911929 final success; small report collected once. All four CURRENT/TRIAL window traces preserve full output and raw MIDI. Bulk evidence download active in exec session56619; poll it, do not duplicate. Next inspect costs at labels252 and306 lane transfers. Policy remains rejected; installed unchanged.
+
+# Supported sustain paired assignment trace dispatched
+
+Active checkpoint: docs/recovery/github-supported-sustain-assignment-trace-20261118.json. Portable44329469945 passed build/native tests/comparison contracts/synthetic buffer parity. Worker44329911929 dispatched once at source12b191d9bf8c11180fa5e5c1eda08a641df6e67b, worker0e74b3ae0e6f701e1a39e593db7839991c291f2c. Collect small report once into build/github-results/supported-sustain-assignment-44329911929. CURRENT/TRIAL traces47.5-48.5s and58.6-59.5s require full output/raw MIDI parity. Determine which lane costs cause valid-note swaps; installed unchanged.
+
+# Supported sustain paired assignment trace prepared
+
+Active checkpoint: docs/recovery/github-supported-sustain-assignment-trace-20261118.json. Source12b191d9bf8c11180fa5e5c1eda08a641df6e67b and worker0e74b3ae0e6f701e1a39e593db7839991c291f2c pushed. Nine local tests passed. Portable44329469945 in progress; worker not dispatched. On success dispatch one ordinary-harmonic-fixed-competition task, ordinary, assignment_diagnostic=supported-sustain-trace, note75,label_index10, exact source SHA. Captures CURRENT/TRIAL assignment costs at47.5-48.5s and58.6-59.5s; full output/raw MIDI parity required. transfer-ownership-context.json shows stale33 removed and50 admitted, followed by valid-lane swaps;306 changes lanes even when intended lane free. Installed unchanged.
+
+# Supported sustain interruptions are lane transfers
+
+Active checkpoint: docs/recovery/github-supported-sustain-renewal-20261118.json. Evidence download session55130 completed successfully once; files at build/github-results/supported-sustain-44326368327/evidence. Raw MIDI hashes verified against report. event-interruption-diagnosis.json: label252 CURRENT4 vs TRIAL18 same-sample lane transfers; label306 CURRENT3 vs TRIAL13; zero positive-gap releases in either window. This rejects note-inactivity as the observed fragmentation mechanism; exact assignment-cost cause is not yet established. Next inspect competing lane ownership, then use existing paired trace machinery for supported-sustain if needed. Trial rejected; installed unchanged. Do not redownload or rerun completed44326368327.
+
+# Supported sustain renewal screen rejected
+
+Active checkpoint: docs/recovery/github-supported-sustain-renewal-20261118.json. Worker44326368327 final success; small report collected once at build/github-results/supported-sustain-44326368327. Ordinary matches145400->151842/528632; false frames319757->292409, but32 labels lose frames and target252 attacks5->19, longest hold48577->10497 despite total hold48577->50113. Reference identity passes. Do not widen or promote. Next diagnose target252 fragmentation and label306 loss from retained events. CI44325875646 and portable44325876136 both passed. Evidence artifact download active in exec session55130 into build/github-results/supported-sustain-44326368327/evidence; poll this session, do not duplicate. Largest held loss label306:46529->3840 samples, attacks3->13. Installed unchanged.
+
+# Supported sustain renewal replay dispatched
+
+Active checkpoint: docs/recovery/github-supported-sustain-renewal-20261118.json. Portable44325876136 passed native build/tests, comparison contracts and synthetic parity. Worker44326368327 dispatched once at source3c18fc14e8ea54a747a28180089ebd2f281d3b9f, worker158108696f4b488643b3eae03fe98a83d7968a87; isolated supported-sustain choice, ordinary corpus. Follow this run and collect small report once into build/github-results/supported-sustain-44326368327. CI44325875646 was still running. Installed unchanged.
+
+# Supported sustain renewal pushed; awaiting source build
+
+Active checkpoint: docs/recovery/github-supported-sustain-renewal-20261118.json. Source3c18fc1 and worker1581086 pushed. 23 local comparison tests passed. Portable44325876136 and CI44325875646 are in progress; follow these existing runs. Worker not dispatched yet. Installed unchanged.
+
+# Supported sustain renewal trial prepared locally
+
+Uncommitted default-off native diagnostic `--diagnostic-supported-sustain-renewal` tracks unsupported active singleton ticks independently of reselection; retains direct-fundamental OR existing missing-fundamental evidence routes and normal release grace. Runner `--supported-sustain-renewal` compares saved OFF/CURRENT against isolated trial, targets label252/note55/lane1 and requires longer exact hold without more attacks or snapshot loss, plus existing whole-ordinary safety gates. Worker workflow choice `supported-sustain` wired locally. Six target/isolation tests and two paired trace tests passed; diff check clean. Native code has NOT been compiled or replayed. Next inspect lifecycle interactions once, then source/worker commit and push under existing build authorization; use GHA native build before one bounded worker replay. Installed plugin and scoreboard unchanged. Do not rerun or redownload completed44320982632.
+
+# Stale note renewal identified
+
+CURRENT note33 belongs to preceding chord (last labeled snapshot4559999), then stays active through1124/1124 target chord snapshots with0 direct-fundamental rows. It is selected173 times, coasts951, and release resets26 times. See build/github-results/local-onset-assignment-44320982632/lane0-owner-release-summary.json. Native selected branch unconditionally resets release_ticks. Next design bounded default-off renewal rule that protects genuine weak-fundamental sustain; GHA-only replay and unchanged per-label/false-output acceptance gates. Installed unchanged. All paired evidence collected; no rerun/download required for diagnosis.
+
+# Assignment cascade: inspect lane0 owner before ramp
+
+New switch-context-diagnosis.json in build/github-results/local-onset-assignment-44320982632: only2/26 observed consecutive-selected55 switches coincide with phase validity changes (not total MIDI attacks). Note50 is expected on lane0, physically playable, but33 reserves lane0 at first displacement. Most later swaps occur with stable validity. Do not assume a phase ramp fixes this. Next inspect33 ownership/release evidence and50 acquisition of labeled lane0. All evidence collected; no remote rerun needed. Installed unchanged.
+
+# First handoff trigger identified
+
+Paired44320982632 evidence collected/hash verified. first-handoff-diagnosis.json: at4589247 note50 phase.valid flips0->1 at update240, instantly adding cents penalty509.44 on lane3 vs66.87 on lane1, overwhelming retention4 and displacing55. Frozen DP reproduces actual50:1,53:2,55:3; removing only50 cents term gives50:3,53:2,55:1. This is arithmetic, not replay acceptance. Next inspect phase maturation and analogous switches before bounded confidence-transition trial. Installed unchanged; no rerun/download needed.
+
+# Paired assignment evidence collected
+
+Download12533 completed0; both compressed trace hashes verified. first-handoff-costs.json under build/github-results/local-onset-assignment-44320982632 captures selected peers at4589183/4589247. Trial note50 takes lane1 and note55 moves1->3 after192 correct samples; lane1 is not reserved. Next compare joint cost terms to distinguish competition from retention feedback. Policy rejected; installed unchanged. Do not redownload or rerun44320982632.
+
+# Paired assignment report collected; evidence downloading
+
+Worker44320982632 final success. Small report collected once under build/github-results/local-onset-assignment-44320982632. Both CURRENT/TRIAL full snapshots and raw MIDI bit-identical to respective untraced outputs. Policy remains rejected. Bulk evidence54304223bytes downloading in existing exec session12533 to that directory/evidence; poll session, do not duplicate. Next inspect costs/reservations for label252 at47.5-48.5s. Installed unchanged.
+
+# Paired local onset assignment trace dispatched
+
+Portable44320611905 passed build, native tests, comparison contracts and synthetic parity. Worker44320982632 dispatched once at sourceaba457cfdfc2ccb16c85355d7d8bfad5dfee8781, worker58d91d8f51724f6f376f5d4ba483bc83c9ed3178. Follow this run and collect small report once into build/github-results/local-onset-assignment-44320982632. CURRENT/TRIAL trace47.5-48.5s requires full snapshot/raw MIDI parity. Diagnose label252 assignment instability before replacement; installed unchanged.
+
+# Paired local onset assignment trace prepared
+
+Sourceaba457cfdfc2ccb16c85355d7d8bfad5dfee8781 and worker58d91d8 pushed. Portable44320611905 running;17 Python tests passed. No diagnostic worker dispatched. On success dispatch exactly one ordinary-harmonic-fixed-competition task with assignment_diagnostic=local-onset-trace,dataset ordinary,note75,label10 and this source SHA. It observes CURRENT/TRIAL assignment costs at47.5-48.5s and requires full snapshot/raw MIDI parity. Diagnose reserved coasting lanes versus cost feedback before choosing replacement. Installed unchanged.
+
+# Local onset event diagnosis collected
+
+Bulk download61793 completed once. event-loss-diagnosis.json under build/github-results/local-onset-44317933962 contains verified raw MIDI hashes and events. Label252 has repeated lane transfers,29 attacks vs5 and intended hold192 vs48577; label392 stays wrong lane while new33/34 alternate on intended lane0;451 recovers one lane6 onset. Next inspect assignment feedback caused by newly active competing pitches before choosing replacement. Rejected policy and installed output unchanged.
+
+# Local onset event evidence download active
+
+Existing gh artifact download exec session61793 is running for m3-evidence-44317933962-1 (45235595 bytes), destination build/github-results/local-onset-44317933962/evidence. Poll that session, do not duplicate. Next compare MIDI ownership events for labels252,392,451. Label252 hold48577->192 and attacks5->29; label392 hold52929->0; target451 hold0->22657. Policy rejected; installed unchanged.
+
+# Local onset trial rejected; report collected
+
+Worker44317933962 final success, offline screen REJECTED. Small report collected once at build/github-results/local-onset-44317933962/ordinary-harmonic-fixed-competition/report.json. Both saved references identical. Label451 exact hold0->22657/71863, one onset; snapshots500 unchanged. Net frame matches-725, wrong-note+534, wrong-string+2195, gap+1316. 18 labels lose frames; 16 lose held samples. Installed unchanged. Next compare target451 with lost labels252/392 from saved trial events to distinguish valid onset from false ownership; do not widen rejected policy. Bulk evidence remains remote (45235595 bytes); retrieve once only if needed for diagnosis. Do not poll/rerun completed job.
+
+# Isolated local onset trial dispatched
+
+Worker44317933962 dispatched once at source495f2d95d3bf787e9ad9437b2098d7c67c58d40b, workerf95cb92f36e948398615e1af8d0870f993cf2de5. Task ordinary-harmonic-fixed-competition, assignment_diagnostic=local-onset, ordinary, routing note75/label10; actual target451. CI44317046643 and portable44317404242 passed. Follow existing worker, collect small report once into build/github-results/local-onset-44317933962; require no passage/held losses or false growth and reference identity. Installed unchanged.
+
+# Local onset runner checks passed; production CI building
+
+Portable44317404242 passed native tests, comparison contracts and synthetic buffer parity. CI44317046643 native tests passed; production VST3 build running. Follow that existing CI; on success dispatch the exact isolated trial recorded below once. No worker dispatched. Installed unchanged.
+
+# Local onset runner pushed; await portable check
+
+Native portable44317046624 passed. CI44317046643 still running. Runner source495f2d95d3bf787e9ad9437b2098d7c67c58d40b pushed; portable44317404242 running. Worker f95cb92f36e948398615e1af8d0870f993cf2de5 pushed. Follow those existing runs; after success dispatch exactly one m3-offload.yml task ordinary-harmonic-fixed-competition, dataset ordinary, note75,label_index10, assignment_diagnostic=local-onset, source_sha495f2d95d3bf787e9ad9437b2098d7c67c58d40b. Routing metadata retains reference10; actual report target451. No worker dispatched yet. Collect small report once into build/github-results/local-onset-RUNID. Installed unchanged.
+
+# Local onset native tests pass; isolated runner prepared
+
+Portable44317046624 build and Native tests passed; workflow comparison contracts still running. CI44317046643 running. Uncommitted tools/portable_ordinary_harmonic_admission.py and tests add isolated --local-onset-evidence (no harmonic cues/rescue flags), target451, preserved frozen OFF/ON/outcome identity and all passage/false/held rejection gates. 15 Python tests pass. Worker build/recovery/m3-offload-worktree workflow has uncommitted local-onset option using ordinary-harmonic-fixed-competition reference manifest. Do not push source until current portable completes (push cancels same-branch run). Then commit runner/tests, push worker routing, follow new portable build and dispatch one ordinary fixed-competition task with assignment_diagnostic=local-onset, note75,label10 routing metadata (actual report target451). No corpus trial launched yet. Installed unchanged.
+
+# Local onset trial cloud checks queued
+
+Source 2bb1a474d566ea6a9e9975104388ce1614c8d003 pushed. CI44317046643 and portable44317046624 queued. Default-off local onset evidence trial and focused delay/lane-reset/disabled tests committed; native execution only on GHA. Next follow these checks, fix any actual failure, then add isolated ordinary trial routing and measure passage/false/held gates before acceptance. Installed unchanged. ntfy milestone sent.
+
+# Local onset trial implementation in progress
+
+Uncommitted native header/source and replay.hpp/replay.cpp/replay_main.cpp add default-off --diagnostic-local-onset-evidence. Consecutive selected/direct/nonquiet/same-singleton lane observations accumulate; after candidate_evidence_decisions(false), bypass whole-signal energy only and retain normal attack/capacity/ownership. Persistent counters reset in reset/calibration/setter. New replay argument appended to preserve positional callers. git diff --check passes. No native execution locally. Next add focused causal tests for delay, reset/lane changes and disabled parity, review, then commit/push GHA checks and isolated ordinary trial routing. No workflow dispatched. Installed unchanged.
+
+# Candidate-local onset trial design ready
+
+Activation diagnostic44315668082 final and collected, including bounded evidence. All500 selected label451 frames direct, nonquiet, mask64, capacity available; energy blocks all, longest streak423. See checkpoint joint_rescue_design.activation_gate_diagnostic.admission_design. Next implement default-off consecutive direct/selected/same-singleton-lane onset evidence; bypass energy only after existing evidence duration, preserve attack delay and ownership. Test independently of harmonic rescue on GHA ordinary full passage/false/held gates. No code policy changed yet. Installed unchanged.
+
+# Activation gate confirmed
+
+Worker44315668082 final success; small report collected once at build/github-results/activation-gates-44315668082/trace/report.json. Label451: all500 selected frames blocked by energy;623 not selected. Full snapshot and raw MIDI bit-identical. No policy change. Bulk collected once; candidate hash verified. See energy-summary.json. Next inspect gate-time ratios, then targeted admission design; earlier evidence-retention remains rejected. Installed unchanged.
+
+# Activation gate diagnostic dispatched
+
+Portable44315373418 passed. Worker44315668082 dispatched once at source585c765657e8937844dc70f2a0875026068ab01e, worker5d6456928cfb6d0a890c012fc80b06e5917c9c7f: assignment-trace ordinary note65 label451 activation-gates. Follow run; collect m3-report-44315668082-1 once into build/github-results/activation-gates-44315668082. Full snapshot and MIDI parity required. Installed unchanged.
+
+# Activation trace runner pushed
+
+Source585c765657e8937844dc70f2a0875026068ab01e; worker5d6456928cfb6d0a890c012fc80b06e5917c9c7f. 11 Python tests pass including raw MIDI mismatch rejection. Prior instrumentation CI44314849636 and portable44314849972 passed. New portable44315373418 running; follow before one assignment-trace ordinary note65 label451 with assignment_diagnostic=activation-gates. No worker dispatched. Installed unchanged.
+
+# Activation runner extension in progress
+
+Portable44314849972 passed; CI44314849636 last observed running. Uncommitted tools/portable_assignment_trace.py adds --activation-gates: current-ON collision-only, bounded candidate trace, full snapshot/raw MIDI identity. Existing 10 Python tests pass. Next add focused new-path test and worker routing, then cloud validation and label451 replay. No worker dispatched; installed unchanged.
+
+# Activation diagnostic source checks running
+
+Source ae28326ecaf83561e2d5b324b8ada7359ab14dad pushed. CI44314849636 and portable44314849972 confirmed in progress. No worker replay dispatched. Follow existing checks, then bounded ordinary current-ON note65/label451 candidate trace (spectral-lane-collision policy only), with full snapshot and raw MIDI identity. Installed unchanged. Checkpoint joint_rescue_design.activation_gate_diagnostic.
+
+# Activation diagnostic implemented, awaiting GHA validation
+
+Offline-only CandidateDecisionTrace now appends the actual first onset-loop exit (selection, active, capacity, energy, evidence, attack delay, joint deferral, refused NoteOn, or activation), gate-time fast/slow/required energy, active count and pre-reset evidence/attack ticks. No onset policy changed. Candidate trace partition/parity test extended with energy-gate consistency. Whitespace check passes; native tests not run locally. Next review diff, commit source and run GHA checks, then bounded ordinary note65 label451 trace with full snapshot/MIDI parity. Installed unchanged.
+
+# Activation gate narrowed
+
+Label451 saved baseline: 500 selected frames, longest consecutive streak423; all direct fundamental evidence, two active candidates against maxpoly5, evidence/attack/age all zero. Selection resets and candidate capacity do not explain sustained interval. Whole-signal attack energy gate is leading hypothesis, not yet directly measured. Add offline-only first activation-blocker/energy diagnostic and bounded GHA replay with unchanged snapshot/MIDI identity before onset-policy changes. Evidence: build/github-results/common-detuning-44311060053/label451-activation-gates.json. No new build dispatched; installed unchanged.
+
+# Snapshot versus MIDI activation finding
+
+Label451 baseline has 500/1123 snapshot matches, all with candidate65 inactive. Code write_snapshot includes selected inactive (settling) candidates; snapshot_matches_label does not require tracking state. This explains why snapshot matches need not yield MIDI holds; it is not grounds to waive trial regressions. Evidence: build/github-results/common-detuning-44311060053/label451-snapshot-activation.json. Next distinguish selection resets from energy/evidence/capacity activation gates using existing diagnostics. Installed output and scores unchanged.
+
+# Common detuning final: targeted recovery, trial rejected
+
+Worker44311060053 completed successfully; small report collected once in build/github-results/common-detuning-44311060053; bulk remote. Both references identical. Versus temporal trial: +78 matches, -78 wrong-string outputs, +4672 held samples; label247 recovers79 frames, label446 loses1. Wrong-note/gap outputs unchanged. Combined trial still loses23 passages and adds false outputs; installed unchanged. See incremental-comparison.json and checkpoint joint_rescue_design.common_detuning_support. Next isolate admission errors and largest remaining passage loss label451; preserve target10/label247 recovery. Do not poll or redownload completed jobs.
+
+# Common detuning ordinary screen dispatched
+
+CI44310312567 and portable44310312802 passed at source3f3385575823e0172e49d557f351612281d491f7. Worker44311060053 dispatched once on worker3a6105d. Follow this run; collect m3-report-44311060053-1 once into build/github-results/common-detuning-44311060053. Require no passage loss or false-output growth. Installed unchanged. Checkpoint joint_rescue_design.common_detuning_support.
+
+# Common detuning source checks running
+
+Source3f3385575823e0172e49d557f351612281d491f7 and worker3a6105d pushed. CI44310312567 and portable44310312802 confirmed in progress. 14 runner tests pass including TRIAL-only routing; energy weighting disabled. Follow these checks before one common-detuning ordinary screen. No worker replay dispatched. Installed unchanged. Checkpoint joint_rescue_design.common_detuning_support.
+
+# Common detuning support experiment in progress
+
+Detector opt-in and comparison contract implemented, uncommitted. Intersect support across playable strings; empty intersection gives no detuning preference. Production default unchanged. Whitespace passes; native tests not run. Next wire replay CLI/runner/worker and run GHA checks before one recorded screen. See joint_rescue_design.common_detuning_support. No new remote run yet.
+
+# Detuning support mismatch identified
+
+Saved label247 evidence: wrong lane1 has no valid detuning comparison, but gains10.71491 log units relative to measured correct lane2 through valid-only centering. This is prior-trial evidence, not a new measured fix. Energy weighting loses837 frames overall; labels39/68/8 account for754 losses, label128 gains3 and247 is unchanged. See energy-weighted-descriptor-44306781482/detuning-support-finding.json. Next inspect partial-detuning support/contracts and design comparable-support likelihood before offline-only trial. All completed runs remain collected; no new run launched. Installed unchanged.
+
+# Energy-weighted descriptor final: rejected
+
+Worker44306781482 succeeded; small report collected once at build/github-results/energy-weighted-descriptor-44306781482. Both references identical. Compared with temporal trial: -837 matched frames, +837 wrong-string outputs, -51648 held samples; rescued target unchanged. 25 labels lose matches versus current ON. No promotion; installed unchanged. See incremental-comparison.json. Next compare saved per-label changes before a causal replacement; do not widen admission. Bulk remains remote.
+
+# Energy-weighted descriptor replay dispatched
+
+CI44306021405 and portable44306021305 passed at source1e09196. Worker44306781482 dispatched once on worker e9d9f39 using energy-weighted route, ordinary/fundamental veto. Collect small report once into build/github-results/energy-weighted-descriptor-44306781482. Require no passage loss or false-output growth; installed unchanged. Checkpoint joint_rescue_design.energy_weighted_descriptor.
+
+# Energy-weighted descriptor source pushed
+
+Source 1e09196e0155c21fadf753bf8a202fb4b497df7e pushed; 13 runner tests pass, including TRIAL-only flag routing. GHA CI44306021405 queued; portable44306021305 in progress. Worker energy-weighted route committed/pushed at e9d9f39e61295091ad5bc151689f775085942225; no replay dispatched. Source contracts passed; both native builds observed in progress. Native execution remains on GHA. Next follow source checks, then one bounded recorded replay. Installed unchanged. Checkpoint joint_rescue_design.energy_weighted_descriptor.
+
+# Energy-weighted descriptor implemented, unvalidated
+
+Uncommitted native comparison and offline flag --diagnostic-energy-weighted-descriptor added. Observation-only ratio weight min(1,12*a*b/(a+b)); same across strings, absent pairs zero, balance unchanged, default disabled. Three native contracts added for absent/tiny/supported partials and scale invariance. Whitespace passed; no native execution. Calibration hash matches ordinary-harmonic-admission reference manifest. Next wire ordinary runner/worker route and replay option coverage, then source commit and GHA checks before one bounded replay. Installed unchanged. Checkpoint joint_rescue_design.energy_weighted_descriptor.
+
+# Weak calibration partials identified
+
+Local canonical calibration note49 lane2 upper energies [4,0,0] versus wrong lane1 [0,0,0]: only 0.0122% upper energy creates unequal log-ratio penalties. Saved trace upper term supplies +5.084705 wrong-lane advantage. Note45 third partial is 6 versus15 Q15 units. No reliability weighting exists in compare_harmonic_evidence. See partial-reliability-finding.json in posterior-descriptor-44299693688. Remote calibration hash still needs provenance match; observed raw energies absent from trace. Next default-off energy-supported comparison after provenance match, with weak/zero-partial contracts and GHA bounded replay. No policy change; installed unchanged.
+
+# Descriptor diagnostic collected and attributed
+
+Worker44299693688 final success; small and bulk artifacts collected once at build/github-results/posterior-descriptor-44299693688. Four trace hashes verified and all full snapshot/MIDI parity checks pass. component-attribution.json: label128 first correct-to-wrong divergence2344767 lower term +1.03047 wrong-lane advantage; label247 divergence4494847 upper +5.08471, lower -0.00869. Balance negligible. Inspect observed/calibrated partial energy reliability next; removing upper head cannot fix both. Trial rejected; installed unchanged. Do not poll or redownload.
+
+# Descriptor diagnostic final; evidence collection active
+
+Worker44299693688 succeeded. Small report collected once at build/github-results/posterior-descriptor-44299693688. All four paired traces preserve full snapshot and MIDI identity. Tracking trial remains rejected for passage losses and false-output growth; installed unchanged. Single bulk download is active in terminal session8500; do not duplicate. After completion run analyze-components.py in that output directory and inspect labels128/247. Checkpoint joint_rescue_design.posterior_descriptor_diagnostic. ntfy confirmed HTTP200 inline562 bytes, idp01GVSc3aA2M.
+
+# Descriptor paired diagnostic dispatched
+
+CI44299079515 and portable44299080722 passed at sourcefb84c5f. Worker44299693688 dispatched once at worker78f98bf with posterior-loss route. Follow this run; collect small report once into build/github-results/posterior-descriptor-44299693688, then descriptor evidence if parity passes. Two bounded windows, same-policy full snapshot/MIDI identity required. Installed unchanged. Checkpoint joint_rescue_design.posterior_descriptor_diagnostic.
+
+# Descriptor bounded trace reader fixed; checks queued
+
+Source fb84c5f pushed. Portable44299080722 queued, CI44299079515 pending. Previous portable44298810503 failed the remaining bounded reader at line1710; first two updated readers passed. Fixed count and six shifted indexes. No worker dispatched; follow these source checks before bounded paired posterior-loss replay. Installed unchanged.
+
+# Descriptor trace test fix: source checks running
+
+Source 4d8cf49 pushed. Portable 44298810503 running; CI 44298810316 pending. Previous portable 44298437561 failed only two stale 104-column trace assertions after schema expanded to 111. Shifted readers and added descriptor finite/range checks. Follow these new runs before one bounded paired posterior-loss replay. No worker dispatched. Installed unchanged. ntfy confirmed HTTP200 inline553 bytes, id78xjwq3lgXe1.
+
+# Descriptor diagnostic source checks running
+
+Sourceba0d0ec pushed. Portable44298437561 in progress; CI44298437487 queued. Diagnostic-only fast/settled lower/upper/balance and transient fields added; no tracking-policy change. Follow these source checks before one bounded posterior-loss paired replay. No worker dispatched. Installed unchanged. Checkpoint joint_rescue_design.posterior_descriptor_diagnostic.
+
+# Pending posterior descriptor conflict isolated
+
+Existing paired trace44288828577 shows profile similarity favors correct lane2 in both losses128/247, but aggregate descriptor favors wrong lane1 by1.16133/5.07599 log units; detuning adds10.71491 in247. Recovered algebraically from saved lane_terms; no new processing. Next split descriptor lower/upper/balance and transient blend with bounded paired diagnostics; preserve output identity. This is prior-trial evidence, not a trace of temporal correction. See likelihood-attribution.json in build/github-results/posterior-loss-44288828577 and active checkpoint. Installed unchanged.
+
+# Temporal-prior replay final: rejected
+
+Worker44294955015 completed; small report collected once at build/github-results/pending-temporal-44294955015. Both saved references identical. Versus current ON: +7900 matches, +1652 wrong-note, +3838 wrong-string, +2339 gap outputs;24 labels lose matches. Increment versus prior posterior trial: +51 matches,-51 wrong-string,+3584 held samples. CI and portable passed. Installed unchanged. Next inspect remaining losses128/247; do not widen policy. Bulk remains remote.
+
+# Temporal-prior source CI passed; recorded replay active
+
+CI44294436363 and portable44294436360 passed at source3b07d84. Worker44294955015 remains in progress; collect its small report once when available. No measured tracking gain yet; installed unchanged.
+
+# Pending temporal-prior recorded replay dispatched
+
+Worker44294955015 queued at worker78f98bf, source3b07d84. Portable44294436360 passed native tests/replay contracts/synthetic parity. CI44294436363 still installing GUI dependencies. Follow these existing runs; collect small worker report once into build/github-results/pending-temporal-44294955015. No measured guitar gain yet; installed unchanged. Checkpoint joint_rescue_design.pending_temporal_prior_experiment.
+
+# Pending temporal-prior correction pushed
+
+Source 3b07d840feae7333ad10916ae09d40bae83b4efd pushed; CI44294436363 and portable44294436360 confirmed in progress. Follow these runs before any worker dispatch. Offline-only pending onset uses existing energy-rise signal after first observation; tests cover first/continuing/rising/restarted attacks and allocations. Native tests not yet run. After passing source checks, use existing pending-posterior route for one recorded replay. Installed unchanged; no measured gain yet. Checkpoint joint_rescue_design.pending_temporal_prior_experiment.
+
+# Paired posterior loss diagnosed; temporal prior reset found
+
+Worker44288828577 final success; small and bulk evidence collected once. All four traces preserve full snapshot/MIDI identity. First output divergence is target note45 at2349119 and note49 at4494847: new posterior term reverses correct pending lane2 to wrong lane1. Wrong posterior probabilities0.761 and0.998; confidence alone is insufficient. Pending candidates force onset_strength=1 each tick, mathematically resetting predicted prior to uniform. Next evaluate actual energy-rise onset during pending attacks before default-off correction/GHA replay. This is a hypothesis, not measured gain. Installed unchanged; trial remains rejected. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json joint_rescue_design.posterior_loss_diagnostic. Do not poll or redownload completed jobs.
+
+# Paired posterior loss diagnostic dispatched
+
+Source portable44288596097 passed. Worker44288828577 dispatched once at worker78f98bf and source4cf67ed. Follow this run; collect small report once into build/github-results/posterior-loss-44288828577. Paired OFF/ON traces cover labels128 and247 with full-output/MIDI parity checks. Installed unchanged.
+
+# Paired posterior loss diagnostic source checks running
+
+Source4cf67ed portable44288596097 is in progress. Worker78f98bf route posterior-loss ready. Local12 runner tests passed. Follow source checks, then dispatch exactly one recorded paired diagnostic using checkpoint joint_rescue_design.posterior_loss_diagnostic. No worker dispatched yet. Captures23.5-24.6s and46.5-47.6s OFF/ON with identical cues and full-output/MIDI parity. Installed unchanged.
+
+# Pending posterior replay final: rejected
+
+Worker44284371807 completed successfully; small report collected once in build/github-results/pending-posterior-44284371807. Increment versus joint-rescue: +796 matched frames, -796 wrong-string outputs, +48320 exact held samples; eight labels lose snapshot matches and five lose held samples. Whole trial remains rejected; installed unchanged. Next diagnose labels128 and247 before isolating this option. See docs/recovery/github-harmonic-source-continuity-20261117.json joint_rescue_design.pending_posterior_experiment. Do not poll or redownload completed small report.
+
+# Pending posterior recorded replay dispatched
+
+Source portable44283705478 and CI44283705614 passed. Worker44284371807 dispatched once with source2100b8424fab6cbf492f8a6429bf2ef2e4d2a0eb and pending-posterior option; worker79d25e186df98765035b9041671cad5b769bafa5. Follow this run; collect small report into build/github-results/pending-posterior-44284371807 once. Installed unchanged, audio gain unmeasured. Checkpoint joint_rescue_design.pending_posterior_experiment.
+
+# Pending posterior GHA checks running
+
+Source2100b84 pushed with offline-only pending posterior and native eligibility/allocation contracts. Portable44283705478 passed all checks; CI44283705614 still running (source contracts passed, native build underway). Worker79d25e1 pushed; option pending-posterior adds calibrated-prior, joint-rescue, pending-string-posterior and assignment diagnostic. Follow source checks before one recorded replay; none dispatched yet. Checkpoint joint_rescue_design.pending_posterior_experiment. Installed unchanged.
+
+# Pending posterior diagnostic implemented, unvalidated
+
+Uncommitted offline-only --diagnostic-pending-string-posterior wired through detector/replay/ordinary runner. Existing regular weight0.25, pending non-emitting singleton with attack evidence; group and handoff exclusions; joint allocation unchanged. Python AST and whitespace pass. Next add native behavioral contracts, worker option, source commit/push and GHA checks, then recorded replay. No native execution or measured gain yet; installed unchanged. Checkpoint joint_rescue_design.pending_posterior_experiment.
+
+# Pending posterior evidence bypass found
+
+Saved bounded trace has22 labeled pending rows and one correct-to-wrong switch. At659775 correct lane4 posterior0.837946 vs wrong lane3 0.031154, but use_posterior is gated off for pending/chord candidates. Existing regular weight0.25 adds about0.823 relative penalty to wrong lane, exceeding its0.592 local advantage; this is arithmetic, not replay proof. Next implement default-off pending calibrated singleton posterior diagnostic using existing weight and joint allocation; no arbitrary retention bonus. Checkpoint joint_rescue_design.pending_posterior_finding; analysis pending-lane-switch-analysis.json in joint-rescue44277602068. No new native run; installed unchanged.
+
+# Pending attack string continuity gap located
+
+Source inspection confirms pending attacks receive no lane retention: retained_lane requires active=true; existing provisional bonus4.0 begins only after activation. Attack confirmation counts selected pitch decisions regardless of string changes. This explains how the observed0.5921537 advantage switches lane during attack4/10, but does not prove the first lane should be retained. Next compare initial-lane correctness and legitimate corrections in the saved trace before a bounded pending-identity experiment. Checkpoint joint_rescue_design.pending_attack_cost_diagnosis. Installed unchanged; no new run launched.
+
+# Joint rescue failure diagnosed: cost still selects wrong string
+
+Run44277602068 final/rejected; small and evidence artifacts collected, trace hashes verified. At sample659775 note65 correct lane4 is now eligible (effective216), but wrong lane3 wins cost by0.5921537 during pending attack4/10. MIDI identical to previous trial; no match or hold gain. Next inspect cost terms and pending-attack continuity; do not widen eligibility-only policy. Finding: build/github-results/joint-rescue-44277602068/joint-rescue-trace-finding.json. Installed unchanged.
+
+# Joint rescue completed: rejected, no match or hold gain
+
+Run44277602068 final success; small report collected once at build/github-results/joint-rescue-44277602068. Comparison and target result equal previous trial44272371890: 23 lost labels, 17 held losses and increased false outputs versus baseline. Trace preserves trial snapshot/MIDI. Source checks passed; installed unchanged. Evidence download51381 failed with connection reset; retry session61329 is active; do not duplicate. Next inspect note65 label39 effective mask at659775 and joint costs. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json joint_rescue_design.
+
+# Joint rescue recorded-guitar comparison dispatched
+
+Source954bcee portable44277003193 and CI44277003286 passed. Worker44277602068 dispatched once at worker9e95a92; ordinary joint-rescue comparison, note75 label10. Follow this run and collect small report once into build/github-results/joint-rescue-44277602068. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json joint_rescue_design. Installed unchanged; no audio gain measured yet. ntfy receipt eXKzK40I2RLp.
+
+# Joint rescue trace assertion corrected; GHA active
+
+Source954bcee: portable44277003193 in_progress; CI44277003286 pending. Earlier44276731394 detector tests passed but replay failed raw-text equality due to final TSV newline; numeric equality fixes assertion. Worker9e95a92 ready. Follow corrected runs before dispatch with checkpoint joint_rescue_design.worker_inputs. No audio gain measured; installed unchanged. ntfy sent successfully.
+
+# Joint rescue worker ready; source tests running
+
+Worker9e95a92 pushed from build/recovery/m3-offload-worktree; joint-rescue option adds only the new flag to calibrated-prior tracing. Source28c5fff diagnostic build passed; portable44276731394 native tests running, CI44276731409 active. Wait for these checks before one worker dispatch using checkpoint joint_rescue_design.worker_inputs. No audio result yet; installed unchanged.
+
+# Joint rescue GHA checks running
+
+Source28c5fff: portable44276731394 and CI44276731409 confirmed in_progress. Follow these existing runs. No audio result yet; worker wiring pending; installed unchanged.
+
+# Joint rescue source pushed for GHA validation
+
+Source 28c5fffbac7ca815650827d128ae4644789d2c39 includes owner-protected alternatives, native contracts and effective-mask trace provenance. Push succeeded; initial run-list query returned no entries yet. Locate automatic source CI/portable runs by full SHA before dispatching anything. Worker option wiring and ordinary replay remain pending. Installed unchanged.
+
+# Joint rescue alternatives implemented, unvalidated
+
+Uncommitted default-off --diagnostic-joint-rescue-eligibility adds unowned alternatives to the existing rescue assignment mask, preserving original admission and fine-frequency sentinel. Native API/CLI and ordinary runner wired. Local Python AST and whitespace checks pass; native contracts, trace eligibility provenance and GHA worker wiring pending. No native execution or installed change. See checkpoint joint_rescue_design.
+
+# Joint rescue assignment experiment bounded
+
+Checkpoint joint_rescue_design specifies a separate default-off eligibility experiment. Preserve existing rescue admission and its nonzero mask: that mask also disables fine-frequency multi-source acquisition. Widen assignment only within physical/selector eligibility minus other active assigned/MIDI owners; joint DP retains uniqueness and group-extra reservations. Implementation and GHA verification pending; installed unchanged.
+
+# Rescue eligibility mismatch confirmed
+
+Run44272371890 trace collected once, hashes verified, output/MIDI identity passed. At659775 selector_used144 excludes correct lane4; rescue_allowed72 forces pending note65 to lane3 at4/10 attack ticks although final other voices use2,5,1. Evidence: build/github-results/rescue-eligibility-trace-44272371890/eligibility-provenance.json. Next reconcile rescue feasibility with joint assignment while protecting actual coasting owners. Do not remove constraint blindly; underlying policy still rejected, installed unchanged.
+
+# Rescue eligibility diagnostic completed
+
+GHA44272371890 succeeded; small report collected once in build/github-results/rescue-eligibility-trace-44272371890. Trace preserves full snapshot and raw MIDI identity, all1242 rows retained. Underlying policy remains rejected. Next retrieve trace once and inspect sample659775 eligibility provenance. Installed unchanged. Do not poll or recollect completed run.
+
+# Assignment trace test schema corrected
+
+Source2d7dbb9 updates trace tests from99 to103 columns and verifies eligibility mask reconstruction. Portable44272357038 failed the two stale-schema trace tests; detector tests passed. Source portable44273097512 and CI44273097271 passed; see checkpoint rescue_eligibility_trace.schema_test_fix. Existing worker44272371890 remains active at2ac6efd; do not duplicate it. Installed unchanged.
+
+# Rescue eligibility diagnostic active
+
+GHA44272371890 queued at source2ac6efd9fee66623c14e30be6fa6e9c2bc9acf02, worker89a161a878234a1810833e051bbebd427854d397. Source CI44272357056 and portable44272357038 in progress. Four observation-only eligibility fields added; no policy change. Follow existing run, collect m3-report-44272371890-1 once into build/github-results/rescue-eligibility-trace-44272371890. Require snapshot/MIDI identity and inspect659775. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json key rescue_eligibility_trace. Installed unchanged.
+
+# Calibrated assignment prior: rescue eligibility mismatch
+
+GHA44267870125 is final, rejected, and small/bulk evidence collected once. Installed plugin unchanged. Initial correct lane4 for note65 is excluded at659775 after4/10 attack ticks by a dynamic rescue eligibility mask72; final other voices occupy2,5,1, leaving4 unused. Selector spare-lane witness differs from final assignment. Exact witness provenance is not yet traced; do not remove the safety constraint blindly. Added uncommitted diagnostic-only provenance fields physical_playable, selector_used, selector_override, rescue_allowed in three native files. Whitespace check passes; native verification pending. Next commit those files and run existing calibrated-prior GHA diagnostic route with snapshot/MIDI identity checks. Evidence: build/github-results/calibrated-assignment-prior-44267870125/rescue-eligibility-finding.json. Authoritative checkpoint: docs/recovery/github-harmonic-source-continuity-20261117.json.
+
+# Calibrated assignment prior replay dispatched
+
+GHA44267870125 follows source7cc98a0 and worker89a161a. Fixed-competition ordinary replay with fundamental veto and calibrated-prior assignment experiment; tracing must preserve untraced trial. Follow existing run, collect m3-report-44267870125-1 once into build/github-results/calibrated-assignment-prior-44267870125. Full ordinary passage/held/false-output gates determine acceptance; installed unchanged. Local AST and whitespace checks pass; GHA native verification pending.
+
+# Calibrated assignment prior switch implemented, unvalidated
+
+Uncommitted native detector/replay change adds --diagnostic-calibrated-assignment-prior, default false, appended replay API parameter. Complete calibration enables existing0.005 assignment fret weight regardless of isolated readiness; other cost terms unchanged. Non-diagnostic replay rejects flag. git diff --check passed; no native build executed locally. Next wire optional runner experiment and GHA contracts/replay, inspect ordinary full-passage/false-output gates. Not accepted or installed.
+
+# Calibrated assignment prior experiment specified
+
+Code confirms assignment fret weight remains 1 for chords because calibrated_reassignment_ready requires isolation; existing calibrated weight is0.005. Existing fretted-prior diagnostic changes selector cost, not assignment. Next add distinct default-off offline assignment-prior switch for complete calibration only, retaining all posterior/phase/retention gates; compare full ordinary passage/held/false-output gates before corpus validation. Specification in current checkpoint initial_assignment_diagnostic.code_finding. Not implemented or measured; installed unchanged.
+
+# Initial assignment cost mechanism identified
+
+Trace at659519: lane4 fret17/profile-90.6268/total-73.6268; lane6 fret9/profile-88.2282/total-79.2282. Correct lane4 profile advantage is outweighed by fret prior; posterior and cents penalties absent. At680255 cents evidence selects lane4 despite lane6 retention. Evidence: build/github-results/initial-assignment-diagnostic-44263272612/initial-assignment-finding.json. Next inspect general acquisition prior/confidence before a bounded default-off policy test; no promotion or installed change.
+
+# Initial assignment diagnostic collected
+
+GHA44263272612 completed successfully. Report and evidence collected once at build/github-results/initial-assignment-diagnostic-44263272612; hashes verified. Full snapshot/labels and raw MIDI bit-identical with tracing. Trace retains all1242 rows over6.7-7.3s. Next inspect note65 initial lane6 versus correct lane4 costs. Policy remains rejected; installed unchanged. Do not poll or redownload this run.
+
+# Initial assignment diagnostic replacement active
+
+GHA44263272612 queued with explicit note75,label10; source c5f99ed9c86f3dd830323546f41207845459d3ce, worker3b6747f5133583d9cfc56362f8beafe4c9531f64. Source portable44263021486 passed. Prior44263051300 failed input validation before processing, no artifacts. Follow replacement; collect m3-report-44263272612-1 once into build/github-results/initial-assignment-diagnostic-44263272612. Trace6.7-7.3s must preserve full output and MIDI. Installed unchanged.
+
+# Initial assignment diagnostic prepared
+
+Uncommitted optional --assignment-diagnostic in tools/portable_ordinary_harmonic_admission.py replays the same experimental cues with all-tick assignment costs over 6.7-7.3 seconds; requires complete snapshot/label and raw MIDI parity before retaining trace. Local AST and diff whitespace checks pass. Native execution not run. Next wire explicit worker input, run GHA contracts and bounded diagnostic, then inspect note65 initial lane6 versus lane4. No policy or installed change.
+
+# Fundamental veto MIDI delta resolved
+
+Both trials have11903events; only three note65 event tuples change. Initial wrong lane6 starts23296samples earlier, correct lane4 starts17920samples earlier, net wrong-lane duration+5376samples. Gap57 events identical: no extra MIDI from the suspected gap cue. Bulk archive collected once and digest verified; do not redownload. Evidence: build/github-results/fundamental-veto-replay-44259013770/raw-midi-incremental-comparison.json. Next inspect initial lane assignment around660095 and680255. Full policy remains rejected; installed unchanged.
+
+# Fundamental veto native replay final: rejected
+
+Run44259013770 completed; small report collected once with verified digest at build/github-results/fundamental-veto-replay-44259013770. Target75 gains58433/71894 exact held samples, but wrong-note outputs+1706, wrong-string+6746, gap+2357; label117 loses18 frame matches and1152 held samples. Both saved references retain identity. Installed output unchanged. Next compare prior fixed-competition trial to isolate this experiment and inspect note57 gap MIDI if needed. Do not rerun or recollect completed job.
+
+# Fundamental veto native replay dispatched
+
+GHA44259013770, source62ad0db555556c847e3e4edaccada58bbcd5e06d. Explicit experimental switch; defaults unchanged. Worker runs contracts before ordinary replay with raw MIDI capture and frozen reference checks. Follow existing run, collect m3-report-44259013770-1 once into build/github-results/fundamental-veto-replay-44259013770. Check passage/false-output gates and note57 gap reattack; no installed change. Checkpoint fundamental_veto_native_replay in docs/recovery/github-harmonic-source-continuity-20261117.json.
+
+# Gap admission lifecycle resolved; native effect remains unmeasured
+
+Both saved variants release note57 at6474879; experimental cue starts6489088, 14209samples (148.01ms) later. This is potential re-admission, not held-note continuation. Native rescue still passes downstream selection/evidence/attack gates, so an added cue is not proof of extra MIDI. Next prepare bounded GHA ordinary experimental-cue replay with unchanged references and passage/false-output checks. Do not add a cooldown from this evidence. Checkpoint gap_lifecycle_followup in docs/recovery/github-harmonic-source-continuity-20261117.json. Installed output unchanged.
+
+# Ordinary admission screen final and collected
+
+Worker44255799538 passed19 numerical contracts; report collected once with verified digest. Source44255760850 passed. Admission transitions:2675 unchanged rejected,774 unchanged admitted,7 newly admitted. Proposed cue spans:6144 samples on expected pitches,1024 in an unlabeled gap (note57,available6489087). This is not emitted MIDI or measured frame gain. No promotion; installed output and scores unchanged. Next inspect saved gap admission against the six expected-pitch changes before choosing a replacement or native replay. Checkpoint fundamental_veto_ordinary_screen in docs/recovery/github-harmonic-source-continuity-20261117.json; report and classification in build/github-results/ordinary-source-continuity-44255799538. Do not poll or recollect.
+
+# Ordinary admission screen dispatched
+
+Worker44255799538, sourcedb467dbd018bdf45989b3789861cd73e29d1895b, worker8109e4237bc49ce894e1bd9fc7d59db89f714a74. Follow existing run, collect m3-report-44255799538-1 once into build/github-results/ordinary-source-continuity-44255799538. Screens all eligible ordinary saved-state admissions with optional fundamental veto rule, bounded2400seconds. No native replay, installation or score changes. Classify changed admissions against labels before any broader replay. Checkpoint fundamental_veto_ordinary_screen in docs/recovery/github-harmonic-source-continuity-20261117.json.
+
+# Fundamental veto experiment final and collected
+
+Source44255388655 and worker44255402988 passed. Report archive digest verified, collected once at build/github-results/ordinary-source-continuity-44255402988. Real65 admissions2->3 across9 eligible windows; false74 unchanged9/50. The single recovered window is659455. All80 baseline diagnostic decisions retain parity. This is focused admission evidence, not MIDI or corpus acceptance. Existing false74 persists. Next evaluate admission changes across ordinary saved outcomes, then address decay-aware lower competitor evidence separately; no promotion. Default disabled; installed plugin and scoreboard unchanged. Checkpoint fundamental_veto_experiment in docs/recovery/github-harmonic-source-continuity-20261117.json. Do not poll or recollect completed runs.
+
+# Fundamental veto experiment dispatched
+
+Source b1363a78de1c1d8039f18b8b165c5479ded9c6b1; portable tests44255388655 observed in_progress. Worker44255402988 observed queued; follow existing runs, never duplicate. Collect m3-report-44255402988-1 once into build/github-results/ordinary-source-continuity-44255402988. Optional experiment checks independent fundamental prediction after original two-partial admission; production default remains disabled. Focused recorded comparison is not corpus acceptance. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json fundamental_veto_experiment. Installed plugin and scores unchanged.
+
+# Shared-background sensitivity final and collected
+
+Worker44254936333 passed nine numerical contracts; small report collected once and digest verified. All80 decisions unchanged. Shared background gain leaves real65/lower63 fundamental power ratio2.96162 versus false74/lower62 ratio0.0461479 (third0.460374). A common background amplitude change does not reverse the contrast. Conditional evidence only; blanket lower-note persistence remains unsupported. Next address upper-note admission: compare independently supported fundamental and shared harmonic evidence for real65 and false74, then choose a causal change with false-output controls. Stop expanding background diagnostics absent conflicting evidence. Installed output and scores unchanged. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json shared_background_gain_diagnostic. Do not poll or recollect completed worker.
+
+# Shared-background gain sensitivity dispatched
+
+Worker44254936333 uses source4f018a914457a88f7d2c5a9748a2478a40164387. Numerical contracts gate bounded retained recording analysis. Follow existing run; collect m3-report-44254936333-1 once into build/github-results/ordinary-source-continuity-44254936333. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json shared_background_gain_diagnostic. No policy, installed output or score change. Compare gain-adapted lower-partial estimates with frozen-background evidence before choosing retention behavior.
+
+# Frozen-background diagnostic final and collected
+
+Source44254332837 and worker44254416314 passed; seven numerical contracts passed. Small report collected once and SHA verified at build/github-results/ordinary-source-continuity-44254416314. Do not poll or recollect. 51/51 conditional fits available; all80 decision rows unchanged. At false74 admission sample2973695, lower62 fundamental prediction/training power=0.0338883 and third=0.609463. At real65 failure sample659455, lower63 fundamental ratio=3.50698. Conditional on stationary background; not independent source-presence proof. Blanket lower-note persistence is unsupported. Next test background-evolution sensitivity before a persistence policy; real65 supported-partial limitation remains separate. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json frozen_background_diagnostic. No installed or score change.
+
+# Frozen-background retained-recording check dispatched
+
+Worker44254416314 uses source1e553094d350e4958914c5d462ad3e6afa9064f6 and workerffc57b30ef9bb8b0674b19e79918a266b3590913. Numerical contracts gate recording analysis. No native replay or policy change. Follow existing run; collect m3-report-44254416314-1 once into build/github-results/ordinary-source-continuity-44254416314. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json frozen_background_diagnostic. Source portable44254332837 still in progress at dispatch.
+
+# Frozen-background continuity contracts running
+
+Source1e553094d350e4958914c5d462ad3e6afa9064f6 implements conditional candidate adaptation with nuisance coefficients frozen from the full training window. Portable run44254332837 observed in_progress; follow existing run. Syntax/diff checks passed; numerical contracts pending GHA. No policy, installation or score change. Background evolution can contaminate estimates; these are not source-presence verdicts. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json frozen_background_diagnostic. Next inspect tests, then bounded retained recording analysis if passed.
+
+# Continuity geometry diagnostic final and collected
+
+Source portable44253691223 and worker44253783676 passed. Small report collected once with verified hash; do not poll or recollect. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json geometry_diagnostic. Decisions remain identical across80 focus rows; no policy or installed-score change. Candidate separation remains unidentifiable in short segments after removing redundant nuisance directions. This rules out simple nuisance-rank cleanup as the fix; it does not establish note disappearance. Next evaluate a constrained causal temporal model against real65 and false74, preserving unavailable states and using only already-observed audio.
+
+# Lower-source continuity recording diagnostic final and collected
+
+GitHub worker44253183600 completed successfully; small artifact collected once and SHA-256 verified. Checkpoint docs/recovery/github-harmonic-source-continuity-20261117.json recorded_audio. Diagnostic decisions unchanged across80 focus rows. All51 lower-comparison prediction-segment fits are unavailable due to rank/conditioning; this does not establish source loss or onset. Next diagnose segment identifiability against the frozen harmonic nuisance model before another run or policy change. Installed output and scores unchanged. Do not poll, rerun or recollect this completed job.
+
+# Lower-source continuity diagnostic implemented; source tests passed
+
+Source `12ee5c324262b414d4a80e21638701912cd59eaa` adds optional observation-only lower-partial energy/phase measurements across early training, late training and already-observed prediction segments. Unidentifiable segments are explicitly unavailable. No onset claims, cues or admission changes. Four numerical contracts are included in portable Actions run44252691610, final success; do not relaunch. Local syntax/diff checks passed; numerical/audio execution remains on GHA. Checkpoint `docs/recovery/github-harmonic-source-continuity-20261117.json`; status portable_compute.harmonic_source_continuity. Next wire bounded diagnostic against retained outcomes/audio without repeating native replay. Installed output/scoreboard unchanged.
+
+# Saved onset fields cannot support temporal resets
+
+Focused saved-outcome inspection is at `build/github-results/ordinary-harmonic-fixed-competition-43994253844/saved-onset-focus.json`. Lower62 (667 rows), lower63 (380), upper65 (392), upper74 (790) are all inactive with onset=0 and attack=0. The TSV omits `string_fret_onset_observed`; native onset assignment runs only with posterior_available and assigns inactive candidates 1. Therefore zero is not evidence of no re-pick. Do not build onset-reset persistence from these saved zeros. Next implement an offline causal audio-derived lower-source continuity diagnostic with explicit availability/source-loss state; evaluate real65 loss separately from false74 admission. No audio replay, policy change, new score or installation this turn.
+
+# Saved temporal admission mechanism identified
+
+Saved decision timeline: `build/github-results/ordinary-harmonic-fixed-competition-43994253844/saved-temporal-focus.json`. Lower62 prediction support repeatedly changes sign, bypassing the upper comparison during false74 admission windows. The native cue gates diagnostic rescue (polyphonic_pitch_detector.cpp:5095); expiry is not an explicit release command. Real65 admission is also intermittent, so blanket persistence can suppress real notes. Next design causal lower-harmonic evidence state with onset/source-loss resets, then evaluate it offline against target75, real65, false74 and all passage/false-output gates. No new replay, score, DSP change or installation.
+
+# Saved harmonic focus comparison completed
+
+Saved evidence now local in build/github-results/ordinary-harmonic-fixed-competition-43994253844/saved-focus-comparison.json. Evidence artifact14289093862 collected once and digest verified; do not redownload. Real65 sample659455 remains withheld by the two-supported-harmonic rule despite positive fundamental prediction gain. False74 initial sample2966527 remains withheld; at later sample2973695 lower62 fails independent support (gain -0.0200563852), so upper comparison is bypassed and false74 is admitted in both policies. This identifies different limiting gates for true-note loss and surviving false octave; no DSP or installed changes. Next inspect saved temporal lower62 support around this later onset and real65 harmonic support before designing a replacement; no threshold sweep or repeated audio replay.
+
+# Current checkpoint: bounded timing diagnostic final and collected
+
+GitHub worker 44249697052 completed successfully at source cc95ab67089667e6c7d1d1f71502455acae41a55 / worker 9b75bbe4401fa44c71a2fa85e427913d2e8aec1c. All 32 checks on extended-highmid and extended-high pass; all eight timed runs have zero allocations/frees and zero overruns. Maximum 184649 ns; p99 maximum 67046 ns, against unchanged 333333/166666 ns limits. Small report collected once with verified server digest at build/github-results/vst3-timing-location-44249697052/vst3-timing-location/report.json; bulk remains remote. Do not poll, rerun or redownload completed runs.
+
+Previous full-corpus maximum-time failures did not recur; cause remains unknown. This bounded diagnostic has corpus_gate_pass=null and does not supersede full-corpus rejection. Pitch multiplicity, buffers/formats, labels and false-output gates pass for these two datasets. Installed plugin/default/scoreboard unchanged. Source portable 44249665795 passed. Checkpoint docs/recovery/github-vst3-stable-note-corpus-20261117.json nested bounded_timing_location contains timing block locations and collection metadata.
+
+Next: compare retained fixed-competition decisions for real65/lower63 and false74/lower62 against the prior trial, following docs/recovery/github-ordinary-harmonic-fixed-competition-20261116.json. Explain unchanged recorded raw MIDI using saved evidence before another policy trial. Acoustic re-pluck preservation remains unmeasured: current corpus reader supplies span/pitch/string labels, not within-hold attack annotations. Tagged-event routing tests do not close that gate. Retain original timing failures and external host gates; do not repeat the bounded diagnostic merely to accumulate passing runs.
+
+# Current checkpoint: build passed; full-corpus promotion rejected on timing
+
+Bounded diagnostic selection is now implemented locally in tools/portable_vst3_stable_note_corpus.py (`--datasets extended-highmid extended-high`). Explicit selections report scope=bounded diagnostic and corpus_gate_pass=null, preserving full-corpus defaults. Thirteen runner/timing contracts passed. Changes are not committed or dispatched; next wire the bounded selector into the existing worker workflow, then offload the two-recording diagnostic. No native processing ran locally.
+
+Timing-location diagnostic committed/pushed at `05505c03c2ca8b09747d84c1ff7c783365562414`. Source CI44248943796 and portable44248943771 completed successfully. Native tests, production VST3 packaging, replay contracts and synthetic buffer parity passed. Package collected once and server archive hash verified in build/github-results/vst3-build-44248943796; not installed. Do not poll or recollect completed runs. Adds max-block sample position/frame count outside measured process; no DSP/gate change. Recorded diagnostic not dispatched yet; next use a bounded two-recording screen, not a duplicate full corpus.
+
+Run **44245557161** is final/failure at source `3837130f692871808b17b73a8fb25d279905ce50`, worker `75d4a6cbb3c469b3463ed695f14fcc5352c76d02`. Native build passed. Small report collected once and SHA-256 verified; do not poll or download again. Checkpoint: `docs/recovery/github-vst3-stable-note-corpus-20261117.json`; status `portable_compute.vst3_stable_note_corpus`. Report: `build/github-results/vst3-stable-note-corpus-44245557161/vst3-stable-note-corpus/report.json`. Bulk remains remote.
+
+All 14 pitch-multiplicity, per-label coverage/hold/attack and false-output comparisons pass. 222/224 native runs pass all gates; 12/14 datasets pass the combined gates. Two stable-note timed runs each exceed the 333333ns maximum once: extended-highmid float64 max353850ns (p99 62640ns), extended-high float32 max357359ns (p99 66753ns). Other gates pass, including allocation, dry-audio and buffer/format checks. These are measured deadline failures; their cause is not yet diagnosed. No promotion or installation. Acoustic re-plucks, physical-string assignment and external-host readiness remain unverified by this screen.
+
+Next: narrowly diagnose these two timing failures before another candidate. Do not automatically repeat completed processing. Installed plugin/default/scoreboard unchanged. All native execution remains on GitHub Actions. Earlier annotation-validation error is fixed: all 14 annotations preflight and all 224 native runs completed.
+
+# Latest result: corpus runner stopped on annotation validation
+
+Run44241978295 is final/failure. Small artifact collected once and SHA-256 verified; do not poll or redownload. Report: `build/github-results/vst3-stable-note-corpus-44241978295/vst3-stable-note-corpus/report.json`. Error: `ValueError: Invalid annotation bounds or pitch/string identity`. Last recorded stage `extended-high/stable_note-64-1024-plain`; inspect runner label validation and identify offending dataset before a replacement. Partial native measurements retained; no full-corpus acceptance or installation. Checkpoint `docs/recovery/github-vst3-stable-note-corpus-20261117.json`.
+
+# Current checkpoint: full-corpus stable-note component screen dispatched
+
+Checkpoint: `docs/recovery/github-vst3-stable-note-corpus-20261117.json`; status `portable_compute.vst3_stable_note_corpus`. GitHub worker44241978295 at source2c9560b4ee798dcd9bd295881fffd2948e15ed24 / worker75d4a6cbb3c469b3463ed695f14fcc5352c76d02. Dispatched once; query this run only, do not duplicate. Small artifact `m3-vst3-report-44241978295-1` not collected; collect once into `build/github-results/vst3-stable-note-corpus-44241978295` when final, leaving bulk remote.
+
+The runner compares both routing modes on14 recordings, float32/64, blocks32/512/1024, with paired32-sample timing passes (224 total). Gates preserve pitch multiplicity including unisons/gaps, per-label coverage/hold/attacks, false outputs, buffer/format identity, allocations and deadlines. Sixteen lightweight contracts passed locally. Native execution stays on Actions. Actual corpus verdict remains pending; acoustic re-plucks, physical-string assignment and external DAW delivery remain unmeasured. Installed output/default/scoreboard unchanged; no promotion.
+
+# Current checkpoint: bounded VST3 process timing passed
+
+Checkpoint: `docs/recovery/github-vst3-process-timing-20261117.json`; status `portable_compute.vst3_process_timing`. Worker44235670572 final/success at source6577822721b6fffea352aeb75ed241a1ed9e94b6 / worker8532b4065fa3bf800ada3851952985588fe10949. Small report collected once and SHA-256 verified at `build/github-results/vst3-process-timing-44235670572/vst3-process-timing/report.json`; bulk remains remote. Do not poll, rerun or recollect. Source CI44235656307 and portable44235656413 passed.
+
+All16 ordinary-recording component passes preserve frozen callbacks, ownership, calibration and dry audio across32/512/1024 buffers and float32/64 in per-voice/stable-note modes. Each timed32-sample/96k pass measures334050 full process calls including cold blocks, accepting test sink and diagnostic work. Per-voice float32 p99/max97613/224671ns; stable float32 96671/205144ns; per-voice float64 101340/215634ns; stable float64 100418/213630ns. All below166666/333333ns limits, zero deadline overruns and zero C/C++ allocations/frees. Timed/untimed state and callback hashes match. This proves this bounded instrumented component screen on this runner, not external-host timing or wider-corpus acceptance.
+
+Next: extend stable-note validation to remaining physical/synthetic corpus, including unisons and articulation, preserving per-label coverage and false-output duration with full component timing/allocation/buffer gates. Earlier corpus maximum-time failures are not closed by ordinary-only evidence. External DAW/device delivery and real re-plucks remain open. Installed plugin/default and scoreboard unchanged; no promotion. All native and recorded-audio execution remains on GitHub Actions.
+
+# Previous checkpoint: VST3 stable-note component screen and source build passed
+
+Checkpoint: `docs/recovery/github-vst3-stable-note-identity-20261117.json`; status `portable_compute.vst3_stable_note_identity`. Worker44232818757 final/success, small report collected once and SHA-256 verified; do not poll or redownload. Actual component matches both frozen callback references, transfers1614 pairs, callbacks11851 to8623, identical float32/64, refusal/Panic recovery passes. Installed output unchanged; timing, allocations and external host unmeasured. Current source CI44233818646 and portable44233818521 at 5eb869b5260a0fdc4d088938589978969f26c841 both passed; production package collected under `build/github-results/vst3-build-44233818646`, server archive hash verified. Runtime source df7714dd8f218787f2ce3dbb318e259c3d949cc6 unchanged; follow-up commits repair only test fixtures. First omitted routing automation; second duplicated Panic; both fixed. Build complete; do not poll or duplicate completed runs. Next: corpus timing/allocations and external DAW delivery before promotion.
+
+# Previous checkpoint: stable note identity bounded screen passed; default-off
+
+Checkpoint: `docs/recovery/github-stable-note-identity-ledger-20261117.json`; status key `portable_compute.stable_note_identity_ledger`. GitHub worker `44079653692` is final/successful at source `3b03a7f9b6839d9635da3f9c1269415c0e8d6d25`, worker `ab93f32d072c6f6ddeb0333825153bea6cf45735`. Final source portable `44078846797` and CI `44078846875` passed, as did seven focused Python contracts. One native review is complete. Earlier compile-order and test-expectation failures are recorded and superseded. The 38,139-byte small archive was collected once and its server SHA-256 verified. Report and `collected-verdict.json` are in `build/github-results/stable-note-identity-ledger-44079653692`. Bulk evidence (122,866,766 bytes) remains remote. Observer session65481 ended normally. Do not poll, rerun or recollect these completed jobs.
+
+The bounded accepting-file-sink screen is **eligible for wider validation**, not promoted. Target label17/note37 note-ons fall156 to109 (-30.1282%); longest individual sink hold rises5184 to5824 samples (54.0 to60.6667ms at96kHz). Its pitch-present coverage stays65857/71783 samples (91.7446%). Across499 labels,79 have longer sink holds and148 fewer note-ons, with zero per-label pitch-coverage/longest-hold losses or note-on increases. Total callbacks fall11851 to8623 through1614 proven continuation pairs; pairing errors and accepting-sink faults remain zero. The complete pitch-multiplicity timeline is identical.
+
+Wrong-note and unlabeled-gap output duration stay8222039 and3761781 voice-samples respectively. Their onset counts fall1200 to928 and517 to323. Gap outputs are extra notes, not missing notes. Both full saved OFF/current TSV and raw MIDI references retain identity; tagged inference outcomes and scored output are identical, and removing the new provenance column recovers current raw MIDI bit-for-bit. Physical target exact hold remains40000/71783 samples (55.7235%), longest3968 and78 segments; ordinary physical snapshot matches remain145400/528632. Sink IDs are not physical strings, and the sink-hold improvement is not a physical-string score gain. One note44 remains open at EOF in both modes; no forced release was added and this alone does not prove stuck MIDI.
+
+This default-off offline mode preserves a sink note's identity through continuously selected, single-owner same-pitch string reassignment while physical string inference keeps moving. Unisons, ambiguous pairs and observed/potential attacks retain original events. Continuation requires available causal onset evidence with no energy rise and no pending attack; acoustic re-pluck quality remains unverified. Existing physical-string routing, installed output/default and scoreboard remain unchanged. Native timing, recorded processing allocations, buffer identity and external host/device delivery were not measured; the prior corpus maximum-time rejection remains open. The gain is real but limited: the target still has109 note-ons and only a60.7ms longest sink hold.
+
+Next: validate explicit stable-note routing through the actual VST3 component, including accepting delivery, refused NoteOff/Panic recovery, real re-plucks and unisons. Require preserved articulation and pitch multiplicity, zero coverage/hold loss and no false-output growth; then native timing/allocation/buffer and wider-corpus gates before promotion. Safe chord-note admission remains the separate coverage priority. All native and recorded-audio execution stays on GitHub Actions. Do not repeat ntfy, cleanup or terminal Kaggle work.
+
+Storage cleanup completed 2026-11-17 local time: removed7,552 obsolete untracked CMake objects/dependency files and precompiled headers, reclaiming3,390,062,592 allocated bytes (3.39GB/3.16GiB). All source, recordings, calibration, experiment evidence, final binaries/plugins and worktrees are retained. Receipt: `build/recovery/storage-cleanup-20261117/receipt.json`; exact deleted paths and inventory are alongside it. No processing was launched and no installed score changed.
+
+# Previous checkpoint: fixed harmonic comparison final; rejected, no emitted-MIDI gain
+
+Checkpoint: `docs/recovery/github-ordinary-harmonic-fixed-competition-20261116.json`; status key `portable_compute.ordinary_harmonic_fixed_competition`. GitHub worker `43994253844` is final/successful at source `55714006d84081386aeeddcd2b3741d47bd8a859`, worker `098eab10720903113b0b5fd0ab7220c3e1872403`. Source portable `43994193116` passed. All 44 focused synthetic tests and one review passed. The 95,663-byte small report/log archive was collected once and its server SHA-256 verified; report and `collected-verdict.json` are in `build/github-results/ordinary-harmonic-fixed-competition-43994253844`. Report SHA-256 `d1ee87e60dd5bf19d575c997ba63687b36e2c6674160a22781702c0ef3ce6a05`. Bulk 46,162,661 bytes remains remote. Observer session61161 ended normally. Do not poll, rerun or recollect these completed jobs.
+
+The comparison now freezes original fitted owned frequencies and compares independently supported lower full harmonics at the same causal phase/ET frequency. Only measured rejection may veto; an unavailable comparison retains original admission and records incomplete. Synthetic real65/lower63 passes and omitted62/false74 is rejected by measured redundancy. The recording still rejects this policy: ordinary matched frames rise145400 to150171/528632 (27.5050% to28.4075%), but label117/note60 loses18 matches (648 to630/1122) and1152 exact held samples (41409 to40257). Wrong-note/wrong-string/gap snapshot outputs grow1706/6664/2348. Raw false voice-samples grow121991/322055/120981, with false onset increases3/14/1. Gap outputs are extra notes, not missing notes.
+
+Target label10/note75 preserves58433/71894 exact held samples (81.2766%), one608.677ms hold after140.219ms annotation-relative delay, one note-on and923/1124 snapshot matches. Relative to prior competition run43958359342, cue spans rise766 to774, but full raw MIDI SHA-256 is identical (`3010f834b0ef1caae9265303b70e8fd85fab9121bc9e5f765025110760d79b54`), all499 held-label records and raw output-safety totals are identical. No lost note65 hold was recovered. Snapshot matches and wrong-note counts are unchanged; wrong-string outputs increase64 and gap outputs35. Better synthetic discrimination has not produced an emitted-MIDI gain on the recording.
+
+All four input hashes and both full saved OFF/current TSV/raw MIDI references plus current outcome retain identity. Current/trial pairing is valid, sample clocks agree and raw conflicts do not grow. One open note at EOF is not proof of stuck MIDI. Native candidate `67ec4bf211321cca03d692d03c1b8dbdb6bf57fa`, installed output/default/scoreboard remain unchanged. Native timing, allocations, buffer identity and external host/device delivery were not measured; the prior corpus maximum-time rejection remains open.
+
+Development priority update, 2026-11-16: The user's request to study PolyTune and real-time polyphonic programs is recorded in `docs/REALTIME-TRACKER-COMPARISON-20261116.md`. Jam Origin's documented unique note ID and optional string field provide a useful architectural comparison; PolyTune's known open-string task and Polygraph's approximately 70 ms lookahead are different operating constraints. M3 already has temporal posteriors, attack/release state and joint assignment. This study changes no DSP policy, installed output or measured score.
+
+Next: Keep safe chord-note admission as the largest coverage objective, and implement a separate default-off, bounded stability slice that preserves an unchanged-pitch, continuously selected single owner's output identity across provisional string reassignment. Do not freeze physical lanes, merge unisons, suppress real re-plucks or silently redefine physical-string MIDI routing. Require fewer assignment-only retriggers and longer correct holds with no per-passage match/hold loss or false-output growth, followed by separate native timing/allocation/buffer and external-host gates. The latest fixed comparison added eight cues on notes 57/68/70 only; 65/74/75 cue counts did not change and actual MIDI remained identical. Further 65/74 attribution is secondary unless a specific retained observation can change the next implementation. Label 117 remains unresolved; no rejected admission policy is promoted. All native and recorded-audio execution remains on GitHub Actions. No threshold sweep, repeat ntfy, cleanup or terminal Kaggle work.
+
+# Previous checkpoint: retained competition comparison final; unavailable-fit withdrawals identified
+
+Checkpoint: `docs/recovery/github-ordinary-harmonic-competition-attribution-20261116.json`; status key `portable_compute.ordinary_harmonic_competition_attribution`. GitHub run `43971827351` is final/successful at source `1f32149c8258dd796b01a482983e900eeeee77ce`, worker `beb42b5e16f62a2451576c7eb2c54da74eb8e5c4`. Source portable `43971733891` passed. The 65,637-byte small report/log archive was collected once and SHA-256 verified; report and `collected-verdict.json` are in `build/github-results/ordinary-harmonic-competition-attribution-43971827351`. No bulk output was produced. Do not poll, rerun or recollect these completed jobs.
+
+All 3,456 saved observations pair, all 499 held-label measurements and four output-safety totals reproduce for each trial, and shared inputs/current MIDI/current outcome/original decision statuses retain identity. Cues fall 810 to 766. Of the 44 withdrawals, 31 have unidentifiable parent fits, six have nonconverged/boundary fits, and seven have insufficient supported harmonic pairs. The current binary check treats an unavailable upper comparison as grounds to withhold; both real65/lower63 and initial false74/lower62 hit this path. Cue association alone does not prove native branch causation.
+
+False74 is delayed 7,168 samples (74.667ms at 96kHz), not eliminated: its first wrong-note span falls 42,433 to 35,265 samples, with two other false spans unchanged. Only notes65 and74 change raw classified duration between the trials. Note65 loses 17,920 correct voice-samples; wrong-string output removes 20,160 and adds 14,784 (net -5,376). Note74 wrong-note duration falls 7,168; false gap duration is unchanged. These are voice-samples, not tuner-frame matches or project completion.
+
+Target label10/note75 retains 58,433/71,894 exact held samples (81.2766%) in both trials. Label117/note60 remains 41,409 to 40,257 (-1,152) exact held samples versus saved current; pitch-present coverage remains down 1,728. Both policies remain rejected. Installed output/default, native candidate `67ec4bf211321cca03d692d03c1b8dbdb6bf57fa` and scoreboard are unchanged. No new audio/native, timing, allocation, buffer or host measurement occurred; prior corpus maximum-time rejection remains open.
+
+Next: distinguish unavailable conditional fits from measured evidence against the upper note. Use synthetic true65/lower63 and omitted62/false74 controls to select an identifiable conditional comparison that preserves the real upper while rejecting the false harmonic before any new recorded-audio screen. Preserve target75 and require zero passage loss or false-output growth; the separate label117 assignment loss remains unresolved. No threshold sweep, unchanged corpus replay, production promotion, repeat ntfy/cleanup or terminal Kaggle work. All recorded-audio/native processing remains on GitHub Actions.
+
+Earlier analysis attempts `43970011258` and `43971072792` failed on derived-frequency and per-run-manifest identity guards, with no analysis result. Their small failure logs were collected once and hash-verified. The repairs retain strict underlying input/provenance checks; all 19 focused synthetic tests passed. Fitted-output differences affect 225 observations, maximum 1.6785e-08 cents. Earlier source portable runs `43969920170` and `43971002315` passed; do not poll or recollect them.
 
 # Previous checkpoint: lower-note harmonic competition final; rejected
 

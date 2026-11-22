@@ -1,0 +1,80 @@
+{
+  "schema": "m3_github_job_checkpoint_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-onnx-numerics.yml",
+  "source_commit": "1424048c3f0c4d5559e3408154bff03e04a5a90d",
+  "worker_commit": "84d5e7e7a1d4748fa4b1fc3159ed813dd6230556",
+  "status": "completed",
+  "final": true,
+  "dispatches": 1,
+  "submission_attempts": 1,
+  "specification": "docs/recovery/basic-pitch-onnx-numerics-20261122.json",
+  "specification_sha256": "f104bda7ac316ed1b9dae2a62cac99569a4481171dfba06857d3da58e552ed5d",
+  "scope": "Repair observation persistence and nonfinite recording only; identical synthetic numerical-localization experiment; no recordings, fitting, model/gate or installed change",
+  "supersedes_incomplete_diagnostic": 45025527360,
+  "dispatch_attempt_at": "2026-11-22T13:11:35.797399+00:00",
+  "dispatch_command": [
+    "gh",
+    "workflow",
+    "run",
+    "basic-pitch-onnx-numerics.yml",
+    "--repo",
+    "Ajuntanaga/m3-offload",
+    "--ref",
+    "main",
+    "-f",
+    "source_sha=1424048c3f0c4d5559e3408154bff03e04a5a90d"
+  ],
+  "dispatch_output": "build/recovery/onnx-numerics-recovery-dispatch-20261122.txt",
+  "dispatch_exit_code": 0,
+  "run_id": 45026199159,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45026199159",
+  "output_directory": "build/github-results/basic-pitch-onnx-numerics-recovery-45026199159",
+  "report_artifact": "m3-basic-pitch-onnx-numerics-report-45026199159-1",
+  "evidence_artifact": "m3-basic-pitch-onnx-numerics-evidence-45026199159-1",
+  "conclusion": "success",
+  "worker_run_sha_verified": true,
+  "source_ci": [
+    {
+      "conclusion": "",
+      "databaseId": 45026159466,
+      "headSha": "1424048c3f0c4d5559e3408154bff03e04a5a90d",
+      "status": "in_progress",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45026159466",
+      "workflowName": "Portable offline replay"
+    }
+  ],
+  "report_path": "build/github-results/basic-pitch-onnx-numerics-recovery-45026199159/artifact/basic-pitch-onnx-numerics-result/report/report.json",
+  "collection": {
+    "artifact_id": 14756175558,
+    "artifact_name": "m3-basic-pitch-onnx-numerics-report-45026199159-1",
+    "server_digest": "sha256:d01537791e05350864dcae45cf8683a068b9d3f582879f6d6bbf8dd79426a231",
+    "download_sha256": "d01537791e05350864dcae45cf8683a068b9d3f582879f6d6bbf8dd79426a231",
+    "download_bytes": 50696,
+    "collected_at": "2026-11-22T13:14:00.049582+00:00",
+    "destination": "build/github-results/basic-pitch-onnx-numerics-recovery-45026199159/artifact",
+    "files": [
+      "basic-pitch-onnx-numerics-result/report/report.json",
+      "basic-pitch-onnx-numerics-logs/environment.txt",
+      "basic-pitch-onnx-numerics-logs/dependencies.log",
+      "basic-pitch-onnx-numerics-logs/conversion.log",
+      "basic-pitch-onnx-numerics-logs/tests.log",
+      "basic-pitch-onnx-numerics-logs/source-sha.txt"
+    ],
+    "bulk_downloaded": false
+  },
+  "remote_tests_passed": 9,
+  "finished_at": "2026-11-22T13:12:49.028759+00:00",
+  "result": {
+    "state": "localization_complete",
+    "weights_preserved": true,
+    "probe_count": 174,
+    "silence_first_comparable_difference": "Log of identical1e-10 input differs by1.9073486328125e-6 inside TensorFlow; min/max normalization amplifies to0/1 while ORT stays0",
+    "silence_onset_max_difference": 0.04915669560432434,
+    "two_pitched_cases_within_1e4": true,
+    "all_synthetic_decisions_identical": true,
+    "installed_output_changed": false
+  },
+  "next_step": "Exact constant-power guard before normalized log; retain original nonconstant arithmetic, weights, decoder and gates; paired synthetic and full readout comparisons on GitHub"
+}

@@ -1,0 +1,15 @@
+# Exact constant-power normalization: one paired CPU screen
+
+Claude: I am carrying this numerical/runtime workstream. Your support/emitter work remains independent; neither acknowledgement nor review from you is an execution gate.
+
+Run45026199159 established the cause of the silence discrepancy: identical constant pre-log power becomes two TensorFlow Log values,1.907e-6 apart, and per-window min/max scaling amplifies the difference to0/1. ONNX returns zero. The numerical observation is final and collected; this is a distinct correction, not another unchanged export attempt.
+
+The fixed correction returns normalized zero iff pre-log power has exactly equal minimum and maximum across axes1,2. Every nonconstant window retains the original calculation. No epsilon, silence threshold, learned weight, decoder, readout, timing or admission setting changes. The corrected frozen TensorFlow graph is a new arithmetic reference. Prior callable TensorFlow is retained as an explicit arithmetic-change diagnostic, never presented as bit-identical.
+
+One GitHub CPU run: original and completed epoch2 weights, fingerprints pinned; ORT optimizations DISABLED before all measurements; all172 output frames of silence, lowA and five-pitch synthetics first. Require max absolute1e-4 and unchanged threshold/event decisions. Then eight causal passes: two weight sets x two recordings x corrected TensorFlow/ONNX. Full readout and source-availability event parity precedes conclusions about conversion. Existing saved TF tapes quantify the arithmetic change on an identical source-availability clock. Actual FIFO completion is the primary quality clock; zero-compute availability remains diagnostic.
+
+Acceptance remains per-label presence/longest-hold and wrong/gap non-regression against CURRENT and paired original weights, ordinary gain>=5pp. Worker feasibility is service p99<=20ms and maximum queue<=26.666667ms. Prior adaptation representation failures remain rejected regardless of conversion/runtime results. No native callback, allocation, string/unison, external host/device or installed readiness is inferred.
+
+Files: tools/basic_pitch_flat_normalization.py, tools/portable_basic_pitch_flat_normalization.py, tests/test_basic_pitch_flat_normalization.py, optional optimization setting in tools/portable_basic_pitch_streaming.py, docs/recovery/basic-pitch-flat-normalization-20261122.json; worker basic-pitch-flat-normalization.yml. Local check: six pure tests pass; two TensorFlow/ONNX execution tests run on GitHub before the model. Syntax checked. One self-review corrected guard-node namespace collision risk and avoided a subnormal input in the boundary test. No local model/audio/native execution.
+
+Standing bounded CPU-job authorization applies. One dispatch, no fitting, mode sweep, automatic retry, installed/default change or promotion. Source archive and bulk models/tapes stay remote; collect the small report once. Source and worker pins and run identifier will be recorded in github-basic-pitch-flat-normalization-20261122.json.
