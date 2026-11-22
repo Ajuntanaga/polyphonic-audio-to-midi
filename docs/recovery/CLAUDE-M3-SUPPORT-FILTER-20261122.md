@@ -8,6 +8,8 @@ nothing promoted or installed. Five scripts, each with its predictions written b
 - `CLAUDE-M3-SUPPORT-DILATION-20261122.py` / `.json` — the same filter with the support held forward D ms, removal locations, run counts (P0–P8).
 - `CLAUDE-M3-SUPPORT-LOSERS-20261122.py` / `.json` — which labels still lose at each hold, and how much (L0–L6).
 - `CLAUDE-M3-NATIVE-ONLY-GATE-20261122.py` / `.json` — the same gate with the native confirmation as the only support (N0–N7).
+- `CLAUDE-M3-SUPPORT-REPLICATION-20261122.py` / `CLAUDE-M3-SUPPORT-REPLICATION-EXTENDED-MIDDLE-20261122.json` — the same filter and
+  gates on the second saved corpus with the hold grid unchanged (X0–X8). **This one changes two earlier answers; see answers 8 and 9.**
 
 Scope: ordinary corpus, 512-sample callbacks, one recording, in-sample. All numbers are pitch-samples from the project's own
 `score`/`compare` unless a row says 64-sample ticks. Every earlier hybrid was additive; this is the first pass at the other side of
@@ -66,7 +68,8 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
 7. **No variant yet satisfies the whole strict gate.** The extras-clean hybrid loses a few labels' time; the label-safe hybrid adds
    extras. Combining the rescue lane with the filter and hold (more coverage and fewer extras than the filter alone, no extra label
    losses because the lane is additive) is unmeasured; the lane's rescued spans are not in the saved files, only the trace.
-8. **A gate that uses only the native selector's own confirmation (no Basic Pitch model in the loop) gets most of the way.** Native
+8. **A gate that uses only the native selector's own confirmation (no Basic Pitch model) looks good on the ordinary corpus and does
+   not replicate on the second saved corpus (answer 9). Treat this row as retracted as a general claim.** On ordinary, native
    confirmation as the only support, held forward, plus the native ≥ 60 lane:
 
    | hold | coverage | precision | false vs CURRENT | wrong Δ | gap Δ | exact-set Δ | all-expected Δ | labels losing (present / longest) | lost share of CURRENT present | runs vs CURRENT |
@@ -80,8 +83,27 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
    61.53%) with three more labels losing (9 against 6; worst single loss −44,928 pitch-samples, 468 ms). Both the confirmation and the
    lane come from the selector's own trace, so this variant describes a tracker-internal rule: emit a CURRENT note only while the
    selector's confirmation has held the same pitch within the last D ms, and add the confirmed ≥ 60 pitches. No model is involved in
-   the measured numbers; whether the native lifecycle can reproduce the saved confirmation at callback granularity is not known (see
-   caveats).
+   the measured numbers.
+9. **Second corpus (`extended-middle`: 6 labels, sustained chords, CURRENT already at 97.49% coverage, precision 73.97%, wrong
+   528,259, gap 183,006, 14 runs), same code and the same hold grid, nothing tuned on it.**
+   - **The model-supported filter replicates and is cleaner there.** CURRENT ∩ (A ∪ native confirmation) at holds of 50, 100, 220 and
+     500 ms loses **no label and no present time**, removes 32.2 / 29.3 / 26.0 / 20.9% of the wrong-pitch output, raises precision
+     73.97% → 80.22 / 79.60 / 78.53 / 77.09%, adds exact-set +170,047 / +154,944 / +137,344 / +110,464, leaves the run count
+     unchanged (14 → 14, +0.0%), and **passes the project's own `no_pitch_safety_regression` at all four holds**. At D = 0 one label
+     loses 508 pitch-samples (5 ms) and runs are +7.1%.
+   - **The native-only gate does not replicate.** On this corpus the native confirmation barely covers the sustained chords: native
+     only as support at D = 220 loses 24.8% of CURRENT's present time (coverage 97.49% → 73.33%), 4 of the 6 labels lose time (worst
+     −246,272 pitch-samples, 2.6 s), exact-set −269,375 (−342,909 with the lane), and with the lane wrong-pitch is +121,022 and
+     false is +4.1% of CURRENT's. At D = 0 it loses 49.8% of present time and all 6 labels. So the ordinary-corpus native-only result (0.55%
+     lost) is specific to a recording of short, sharply struck notes, and a gate that waits for the native confirmation alone would
+     cut sustained notes whose confirmation lapses while they decay.
+   - **The ≥ 60 lane is harmful where CURRENT is already complete.** CURRENT ∪ native ≥ 60 lane adds 0 genuine and +258,366 wrong-pitch
+     samples here (exact-set **−77,630**, false +36.3%, runs +186%); every filter-plus-lane row fails `no_pitch_safety_regression`
+     on this corpus. The lane's ordinary gain is a coverage gain, and it has nothing to add where coverage is 97.5%.
+   - So the candidate that holds up on both saved corpora is the **model-supported filter without the lane**, held 50–220 ms:
+     extended-middle strict-gate clean; ordinary 28 / 17 / 6 labels losing small amounts of time with extras reduced (wrong
+     −4.38M / −3.37M / −1.73M, gap −586k / −338k / −291k) and no exact-set regression. That variant needs Basic Pitch arm A running
+     live (the Neural Lab worker path exists but joint use with the native tracker is unbuilt).
 
 ## Predictions
 
@@ -125,6 +147,15 @@ Codex's request that "the recovered pitches and the removal of CURRENT errors" b
 | N5 | at D = 220 between 5 and 9 labels lose | **pass** (9, the upper edge) |
 | N6 | label losses are non-increasing over D = 50, 100, 220, 500 | **pass** (39, 26, 9, 6) |
 | N7 | at D = 500 the wrong-pitch delta with the lane is still ≤ 0 | **pass** (−1,173,986) |
+| X0 | CURRENT re-scored on extended-middle equals the saved report | **pass** |
+| X1 | CURRENT ∩ (A ∪ native) at D = 0 removes more than 25% of CURRENT's wrong-pitch output | **pass** (35.8%) |
+| X2 | filter precision exceeds CURRENT's 73.97% at every hold | **pass** (81.77, 80.22, 79.60, 78.53, 77.09) |
+| X3 | no hold up to 220 ms reaches zero labels losing, A ∪ native filter | **FAILED** (0 labels lose at 50, 100 and 220 ms; 1 at D = 0) |
+| X4 | at D = 220 the filter-only lost share of present time is under 1% | **pass** (0.0%) |
+| X5 | native-only + lane at D = 220: wrong ≤ 0 and gap ≤ 0 | **FAILED** (wrong +121,022; gap −91,936) |
+| X6 | the same variant's exact-set and all-expected deltas ≥ 0 | **FAILED** (−342,909; −500,991) |
+| X7 | the same variant's coverage is not below CURRENT's | **FAILED** (73.33% vs 97.49%) |
+| X8 | the same variant's total false is below CURRENT's | **FAILED** (+4.09%) |
 
 ## 1. The support filter (S0–S6)
 
@@ -199,23 +230,30 @@ The six losers at D = 220 (label, pitch, label length, CURRENT's present time in
 - The false output the project keeps adding to its record is mostly CURRENT's own, and two sources (the saved Basic Pitch arm, a
   separate model, and the native selector's confirmation flag, which comes from the same selector that produces CURRENT's notes, so it
   is not independent of CURRENT) both report most of it as unsupported. A causal removal rule exists on saved spans.
-- The model is not what makes the removal possible: the native confirmation alone, held 220 ms and with the lane, removes more false
-  (−20.9%) than the model-supported version (−16.3%) at the price of 9 labels losing instead of 6. What the model adds is fewer label
-  losses at the same hold, not the removal itself.
+- **Correction to what this note said before the second corpus was scored:** I had written that the model is not what makes the
+  removal possible, because on ordinary the native confirmation alone, held 220 ms and with the lane, removed more false (−20.9%)
+  than the model-supported version (−16.3%). On extended-middle the native-only gate loses a quarter of CURRENT's present time. The
+  model-supported support (arm A ∪ native) is the one that held on both corpora; the native-only gate is ordinary-specific.
+- The additive lane and the filter are separable. The filter generalizes (extended-middle clean at 50–500 ms); the ≥ 60 lane helps
+  coverage on ordinary and only adds false on extended-middle (exact-set −77,630).
 - No hold makes the label clause pass, because the loss has two parts: a confirm delay at some onsets (every row) and a few true CURRENT
   notes that the support never sees (label 229). The first part is intrinsic to any confirm-before-emit gate; the second can only be
   fixed by a better support.
 - The additive and removal sides now bracket the gate. A zero-loss label rule with zero extras is not demonstrated by any saved-data
   variant here; the extras-clean variant at D = 220 costs 0.18% of CURRENT's present time over 6 labels.
-- The hybrid at D = 220 plus the native ≥ 60 lane is a concrete candidate for the "measure recovery and removal together" request:
-  coverage +5.22 pp, false −16.3%, precision 54.2% → 61.5%, but with a 39% increase in note runs, which a real emitter would turn into
-  extra note-ons and is not a free quantity.
+- The filter at D = 220 plus the native ≥ 60 lane is a candidate for the "measure recovery and removal together" request on the
+  ordinary corpus only: coverage +5.22 pp, false −16.3%, precision 54.2% → 61.5%, runs +39% (a real emitter would turn extra runs
+  into extra note-ons, so that is not a free quantity). On extended-middle the lane fails (exact-set −77,630), so any lane would need
+  its own condition. The filter alone at 50–220 ms is the part that held on both corpora.
 
 ## The gate question (the user's call, unchanged in kind from the earlier note)
 
 The strict gate's label clause (no label may lose any present or longest-hold time) and its absolute-extras clause (wrong-pitch and
-gap deltas ≤ 0) have now been shown to pull in opposite directions on this recording: every variant that removes extras loses some
-label time (at best 6 labels, 0.18% of CURRENT's present time) and every variant that never loses label time adds extras. Alternatives
+gap deltas ≤ 0) pull in opposite directions on the ordinary recording: every variant that removes extras loses some label time (at
+best 6 labels, 0.18% of CURRENT's present time) and every variant that never loses label time adds extras. **On the second corpus
+they do not conflict:** the same model-supported filter at 50–500 ms passes the project's own `no_pitch_safety_regression`
+(no label loses, wrong and gap fall, exact-set rises). So the conflict is a property of ordinary's short struck notes (many onsets,
+each costing a confirm delay), not of the filter. Alternatives
 the user might choose between: keep both clauses as written (reject every saved-data variant so far); a per-label tolerance fixed
 before evaluation (for illustration only: a rule of loss ≤ 50 ms and ≤ 5% of the label's own present time would pass three of the six
 D = 220 losers and still fail labels 229, 364 and 263; I chose that example after seeing the loser table, so it is not a usable
@@ -224,7 +262,10 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 
 ## Caveats
 
-- One recording, one corpus, in-sample; descriptive counts; no lane, unison, string, callback or live-host claim.
+- One recording per corpus, in-sample; descriptive counts; no lane, unison, string, callback or live-host claim. The second corpus has
+  only 6 labels (sustained chords, 14 CURRENT runs, CURRENT already at 97.5% coverage), so it tests whether the filter does harm where
+  there is nothing to recover, not whether it recovers; its "no label loses" is six labels. The hold grid was fixed on ordinary and not
+  tuned on extended-middle, but ordinary's numbers were seen before extended-middle was scored.
 - Arm A is an offline causal Basic Pitch run with measured FIFO timestamps, not a native implementation; a real support would add its
   model compute and latency, which these spans include only through the measured timestamps.
 - The native confirmation is read from a saved diagnostic trace at the 512-sample callback grid (`confirmation_spans`); a real gate
@@ -248,6 +289,7 @@ ceiling on false per genuine. Codex's gates stay frozen; I have not changed them
 | `CLAUDE-M3-SUPPORT-DILATION-20261122.py` / `.json` | `918dde68cd76` / `4bc738d12258` |
 | `CLAUDE-M3-SUPPORT-LOSERS-20261122.py` / `.json` | `f3732159ccac` / `8390920e658a` |
 | `CLAUDE-M3-NATIVE-ONLY-GATE-20261122.py` / `.json` | `75044cb42452` / `39b40a022661` |
+| `CLAUDE-M3-SUPPORT-REPLICATION-20261122.py` / `...-REPLICATION-EXTENDED-MIDDLE-20261122.json` | `ce0298cf188f` / `249140f682a9` |
 | `basic-pitch-baseline-20261121.json` (CURRENT, run 44835727027) | `da173e1940fb` |
 | consensus `report.json` / `ordinary-consensus-spans.json.gz` | `6a80b45e7f7b` / `0d0dc2973a0d` |
 | `ordinary-bridge-events.json.gz` (arm A) | `acd64c358819` |
@@ -263,13 +305,15 @@ measurement on the saved ordinary spans, and it moves the question. (1) The remo
 output is unsupported by arm A ∪ the native confirmation, and removing it costs 6.0% of genuine presence; with the ≥ 60 lane and a
 220 ms forward hold the extras clauses and the exact-set / all-expected clauses pass in aggregate and 6 labels lose 0.18% of
 CURRENT's present time. (2) The label clause cannot be passed by any confirm-before-emit rule that waits for support, so the user's
-decision about that clause now matters more than another sweep. (3) A gate that uses only the native confirmation needs no model: at 220 ms with the ≥ 60 lane
-it measures coverage 45.07%, precision 62.77%, wrong −2,144,404, gap −246,599, exact-set +265,475, 9 labels losing 0.55% of CURRENT's
-present time (worst 468 ms), runs +35%. That is a tracker-internal lifecycle change (confirmation-gated emission plus a post-DP lane),
-and the existing Neural Lab path is not needed for it. I have not claimed `native/src/polyphonic_pitch_detector.cpp` and will not
-before the gate question is answered, because a default-off lane or gate is only worth executing if the label clause or the extras
-clause is relaxed; if you read the user's answer first, either of us can take the implementation, and the replay would have to
-report pitch presence separately from string assignment, merge same-pitch duplicates and price the extra note-ons. (4) The supports that drive
+decision about that clause now matters more than another sweep. (3) **I retract my queued message's claim that a native-only gate gets most of the way:** it was
+true on ordinary (at 220 ms with the ≥ 60 lane: coverage 45.07%, precision 62.77%, 9 labels losing 0.55%) and false on
+extended-middle, where it loses 24.8% of CURRENT's present time and 4 of 6 labels. The candidate that held on both corpora is the
+model-supported filter without the lane (extended-middle: strict `no_pitch_safety_regression` pass at 50–500 ms; ordinary: extras
+down, 28 / 17 / 6 labels losing small time at 50 / 100 / 220 ms). That needs Basic Pitch arm A and the native tracker running
+together, which is the unbuilt joint path you named. (4) I have not claimed `native/src/polyphonic_pitch_detector.cpp`. A joint
+gate is only worth building if the user's gate answer accepts a per-label tolerance on ordinary-like material; a replay would have to
+report pitch presence separately from string assignment, merge same-pitch duplicates and price the extra note-ons. If you are already
+building the uninstalled joint build, tell me which file and I will stay out of it. (5) The supports that drive
 the filter are reproducible from the saved files named below; when the adaptation spans from run 45016827324 arrive, the same
 scripts can score them as an additional support without changes except the support input.
 
