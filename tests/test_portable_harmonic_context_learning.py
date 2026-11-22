@@ -34,7 +34,7 @@ class PortableContextTests(unittest.TestCase):
             def activity(self, features):
                 return np.zeros((len(features), 53))
         configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
-        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'phase', 'phase-loss', 'level', 'whiten', 'grid'))
+        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'phase', 'phase-loss', 'scaled', 'scaled-loss', 'level', 'whiten', 'grid'))
         configs.append((runner.HALO_MODEL_PARAMS, 'halo'))
         for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
@@ -66,6 +66,9 @@ class PortableContextTests(unittest.TestCase):
                     spec_data['harmonic_peak_contrast'] = runner.CONTRAST
                 if mode in ('phase', 'phase-loss'):
                     spec_data['harmonic_phase_motion'] = runner.PHASE_MOTION
+                    spec_data['single_pitch_baseline'] = runner.SINGLE_PITCH_BASELINE
+                if mode in ('scaled', 'scaled-loss'):
+                    spec_data['harmonic_pitch_scaled_windows'] = runner.PITCH_SCALED_WINDOWS
                     spec_data['single_pitch_baseline'] = runner.SINGLE_PITCH_BASELINE
                 if mode == 'level':
                     spec_data['harmonic_level_suppression'] = runner.SUPPRESSION
@@ -111,7 +114,7 @@ class PortableContextTests(unittest.TestCase):
                     stack.enter_context(patch.object(runner, 'fit_training_cutoff', return_value=dict(cutoff=.5, feasible=True)))
                     stack.enter_context(patch.object(runner, 'acceptance_gate', side_effect=sequence))
                     preservation = stack.enter_context(patch.object(runner, 'single_pitch_preservation',
-                        return_value=dict(passed=mode != 'phase-loss')))
+                        return_value=dict(passed=mode not in ('phase-loss', 'scaled-loss'))))
                     replay = stack.enter_context(patch.object(runner, 'continuous_dataset', side_effect=replay_result))
                     result = runner.run(spec, root/'output')
                 self.assertEqual(fit.call_count, 1)
@@ -145,7 +148,17 @@ class PortableContextTests(unittest.TestCase):
                     self.assertEqual(result['features']['per_candidate'], 106)
                     self.assertEqual(set(result['contrast_diagnostics']),
                                      {'train', 'calibration', 'test'} if len(sequence) == 3 else {'train'})
-                self.assertEqual(preservation.call_count, int(mode in ('phase', 'phase-loss')))
+                self.assertEqual(preservation.call_count, int(mode in ('phase', 'phase-loss', 'scaled', 'scaled-loss')))
+                if mode in ('scaled', 'scaled-loss'):
+                    self.assertEqual(result['schema'], 'm3_harmonic_pitch_scaled_windows_v1')
+                    self.assertEqual(result['features']['per_candidate'], 62)
+                    self.assertEqual(fit_features.shape, (3, 53*62))
+                    self.assertEqual(result['single_pitch_preservation']['passed'], mode != 'scaled-loss')
+                    self.assertEqual(result['features']['pitch_scaled_window_parameters'], runner.PITCH_SCALED_WINDOWS)
+                    self.assertTrue(all(type(c.args[3]) is runner.HarmonicPitchScaledFeatures
+                                        for c in examples.call_args_list))
+                    self.assertTrue(all(type(c.args[4]) is runner.HarmonicPitchScaledFeatures
+                                        for c in replay.call_args_list))
                 if mode in ('phase', 'phase-loss'):
                     self.assertEqual(result['schema'], 'm3_harmonic_phase_motion_v1')
                     self.assertEqual(result['features']['per_candidate'], 74)
@@ -181,10 +194,10 @@ class PortableContextTests(unittest.TestCase):
                 if params != runner.MODEL_PARAMS:
                     self.assertTrue(result['training_plan_identity']['verified'])
                 self.assertEqual(examples.call_count, len(sequence))
-                self.assertEqual(replay.call_count, 2 if all(sequence) and mode != 'phase-loss' else 0)
+                self.assertEqual(replay.call_count, 2 if all(sequence) and mode not in ('phase-loss', 'scaled-loss') else 0)
                 self.assertEqual(result['state'], 'completed')
                 self.assertTrue(result['final'])
-                self.assertEqual(result['research_screen_passed'], all(sequence) and mode != 'phase-loss')
+                self.assertEqual(result['research_screen_passed'], all(sequence) and mode not in ('phase-loss', 'scaled-loss'))
                 self.assertEqual(result['held_out_scoring']['executed'], len(sequence) == 3)
                 self.assertTrue(result['frozen_model']['persisted_before_held_out_scoring'])
 
