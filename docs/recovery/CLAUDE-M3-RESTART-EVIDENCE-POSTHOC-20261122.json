@@ -1,0 +1,3164 @@
+{
+ "schema": "m3_restart_evidence_posthoc_v2",
+ "post_hoc": true,
+ "census_sha256_note": "read from CLAUDE-M3-RESTART-EVIDENCE-CENSUS-20261122.json",
+ "positive_spans": 21,
+ "negative_spans": 224,
+ "first_label_start_minus_run_end_ms": {
+  "min": -7.07,
+  "median": -1.24,
+  "max": 849.16
+ },
+ "timing": {
+  "L": {
+   "auc_positive_earlier": 0.6379,
+   "auc_positive_later_among_restarted": 0.7708,
+   "positives": {
+    "restarted": 20,
+    "median_ms": 42.67,
+    "p25_ms": 16.0,
+    "p75_ms": 53.33,
+    "at_run_end": 2
+   },
+   "negatives": {
+    "restarted": 100,
+    "median_ms": 5.33,
+    "p25_ms": 0.0,
+    "p75_ms": 10.67,
+    "at_run_end": 37
+   }
+  },
+  "E": {
+   "auc_positive_earlier": 0.5796,
+   "auc_positive_later_among_restarted": 0.7913,
+   "positives": {
+    "restarted": 21,
+    "median_ms": 37.33,
+    "p25_ms": 10.67,
+    "p75_ms": 48.0,
+    "at_run_end": 2
+   },
+   "negatives": {
+    "restarted": 119,
+    "median_ms": 5.33,
+    "p25_ms": 0.0,
+    "p75_ms": 10.67,
+    "at_run_end": 43
+   }
+  },
+  "A": {
+   "auc_positive_earlier": 0.5238,
+   "auc_positive_later_among_restarted": 0.6794,
+   "positives": {
+    "restarted": 21,
+    "median_ms": 10.67,
+    "p25_ms": 5.33,
+    "p75_ms": 21.33,
+    "at_run_end": 2
+   },
+   "negatives": {
+    "restarted": 157,
+    "median_ms": 5.33,
+    "p25_ms": 0.0,
+    "p75_ms": 10.67,
+    "at_run_end": 45
+   }
+  },
+  "M": {
+   "auc_positive_earlier": 0.4866,
+   "auc_positive_later_among_restarted": 0.6667,
+   "positives": {
+    "restarted": 18,
+    "median_ms": 0.0,
+    "p25_ms": 0.0,
+    "p75_ms": 93.19,
+    "at_run_end": 12
+   },
+   "negatives": {
+    "restarted": 154,
+    "median_ms": 0.0,
+    "p25_ms": 0.0,
+    "p75_ms": 0.0,
+    "at_run_end": 154
+   }
+  },
+  "AM": {
+   "auc_positive_earlier": 0.4356,
+   "auc_positive_later_among_restarted": 0.6259,
+   "positives": {
+    "restarted": 21,
+    "median_ms": 0.0,
+    "p25_ms": 0.0,
+    "p75_ms": 10.67,
+    "at_run_end": 12
+   },
+   "negatives": {
+    "restarted": 202,
+    "median_ms": 0.0,
+    "p25_ms": 0.0,
+    "p75_ms": 0.0,
+    "at_run_end": 163
+   }
+  }
+ },
+ "negative_relation_to_concurrent_labels": {
+  "harmonic_of_sounding_lower_note": {
+   "spans": 14,
+   "samples": 585906,
+   "share_of_spans": 0.0625,
+   "share_of_removed_samples": 0.0963
+  },
+  "subharmonic_of_sounding_higher_note": {
+   "spans": 87,
+   "samples": 2590313,
+   "share_of_spans": 0.3884,
+   "share_of_removed_samples": 0.4255
+  },
+  "other_relation_only": {
+   "spans": 123,
+   "samples": 2911045,
+   "share_of_spans": 0.5491,
+   "share_of_removed_samples": 0.4782
+  },
+  "no_concurrent_label": {
+   "spans": 0,
+   "samples": 0,
+   "share_of_spans": 0.0,
+   "share_of_removed_samples": 0.0
+  }
+ },
+ "negative_restarted_by_relation": {
+  "L": {
+   "subharmonic_of_sounding_higher_note": {
+    "spans": 87,
+    "restarted": 39
+   },
+   "other_relation_only": {
+    "spans": 123,
+    "restarted": 55
+   },
+   "harmonic_of_sounding_lower_note": {
+    "spans": 14,
+    "restarted": 6
+   }
+  },
+  "E": {
+   "subharmonic_of_sounding_higher_note": {
+    "spans": 87,
+    "restarted": 51
+   },
+   "other_relation_only": {
+    "spans": 123,
+    "restarted": 61
+   },
+   "harmonic_of_sounding_lower_note": {
+    "spans": 14,
+    "restarted": 7
+   }
+  },
+  "A": {
+   "subharmonic_of_sounding_higher_note": {
+    "spans": 87,
+    "restarted": 66
+   },
+   "other_relation_only": {
+    "spans": 123,
+    "restarted": 84
+   },
+   "harmonic_of_sounding_lower_note": {
+    "spans": 14,
+    "restarted": 7
+   }
+  }
+ },
+ "negative_own_history": {
+  "overhang_of_labelled_note": {
+   "spans": 181,
+   "samples": 4872203,
+   "share_of_spans": 0.808,
+   "share_of_removed_samples": 0.8004
+  },
+  "unlabelled_span": {
+   "spans": 43,
+   "samples": 1215061,
+   "share_of_spans": 0.192,
+   "share_of_removed_samples": 0.1996
+  }
+ },
+ "negative_restarted_by_own_history": {
+  "L": {
+   "overhang_of_labelled_note": {
+    "spans": 181,
+    "restarted": 78
+   },
+   "unlabelled_span": {
+    "spans": 43,
+    "restarted": 22
+   }
+  },
+  "E": {
+   "overhang_of_labelled_note": {
+    "spans": 181,
+    "restarted": 96
+   },
+   "unlabelled_span": {
+    "spans": 43,
+    "restarted": 23
+   }
+  },
+  "A": {
+   "overhang_of_labelled_note": {
+    "spans": 181,
+    "restarted": 127
+   },
+   "unlabelled_span": {
+    "spans": 43,
+    "restarted": 30
+   }
+  },
+  "M": {
+   "overhang_of_labelled_note": {
+    "spans": 181,
+    "restarted": 151
+   },
+   "unlabelled_span": {
+    "spans": 43,
+    "restarted": 3
+   }
+  },
+  "AM": {
+   "overhang_of_labelled_note": {
+    "spans": 181,
+    "restarted": 172
+   },
+   "unlabelled_span": {
+    "spans": 43,
+    "restarted": 30
+   }
+  }
+ },
+ "overhang_label_end_to_cut_ms": {
+  "n": 181,
+  "min_ms": 28.0,
+  "p25_ms": 38.67,
+  "median_ms": 42.0,
+  "p75_ms": 47.33,
+  "max_ms": 457.28
+ },
+ "negative_detail": [
+  {
+   "pitch": 32,
+   "cut": 402432,
+   "end": 432319,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    53,
+    55,
+    63,
+    76
+   ]
+  },
+  {
+   "pitch": 32,
+   "cut": 2605568,
+   "end": 2633855,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    55,
+    57,
+    75
+   ]
+  },
+  {
+   "pitch": 32,
+   "cut": 3258880,
+   "end": 3283455,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    38,
+    43,
+    47,
+    58,
+    73
+   ]
+  },
+  {
+   "pitch": 32,
+   "cut": 3666944,
+   "end": 3675967,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    46,
+    51,
+    53,
+    57,
+    71
+   ]
+  },
+  {
+   "pitch": 32,
+   "cut": 8561664,
+   "end": 8576383,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    40,
+    66,
+    77
+   ]
+  },
+  {
+   "pitch": 32,
+   "cut": 10357760,
+   "end": 10382335,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    41,
+    61,
+    65
+   ]
+  },
+  {
+   "pitch": 33,
+   "cut": 4564480,
+   "end": 4629695,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    50,
+    53,
+    55,
+    79
+   ]
+  },
+  {
+   "pitch": 33,
+   "cut": 4809216,
+   "end": 4826047,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    36,
+    38,
+    55,
+    82
+   ]
+  },
+  {
+   "pitch": 33,
+   "cut": 7012864,
+   "end": 7029887,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    46,
+    74
+   ]
+  },
+  {
+   "pitch": 33,
+   "cut": 8073216,
+   "end": 8081279,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    68,
+    71
+   ]
+  },
+  {
+   "pitch": 34,
+   "cut": 1708544,
+   "end": 1716351,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    51,
+    66,
+    68
+   ]
+  },
+  {
+   "pitch": 34,
+   "cut": 6522880,
+   "end": 6549375,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    52,
+    69,
+    83
+   ]
+  },
+  {
+   "pitch": 34,
+   "cut": 7339008,
+   "end": 7355839,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    49,
+    67
+   ]
+  },
+  {
+   "pitch": 34,
+   "cut": 7991296,
+   "end": 8005247,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    71
+   ]
+  },
+  {
+   "pitch": 35,
+   "cut": 1870848,
+   "end": 1896959,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    48,
+    54,
+    66,
+    70
+   ]
+  },
+  {
+   "pitch": 35,
+   "cut": 6767104,
+   "end": 6781887,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    39,
+    48,
+    52,
+    60,
+    69
+   ]
+  },
+  {
+   "pitch": 35,
+   "cut": 8154624,
+   "end": 8171455,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    54,
+    59,
+    71
+   ]
+  },
+  {
+   "pitch": 35,
+   "cut": 8399360,
+   "end": 8423231,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    50,
+    56,
+    59,
+    67,
+    74
+   ]
+  },
+  {
+   "pitch": 36,
+   "cut": 1218560,
+   "end": 1235199,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    48,
+    64,
+    68
+   ]
+  },
+  {
+   "pitch": 36,
+   "cut": 4890112,
+   "end": 4944575,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    45,
+    51,
+    83
+   ]
+  },
+  {
+   "pitch": 36,
+   "cut": 6278144,
+   "end": 6385343,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    56,
+    57,
+    61,
+    78
+   ]
+  },
+  {
+   "pitch": 37,
+   "cut": 320512,
+   "end": 346495,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    32,
+    45,
+    54,
+    68,
+    76
+   ]
+  },
+  {
+   "pitch": 37,
+   "cut": 5869568,
+   "end": 5893503,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    46,
+    55,
+    64,
+    72
+   ]
+  },
+  {
+   "pitch": 37,
+   "cut": 6359552,
+   "end": 6384191,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    56,
+    57,
+    61,
+    78
+   ]
+  },
+  {
+   "pitch": 37,
+   "cut": 8888320,
+   "end": 8905279,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    82
+   ]
+  },
+  {
+   "pitch": 37,
+   "cut": 9541632,
+   "end": 9568063,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    47,
+    78
+   ]
+  },
+  {
+   "pitch": 37,
+   "cut": 10439168,
+   "end": 10468543,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    48,
+    62
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 809984,
+   "end": 871871,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    43,
+    63,
+    66
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 3585024,
+   "end": 3609855,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    43,
+    49,
+    50,
+    54,
+    70
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 4237824,
+   "end": 4262847,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    48,
+    76
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 4972032,
+   "end": 4999039,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    49,
+    58,
+    83
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 5869568,
+   "end": 5893503,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    55,
+    64,
+    72
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 6849024,
+   "end": 6872255,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    44,
+    53,
+    61
+   ]
+  },
+  {
+   "pitch": 38,
+   "cut": 9541632,
+   "end": 9566207,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    78
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 75776,
+   "end": 99391,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    56,
+    57,
+    62,
+    78,
+    83
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 483840,
+   "end": 508607,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    50,
+    55,
+    56,
+    77
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 3340288,
+   "end": 3364991,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    49,
+    54,
+    74,
+    75
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 3503616,
+   "end": 3510143,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    37,
+    42,
+    50,
+    57,
+    80
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 3828736,
+   "end": 3855359,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    35,
+    43,
+    48,
+    73
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 7583744,
+   "end": 7600575,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    51,
+    62,
+    72
+   ]
+  },
+  {
+   "pitch": 39,
+   "cut": 10194432,
+   "end": 10219455,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    56,
+    64
+   ]
+  },
+  {
+   "pitch": 40,
+   "cut": 1136640,
+   "end": 1163199,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    46,
+    64,
+    67
+   ]
+  },
+  {
+   "pitch": 40,
+   "cut": 3014144,
+   "end": 3039487,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    44,
+    65,
+    67
+   ]
+  },
+  {
+   "pitch": 40,
+   "cut": 8236032,
+   "end": 8343679,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    43,
+    55,
+    58,
+    59,
+    71,
+    73
+   ]
+  },
+  {
+   "pitch": 40,
+   "cut": 8807424,
+   "end": 8831039,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    46,
+    68,
+    70,
+    82
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 973312,
+   "end": 989951,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    49,
+    54,
+    64,
+    65
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 1463296,
+   "end": 1488767,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    51,
+    65,
+    68
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 2116096,
+   "end": 2223039,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    38,
+    45,
+    53,
+    60,
+    61,
+    69
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 2361344,
+   "end": 2387135,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    54,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 4155392,
+   "end": 4183103,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    38,
+    58,
+    62,
+    65
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 5543424,
+   "end": 5655295,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    43,
+    46,
+    50,
+    54,
+    72,
+    80
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 5706752,
+   "end": 5723007,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    47,
+    71
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 6196224,
+   "end": 6219903,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    36,
+    45,
+    49,
+    57,
+    77
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 7420416,
+   "end": 7444287,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    53,
+    67
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 10439168,
+   "end": 10463487,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    62
+   ]
+  },
+  {
+   "pitch": 41,
+   "cut": 10602496,
+   "end": 10628799,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    66
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 75776,
+   "end": 99263,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    56,
+    57,
+    62,
+    78,
+    83
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 1952768,
+   "end": 1975935,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    45,
+    60,
+    66,
+    71
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 3585024,
+   "end": 3691263,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    43,
+    46,
+    49,
+    50,
+    51,
+    53,
+    54,
+    57,
+    70,
+    71
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 4319232,
+   "end": 4343743,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    53,
+    54,
+    64,
+    77
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 5053952,
+   "end": 5080191,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    47,
+    54,
+    62,
+    64
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 5380096,
+   "end": 5403199,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    59,
+    60,
+    66
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 6033408,
+   "end": 6057535,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    74
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 6930432,
+   "end": 6967487,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    33,
+    43,
+    72
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 9541632,
+   "end": 9555839,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    47,
+    78
+   ]
+  },
+  {
+   "pitch": 42,
+   "cut": 10112512,
+   "end": 10119551,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    54,
+    64
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 891904,
+   "end": 922431,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    52,
+    63,
+    68
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 2768384,
+   "end": 2792959,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    45,
+    47,
+    56,
+    84
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 2932736,
+   "end": 2963135,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    40,
+    60,
+    62,
+    67
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 7012864,
+   "end": 7117759,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    46,
+    49,
+    52,
+    74
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 7664640,
+   "end": 7690111,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    33,
+    50,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 8317440,
+   "end": 8334271,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    73
+   ]
+  },
+  {
+   "pitch": 43,
+   "cut": 8561664,
+   "end": 8578431,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    66,
+    77
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 565248,
+   "end": 608063,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    49,
+    54,
+    57,
+    80
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 809984,
+   "end": 831295,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    43,
+    63,
+    66
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 1708544,
+   "end": 1734719,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    51,
+    66,
+    68
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 2442240,
+   "end": 2657087,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    32,
+    45,
+    47,
+    48,
+    55,
+    56,
+    57,
+    60,
+    61,
+    66,
+    73,
+    75,
+    76
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 2768384,
+   "end": 2795775,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    45,
+    47,
+    56,
+    84
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 3258880,
+   "end": 3304959,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    43,
+    47,
+    58,
+    73
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 3992064,
+   "end": 4021823,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    56,
+    74
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 4727808,
+   "end": 4822975,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    33,
+    36,
+    38,
+    55,
+    59,
+    61,
+    63,
+    81,
+    82
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 6930432,
+   "end": 6948287,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    43,
+    72
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 7339008,
+   "end": 7363071,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    49,
+    67
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 7827456,
+   "end": 7968511,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    34,
+    55,
+    56,
+    63,
+    64,
+    68
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 9215488,
+   "end": 9241535,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    65
+   ]
+  },
+  {
+   "pitch": 44,
+   "cut": 9459712,
+   "end": 9502399,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    38,
+    61,
+    78
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 402432,
+   "end": 425663,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    53,
+    55,
+    63,
+    76
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 1381376,
+   "end": 1435519,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    47,
+    65,
+    67
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 1625088,
+   "end": 1650559,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    34,
+    44,
+    66,
+    67,
+    68
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 2034688,
+   "end": 2059199,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    50,
+    60,
+    66,
+    72
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 2361344,
+   "end": 2373311,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    54,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 3828736,
+   "end": 3856127,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    43,
+    48,
+    73
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 4564480,
+   "end": 4587711,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    50,
+    53,
+    55,
+    79
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 4972032,
+   "end": 4996479,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    49,
+    58,
+    83
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 6114304,
+   "end": 6142399,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    47,
+    60,
+    74,
+    76
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 7012864,
+   "end": 7030783,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    42,
+    46,
+    74
+   ]
+  },
+  {
+   "pitch": 45,
+   "cut": 8073216,
+   "end": 8101247,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    35,
+    68,
+    71
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 1218560,
+   "end": 1234495,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    64,
+    68
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 1708544,
+   "end": 1848511,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    35,
+    51,
+    56,
+    60,
+    66,
+    68,
+    69
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 3340288,
+   "end": 3365375,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    49,
+    54,
+    74,
+    75
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 3747840,
+   "end": 3757695,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    45,
+    50,
+    56,
+    72
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 4073984,
+   "end": 4081855,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    51,
+    60,
+    74
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 5706752,
+   "end": 5812159,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    47,
+    51,
+    53,
+    56,
+    71
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 5950976,
+   "end": 5976319,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    70,
+    72
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 7093248,
+   "end": 7117951,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    52,
+    74
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 7256064,
+   "end": 7270335,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    34,
+    44,
+    79
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 7339008,
+   "end": 7364479,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    41,
+    49,
+    67
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 7664640,
+   "end": 7691839,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    50,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 8888320,
+   "end": 8905279,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    82
+   ]
+  },
+  {
+   "pitch": 46,
+   "cut": 9296384,
+   "end": 9309055,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    45,
+    47,
+    55,
+    56,
+    71
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 240128,
+   "end": 268415,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    54,
+    56,
+    57,
+    71
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 1463296,
+   "end": 1487423,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    51,
+    65,
+    68
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 2687488,
+   "end": 2704255,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    44,
+    55,
+    72,
+    81
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 5134848,
+   "end": 5166207,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    50,
+    59,
+    63
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 5788160,
+   "end": 5805183,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    51,
+    53,
+    56,
+    71
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 6196224,
+   "end": 6263871,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    36,
+    45,
+    49,
+    57,
+    77
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 9133568,
+   "end": 9141759,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    53,
+    59,
+    68,
+    69
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 9622528,
+   "end": 9649791,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    58,
+    79
+   ]
+  },
+  {
+   "pitch": 47,
+   "cut": 10112512,
+   "end": 10125823,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    54,
+    64
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 240128,
+   "end": 268351,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    54,
+    56,
+    57,
+    71
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 729088,
+   "end": 753855,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    44,
+    63,
+    64,
+    65
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 1952768,
+   "end": 1978559,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    60,
+    66,
+    71
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 2361344,
+   "end": 2385791,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    54,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 2605568,
+   "end": 2617343,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    55,
+    57,
+    75
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 3911680,
+   "end": 3923263,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    46,
+    49,
+    63,
+    74
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 5380096,
+   "end": 5406079,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    59,
+    60,
+    66
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 6849024,
+   "end": 6873727,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    53,
+    61
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 7256064,
+   "end": 7283007,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    34,
+    44,
+    79
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 7420416,
+   "end": 7443903,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    53,
+    67
+   ]
+  },
+  {
+   "pitch": 48,
+   "cut": 10520064,
+   "end": 10536895,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    65
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 648192,
+   "end": 658111,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    60,
+    62,
+    63,
+    65
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 1054720,
+   "end": 1068671,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    48,
+    64,
+    66
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 3421696,
+   "end": 3445055,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    36,
+    41,
+    56,
+    58,
+    75
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 3666944,
+   "end": 3692863,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    51,
+    53,
+    57,
+    71
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 3992064,
+   "end": 4008831,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    56,
+    74
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 4564480,
+   "end": 4591423,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    50,
+    53,
+    55,
+    79
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 5053952,
+   "end": 5060607,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    47,
+    54,
+    62,
+    64
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 5297664,
+   "end": 5319103,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    48,
+    50,
+    66
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 6278144,
+   "end": 6359103,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    56,
+    78
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 7175168,
+   "end": 7192895,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    48,
+    75
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 7420416,
+   "end": 7444287,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    53,
+    67
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 8724480,
+   "end": 8741375,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    78
+   ]
+  },
+  {
+   "pitch": 49,
+   "cut": 8968704,
+   "end": 8985663,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    56,
+    57,
+    84
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 565248,
+   "end": 581439,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    49,
+    54,
+    57,
+    80
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 2116096,
+   "end": 2147455,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    53,
+    60,
+    61,
+    69
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 3828736,
+   "end": 3854783,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    43,
+    48,
+    73
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 5216256,
+   "end": 5230271,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    57,
+    63,
+    64
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 5380096,
+   "end": 5394303,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    59,
+    60,
+    66
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 5543424,
+   "end": 5567039,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    54,
+    80
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 7746560,
+   "end": 7770431,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    58,
+    67
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 8480256,
+   "end": 8494655,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    65,
+    76
+   ]
+  },
+  {
+   "pitch": 50,
+   "cut": 9133568,
+   "end": 9150591,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    53,
+    59,
+    68,
+    69
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 1789952,
+   "end": 1801727,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    56,
+    60,
+    66,
+    69
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 2932736,
+   "end": 2961983,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    40,
+    60,
+    62,
+    67
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 3747840,
+   "end": 3766527,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    45,
+    50,
+    56,
+    72
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 4155392,
+   "end": 4179583,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    58,
+    62,
+    65
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 4727808,
+   "end": 4750655,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    59,
+    61,
+    63,
+    81
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 4972032,
+   "end": 4997119,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    49,
+    58,
+    83
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 7664640,
+   "end": 7671743,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    50,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 51,
+   "cut": 10112512,
+   "end": 10147135,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    54,
+    64
+   ]
+  },
+  {
+   "pitch": 52,
+   "cut": 973312,
+   "end": 1012799,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    54,
+    64,
+    65
+   ]
+  },
+  {
+   "pitch": 52,
+   "cut": 2850304,
+   "end": 2872959,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    44,
+    47,
+    51,
+    59,
+    84
+   ]
+  },
+  {
+   "pitch": 52,
+   "cut": 6603776,
+   "end": 6620735,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    54,
+    83
+   ]
+  },
+  {
+   "pitch": 52,
+   "cut": 7175168,
+   "end": 7200319,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    48,
+    75
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 2197504,
+   "end": 2212735,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    45,
+    61,
+    69
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 4401664,
+   "end": 4426559,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    55,
+    60,
+    78
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 4645888,
+   "end": 4670975,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    49,
+    51,
+    77,
+    80
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 5869568,
+   "end": 5886271,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    55,
+    64,
+    72
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 7501312,
+   "end": 7518143,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    56,
+    69
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 9215488,
+   "end": 9243583,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    65
+   ]
+  },
+  {
+   "pitch": 53,
+   "cut": 9949696,
+   "end": 9962047,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    52,
+    75
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 1952768,
+   "end": 1969471,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    60,
+    66,
+    71
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 3421696,
+   "end": 3438463,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    36,
+    41,
+    56,
+    58,
+    75
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 3666944,
+   "end": 3693503,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    51,
+    53,
+    57,
+    71
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 5134848,
+   "end": 5159231,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    50,
+    59,
+    63
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 5380096,
+   "end": 5403775,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    59,
+    60,
+    66
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 5624320,
+   "end": 5648511,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    46,
+    50,
+    72
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 8236032,
+   "end": 8259711,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    55,
+    58,
+    59,
+    71
+   ]
+  },
+  {
+   "pitch": 54,
+   "cut": 10194432,
+   "end": 10218367,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    56,
+    64
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 2768384,
+   "end": 2793471,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    40,
+    45,
+    47,
+    56,
+    84
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 4482560,
+   "end": 4505279,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    49,
+    50,
+    79
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 4645888,
+   "end": 4660415,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    49,
+    51,
+    77,
+    80
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 4890112,
+   "end": 4905919,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    45,
+    51,
+    83
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 5950976,
+   "end": 5967359,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    70,
+    72
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 7909888,
+   "end": 7926655,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    34,
+    63,
+    68
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 9377792,
+   "end": 9394687,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    72
+   ]
+  },
+  {
+   "pitch": 55,
+   "cut": 10112512,
+   "end": 10129663,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    39,
+    54,
+    64
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 565248,
+   "end": 578879,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    49,
+    54,
+    57,
+    80
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 1625088,
+   "end": 1641983,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    34,
+    44,
+    66,
+    67,
+    68
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 1870848,
+   "end": 1895423,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    48,
+    54,
+    66,
+    70
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 2523648,
+   "end": 2540607,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    32,
+    48,
+    61,
+    73
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 3503616,
+   "end": 3528703,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    42,
+    50,
+    57,
+    80
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 3828736,
+   "end": 3845759,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    43,
+    48,
+    73
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 4073984,
+   "end": 4090879,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    51,
+    60,
+    74
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 5869568,
+   "end": 5890111,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    46,
+    55,
+    64,
+    72
+   ]
+  },
+  {
+   "pitch": 56,
+   "cut": 9133568,
+   "end": 9149247,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    53,
+    59,
+    68,
+    69
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 157184,
+   "end": 173951,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    48,
+    75
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 320512,
+   "end": 381823,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    32,
+    45,
+    54,
+    68,
+    76
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 648192,
+   "end": 660799,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    48,
+    60,
+    62,
+    63,
+    65
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 2687488,
+   "end": 2712191,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    44,
+    55,
+    72,
+    81
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 2850304,
+   "end": 2866879,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    44,
+    47,
+    51,
+    59,
+    84
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 3585024,
+   "end": 3599551,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    49,
+    50,
+    54,
+    70
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 5297664,
+   "end": 5313791,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    42,
+    48,
+    50,
+    66
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 6278144,
+   "end": 6294719,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    56,
+    78
+   ]
+  },
+  {
+   "pitch": 57,
+   "cut": 9052160,
+   "end": 9066943,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    50,
+    56,
+    58,
+    61
+   ]
+  },
+  {
+   "pitch": 58,
+   "cut": 75776,
+   "end": 87167,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    56,
+    57,
+    62,
+    78,
+    83
+   ]
+  },
+  {
+   "pitch": 58,
+   "cut": 3340288,
+   "end": 3352383,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    54,
+    74,
+    75
+   ]
+  },
+  {
+   "pitch": 58,
+   "cut": 3503616,
+   "end": 3517951,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    42,
+    50,
+    57,
+    80
+   ]
+  },
+  {
+   "pitch": 58,
+   "cut": 5950976,
+   "end": 5967999,
+   "relation": "subharmonic_of_sounding_higher_note",
+   "own": "unlabelled_span",
+   "concurrent": [
+    42,
+    70,
+    72
+   ]
+  },
+  {
+   "pitch": 58,
+   "cut": 8317440,
+   "end": 8334335,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    35,
+    73
+   ]
+  },
+  {
+   "pitch": 58,
+   "cut": 9703936,
+   "end": 9720895,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    44,
+    61,
+    80
+   ]
+  },
+  {
+   "pitch": 59,
+   "cut": 2687488,
+   "end": 2704255,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    43,
+    44,
+    55,
+    72,
+    81
+   ]
+  },
+  {
+   "pitch": 59,
+   "cut": 5216256,
+   "end": 5229247,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    49,
+    57,
+    63,
+    64
+   ]
+  },
+  {
+   "pitch": 59,
+   "cut": 5461504,
+   "end": 5472319,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    43,
+    50,
+    73,
+    76
+   ]
+  },
+  {
+   "pitch": 59,
+   "cut": 8480256,
+   "end": 8497279,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    43,
+    65,
+    76
+   ]
+  },
+  {
+   "pitch": 59,
+   "cut": 9215488,
+   "end": 9231615,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    47,
+    65
+   ]
+  },
+  {
+   "pitch": 60,
+   "cut": 2197504,
+   "end": 2211967,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    37,
+    45,
+    61,
+    69
+   ]
+  },
+  {
+   "pitch": 60,
+   "cut": 2361344,
+   "end": 2374591,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    44,
+    54,
+    61,
+    75
+   ]
+  },
+  {
+   "pitch": 60,
+   "cut": 3176448,
+   "end": 3193407,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    33,
+    44,
+    63,
+    66,
+    71
+   ]
+  },
+  {
+   "pitch": 60,
+   "cut": 3911680,
+   "end": 3926207,
+   "relation": "other_relation_only",
+   "own": "unlabelled_span",
+   "concurrent": [
+    44,
+    46,
+    49,
+    63,
+    74
+   ]
+  },
+  {
+   "pitch": 60,
+   "cut": 4155392,
+   "end": 4172351,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    38,
+    58,
+    62,
+    65
+   ]
+  },
+  {
+   "pitch": 64,
+   "cut": 1299968,
+   "end": 1316543,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    45,
+    57,
+    63,
+    65,
+    66
+   ]
+  },
+  {
+   "pitch": 64,
+   "cut": 10275328,
+   "end": 10292351,
+   "relation": "harmonic_of_sounding_lower_note",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    36,
+    65,
+    67
+   ]
+  },
+  {
+   "pitch": 66,
+   "cut": 5461504,
+   "end": 5478335,
+   "relation": "other_relation_only",
+   "own": "overhang_of_labelled_note",
+   "concurrent": [
+    41,
+    43,
+    50,
+    73,
+    76
+   ]
+  }
+ ]
+}
