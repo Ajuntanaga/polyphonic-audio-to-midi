@@ -1,0 +1,148 @@
+{
+ "schema": "m3_evidence_availability_tally_v1",
+ "note": "counts of record fields by quiet-disposition code; quiet code 5 = rapid_mute_ratio; no class labels",
+ "recordings": {
+  "ordinary": {
+   "trace_sha256_decompressed": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93",
+   "by_quiet_code": {
+    "0": {
+     "decisions": 150917,
+     "decisions_with_records": 150917,
+     "records": 1254060,
+     "energy_observed": 1186391,
+     "onset_observed": 349419,
+     "active_records": 366116,
+     "active_energy_observed": 366116,
+     "active_onset_observed": 269472,
+     "active_onset_positive": 103583
+    },
+    "1": {
+     "decisions": 62,
+     "decisions_with_records": 59,
+     "records": 590,
+     "energy_observed": 0,
+     "onset_observed": 0
+    },
+    "2": {
+     "decisions": 4783,
+     "decisions_with_records": 4749,
+     "records": 27685,
+     "energy_observed": 25359,
+     "onset_observed": 0,
+     "active_records": 4238,
+     "active_energy_observed": 4238,
+     "active_onset_observed": 0,
+     "active_onset_positive": 0
+    },
+    "5": {
+     "decisions": 10949,
+     "decisions_with_records": 10949,
+     "records": 24729,
+     "energy_observed": 0,
+     "onset_observed": 0,
+     "active_records": 24565,
+     "active_energy_observed": 0,
+     "active_onset_observed": 0,
+     "active_onset_positive": 0
+    },
+    "7": {
+     "decisions": 314,
+     "decisions_with_records": 314,
+     "records": 3230,
+     "energy_observed": 3033,
+     "onset_observed": 0,
+     "active_records": 376,
+     "active_energy_observed": 376,
+     "active_onset_observed": 0,
+     "active_onset_positive": 0
+    }
+   }
+  },
+  "extended-middle": {
+   "trace_sha256_decompressed": "78929974b9cc914f71ef3fa58759728dda93f4a53fea16af17f3217adb6ac267",
+   "by_quiet_code": {
+    "0": {
+     "decisions": 32470,
+     "decisions_with_records": 32470,
+     "records": 91958,
+     "energy_observed": 91958,
+     "onset_observed": 38493,
+     "active_records": 40522,
+     "active_energy_observed": 40522,
+     "active_onset_observed": 36942,
+     "active_onset_positive": 15853
+    },
+    "1": {
+     "decisions": 435,
+     "decisions_with_records": 60,
+     "records": 120,
+     "energy_observed": 0,
+     "onset_observed": 0
+    },
+    "2": {
+     "decisions": 817,
+     "decisions_with_records": 621,
+     "records": 1415,
+     "energy_observed": 1415,
+     "onset_observed": 0,
+     "active_records": 513,
+     "active_energy_observed": 513,
+     "active_onset_observed": 0,
+     "active_onset_positive": 0
+    },
+    "3": {
+     "decisions": 60,
+     "decisions_with_records": 60,
+     "records": 120,
+     "energy_observed": 0,
+     "onset_observed": 0
+    },
+    "4": {
+     "decisions": 342,
+     "decisions_with_records": 339,
+     "records": 472,
+     "energy_observed": 0,
+     "onset_observed": 0,
+     "active_records": 472,
+     "active_energy_observed": 0,
+     "active_onset_observed": 0,
+     "active_onset_positive": 0
+    },
+    "5": {
+     "decisions": 888,
+     "decisions_with_records": 888,
+     "records": 1289,
+     "energy_observed": 0,
+     "onset_observed": 0,
+     "active_records": 1289,
+     "active_energy_observed": 0,
+     "active_onset_observed": 0,
+     "active_onset_positive": 0
+    },
+    "7": {
+     "decisions": 13,
+     "decisions_with_records": 13,
+     "records": 62,
+     "energy_observed": 62,
+     "onset_observed": 0
+    }
+   }
+  }
+ },
+ "rapid_mute_summary": {
+  "ordinary": {
+   "decisions": 10949,
+   "records": 24729,
+   "active_records": 24565,
+   "energy_observed": 0,
+   "onset_observed": 0
+  },
+  "extended-middle": {
+   "decisions": 888,
+   "records": 1289,
+   "active_records": 1289,
+   "energy_observed": 0,
+   "onset_observed": 0
+  }
+ }
+}
