@@ -1,13 +1,13 @@
 {
   "schema": 1,
-  "state": "prepared",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "created_at": "2026-11-22T02:12:21.945572+00:00",
-  "updated_at": "2026-11-22T02:12:52.029454+00:00",
+  "updated_at": "2026-11-22T02:21:44.876714+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "8af383d418e85c2a1031386f6ed95e11c7831e48",
-  "source_commit": null,
+  "source_commit": "74f9a276712fc37a8d45b0caba70fb3d6ad81a91",
   "worker_repository": "Ajuntanaga/m3-offload",
   "worker_branch": "main",
   "worker_base_commit": "2aa201a38d8e5a31eae925834fb8b87041776811",
@@ -66,13 +66,13 @@
     "decoded_sha256": "7604d928e23018fc4ea172dc1b186d17967b96b0f9e494dd8a114f6d2da8d0d3",
     "encoding": "SHA256 of decompressed compact JSON bytes; metadata-only generation before recorded execution"
   },
-  "run_id": null,
-  "stage": "Frozen and reviewed; ready for one CPU dispatch",
+  "run_id": 44975092935,
+  "stage": "Final: rejected at clean-training five-pitch gate; held-out and continuous scoring skipped",
   "installed_output_changed": false,
   "labels_changed": false,
   "promotion_accepted": false,
   "bulk_policy": "Collect small report once with server digest verification; model, predictions and mixture plans stay remote. No automatic rerun or cutoff tuning.",
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once; digest verified; bulk remote",
   "validation": {
     "local_synthetic_tests": 8,
     "passed": 8,
@@ -80,7 +80,278 @@
     "git_diff_check": "passed",
     "local_recorded_audio_model_native_execution": false,
     "github_synthetic_tests_required": 98,
-    "independent_static_review": "One focused read-only review completed; no material blocker. FFT boundary and interpolation/RMS effects disclosed; Torch runtime checks remain on GitHub."
+    "independent_static_review": "One focused read-only review completed; no material blocker. FFT boundary and interpolation/RMS effects disclosed; Torch runtime checks remain on GitHub.",
+    "github_synthetic_tests_passed": 98,
+    "github_synthetic_tests_skipped": 0,
+    "source_ci": "passed"
   },
-  "next": "Push the scoped source and worker commits; verify registered workflow; dispatch one CPU job and collect its small report once."
+  "next": "Select a distinct evidence-supported source-transfer mechanism before another fit. Retain this rejection and all labels/gates; no tuning, automatic rerun or new job queued.",
+  "pushed_at": "2026-11-22T02:13:08.539672+00:00",
+  "source_ci": [
+    {
+      "id": 44975042554,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "74f9a276712fc37a8d45b0caba70fb3d6ad81a91",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/44975042554"
+    }
+  ],
+  "dispatch_registration_observation": {
+    "workflows_total": 34,
+    "matching_workflows": [
+      {
+        "id": 426460586,
+        "node_id": "W_kwDOVnjy3s4Za0Wq",
+        "name": "Harmonic partial variation screen",
+        "path": ".github/workflows/harmonic-partial-variation.yml",
+        "state": "active",
+        "created_at": "2026-11-21T18:13:08.000-08:00",
+        "updated_at": "2026-11-21T18:13:08.000-08:00",
+        "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/workflows/426460586",
+        "html_url": "https://github.com/Ajuntanaga/m3-offload/blob/main/.github/workflows/harmonic-partial-variation.yml",
+        "badge_url": "https://github.com/Ajuntanaga/m3-offload/workflows/Harmonic%20partial%20variation%20screen/badge.svg"
+      }
+    ],
+    "matching_runs": [],
+    "active_worker_runs": []
+  },
+  "dispatch_attempted_at": "2026-11-22T02:13:38.115297+00:00",
+  "dispatch_exit_code": 0,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44975092935",
+  "output_directory": "build/github-results/harmonic-partial-variation-44975092935",
+  "report_artifact": "m3-harmonic-partial-variation-report-44975092935-1",
+  "small_artifact_name": "m3-harmonic-partial-variation-report-44975092935-1",
+  "evidence_artifact": "m3-harmonic-partial-variation-evidence-44975092935-1",
+  "github_observation": {
+    "databaseId": 44975092935,
+    "headSha": "f99030043abaae2edeaca9af5580058cbf9a494e",
+    "status": "completed",
+    "conclusion": "success",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/44975092935",
+    "observed_at": "2026-11-22T02:21:44.876714+00:00"
+  },
+  "report": "build/github-results/harmonic-partial-variation-44975092935/artifact/harmonic-partial-variation-result/report/report.json",
+  "report_sha256": "a4cb9a8d8af027c57b40aa96c0f1e44262dd94a47a356395be1b12405a9a9167",
+  "result_note": "docs/recovery/CODEX-M3-HARMONIC-PARTIAL-VARIATION-RESULT-20261121.md",
+  "collection_receipt": "build/github-results/harmonic-partial-variation-44975092935/collection-receipt.json",
+  "collection": {
+    "collected_at": "2026-11-22T02:20:16.970810+00:00",
+    "artifact_id": 14735014273,
+    "name": "m3-harmonic-partial-variation-report-44975092935-1",
+    "bytes": 18285,
+    "sha256": "fa1598a4907aca2c5a90657cf3656581d17d47c65adf2f35aa7529f8afad701c",
+    "server_digest": "sha256:fa1598a4907aca2c5a90657cf3656581d17d47c65adf2f35aa7529f8afad701c",
+    "verified": true,
+    "bulk_downloaded": false
+  },
+  "decision": "rejected at training complete-chord gate",
+  "research_screen_passed": false,
+  "representation_feasibility_passed": false,
+  "held_out_scoring": {
+    "executed": false,
+    "reason": "Training complete-chord gate failed."
+  },
+  "continuous_replay": {
+    "executed": false,
+    "reason": "Training and both held-out complete-chord gates must pass first."
+  },
+  "gates": {
+    "train_complete_chords": false
+  },
+  "fit": {
+    "seconds": 122.74503632700001,
+    "epochs": 80,
+    "mixtures": 16384,
+    "pooled_candidate_rows": 868352,
+    "features_per_candidate": 62,
+    "shared_binary_outputs": 1,
+    "parameter_count": 14465,
+    "final_loss": 0.4600304024061188,
+    "loss_curve": [
+      2.4685490895062685,
+      1.6374792363494635,
+      1.4281107196584344,
+      1.3067526719532907,
+      1.2387125878594816,
+      1.1732122893445194,
+      1.1275847535580397,
+      1.0758777665905654,
+      1.048087487462908,
+      1.0158975776284933,
+      0.9886690867133439,
+      0.9662083326838911,
+      0.9451721347868443,
+      0.9206083714962006,
+      0.9074729490093887,
+      0.8878821111284196,
+      0.8767144684679806,
+      0.8558375025168061,
+      0.8416572643909603,
+      0.8378470956813544,
+      0.8098816985730082,
+      0.7962377148214728,
+      0.7937661916948855,
+      0.7787999338470399,
+      0.7718466045334935,
+      0.7641492383554578,
+      0.7434827408287674,
+      0.73836375400424,
+      0.7330413910094649,
+      0.7290061903186142,
+      0.7142481247428805,
+      0.7062593514565378,
+      0.6969416500069201,
+      0.687523445347324,
+      0.6849168026819825,
+      0.6809772045817226,
+      0.6695136167109013,
+      0.6675065201707184,
+      0.657681581331417,
+      0.6455928860232234,
+      0.6434928034432232,
+      0.6318740714341402,
+      0.6414862747769803,
+      0.6188017493113875,
+      0.6175804606173187,
+      0.6217144900001585,
+      0.6025129556655884,
+      0.607151239644736,
+      0.584805023856461,
+      0.5933843115344644,
+      0.5893999650143087,
+      0.5692277736961842,
+      0.5839874288067222,
+      0.5660254277754575,
+      0.5613704971037805,
+      0.5577634770888835,
+      0.5527251618914306,
+      0.5528584967833012,
+      0.5437683966010809,
+      0.5327643225900829,
+      0.5436252898070961,
+      0.536249456461519,
+      0.5241174118127674,
+      0.5205702104140073,
+      0.5127196635585278,
+      0.5093457812909037,
+      0.5011659211013466,
+      0.5006491269450635,
+      0.49278681667055935,
+      0.4869074837770313,
+      0.48975941981188953,
+      0.4835685876896605,
+      0.4834584421478212,
+      0.472793354652822,
+      0.4733590835239738,
+      0.48367421817965806,
+      0.46763795777224004,
+      0.4593204113189131,
+      0.45997578161768615,
+      0.4600304024061188
+    ],
+    "held_out_used": false,
+    "fits": 1,
+    "objective": "mean_bce_plus_setwise_logsumexp_v1"
+  },
+  "frozen_model": {
+    "sha256": "2ba1575f98e723acd9a5f6bf1229511c8774656ee43f256da270d7fc7338df53",
+    "cutoff": 0.6209489703178406,
+    "persisted_before_held_out_scoring": true,
+    "training_fits": 1
+  },
+  "measured_training_summary": {
+    "overall": {
+      "examples": 16384,
+      "true_positive": 43484,
+      "false_positive": 438,
+      "false_negative": 2214,
+      "precision_percent": 99.00277765129093,
+      "recall_percent": 95.15514902183904,
+      "exact_set_percent": 87.0849609375
+    },
+    "by_distinct_pitch_count": {
+      "0": {
+        "examples": 820,
+        "true_positive": 0,
+        "false_positive": 0,
+        "false_negative": 0,
+        "precision_percent": 0.0,
+        "recall_percent": null,
+        "exact_set_percent": 100.0
+      },
+      "1": {
+        "examples": 3132,
+        "true_positive": 3131,
+        "false_positive": 19,
+        "false_negative": 1,
+        "precision_percent": 99.39682539682539,
+        "recall_percent": 99.96807151979566,
+        "exact_set_percent": 99.36143039591315
+      },
+      "2": {
+        "examples": 3220,
+        "true_positive": 6338,
+        "false_positive": 61,
+        "false_negative": 102,
+        "precision_percent": 99.04672605094547,
+        "recall_percent": 98.41614906832298,
+        "exact_set_percent": 95.31055900621118
+      },
+      "3": {
+        "examples": 3251,
+        "true_positive": 9437,
+        "false_positive": 86,
+        "false_negative": 316,
+        "precision_percent": 99.09692323847527,
+        "recall_percent": 96.75997129088486,
+        "exact_set_percent": 89.26484158720393
+      },
+      "4": {
+        "examples": 3432,
+        "true_positive": 12947,
+        "false_positive": 134,
+        "false_negative": 781,
+        "precision_percent": 98.97561348520755,
+        "recall_percent": 94.31089743589743,
+        "exact_set_percent": 78.0011655011655
+      },
+      "5": {
+        "examples": 2529,
+        "true_positive": 11631,
+        "false_positive": 138,
+        "false_negative": 1014,
+        "precision_percent": 98.8274279887841,
+        "recall_percent": 91.98102016607355,
+        "exact_set_percent": 66.74574930802689
+      }
+    },
+    "silence_false_predictions": 0
+  },
+  "training_five_pitch_progress": {
+    "current": 1688,
+    "total": 2529,
+    "target": 1771,
+    "current_percent": 66.74574930802689,
+    "target_percent": 70.02767892447608,
+    "percent_of_target": 95.31338226990401,
+    "gap_sets": 83,
+    "gap_percentage_points": 3.28192961644919
+  },
+  "artifact_metadata": [
+    {
+      "id": 14735014273,
+      "name": "m3-harmonic-partial-variation-report-44975092935-1",
+      "size_in_bytes": 18285,
+      "digest": "sha256:fa1598a4907aca2c5a90657cf3656581d17d47c65adf2f35aa7529f8afad701c",
+      "expires_at": "2026-12-06T02:17:33Z"
+    },
+    {
+      "id": 14736000295,
+      "name": "m3-harmonic-partial-variation-evidence-44975092935-1",
+      "size_in_bytes": 6729500,
+      "digest": "sha256:2924d483473bcae3b9f4bd2a1b368a5e313932b6f5cd6c72e4c6fea59713a656",
+      "expires_at": "2026-12-06T02:17:34Z"
+    }
+  ]
 }
