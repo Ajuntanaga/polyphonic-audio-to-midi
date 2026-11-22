@@ -1,0 +1,104 @@
+{
+  "schema": "m3_paired_component_mixture_spec_v1",
+  "workflow": "paired-component-mixture.yml",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "frozen_reference": {
+    "run_id": 44966587324,
+    "source_commit": "7481905c4b38bad52770c59c7b9c0fdb3eca75a0",
+    "worker_commit": "99e7422982c1394977977bf73ccb8dfb7e40367d",
+    "report_sha256": "05ecd04c986395620b9635814eed3f41ea73462730d68c2a25511dfe92d65971",
+    "model_sha256": "bf9a974f1cd6d2e6bb8461044a114e45017661a7276f5b9d759072c8da8b4dec",
+    "decision": "rejected; preserved"
+  },
+  "sources": {
+    "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+    "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+  },
+  "artifact": {
+    "id": 14731592882,
+    "name": "m3-harmonic-source-variation-evidence-44966587324-1",
+    "sha256": "cccd31450089b1ac3e49cc0c390144123e9311ab4ff99540285695fefa6d6db5",
+    "bytes": 8013695,
+    "files": {
+      "frozen-harmonic-context-model.pt": {
+        "bytes": 67832,
+        "sha256": "bf9a974f1cd6d2e6bb8461044a114e45017661a7276f5b9d759072c8da8b4dec"
+      },
+      "train-mixture-plan.json.gz": {
+        "bytes": 750676,
+        "sha256": "b20241de70b0621534e44b0e6e8ef1d444eb793eb4252d2b9f39aa3bcce3d9ba"
+      },
+      "train-predictions.npz": {
+        "bytes": 3841674,
+        "sha256": "a8ed47ae74aac1280de9398ea688bf85ba8108aaee9be0479d83d04d6c536a35"
+      },
+      "calibration-mixture-plan.json.gz": {
+        "bytes": 193017,
+        "sha256": "e21ef49df5e43e33b0291b9b53e60033d0e9ee826356101cfe1cf1b31c8709b5"
+      },
+      "calibration-predictions.npz": {
+        "bytes": 964057,
+        "sha256": "d23a9583d87b61455bb51577f5b3eecf3a36ac0f10b968ab6d5d195766c554df"
+      },
+      "test-mixture-plan.json.gz": {
+        "bytes": 176896,
+        "sha256": "045e42c8d53b03f1a62661d4e759a61ea0708a5d1fbc270a178a6b6490bc8cec"
+      },
+      "test-predictions.npz": {
+        "bytes": 964826,
+        "sha256": "6d253ce5ccc0ac6b3e842bab123dfc2ea9e00ab7b3672fca3b98c81889845ad8"
+      }
+    }
+  },
+  "cutoff": 0.586877167224884,
+  "probability_absolute_tolerance": 1e-06,
+  "recomposition_absolute_tolerance": 1e-14,
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    }
+  ],
+  "roles": [
+    "train",
+    "calibration",
+    "test"
+  ],
+  "protocol": "First reproduce all original mixture probabilities and cutoff decisions in all three roles. Only then infer each exact original component alone at its original crop, component normalization/gain and global mixture gain. No fit or threshold change.",
+  "unit": "One distinct expected pitch in each sampled mixture; same-pitch components count once, found alone if any own component supplies that pitch.",
+  "states": {
+    "retained": "Own component found alone and pitch found in mixture",
+    "emerged_after_sum": "No own component found alone, pitch found in mixture",
+    "lost_after_sum": "Own component found alone, pitch absent in mixture",
+    "already_missing_alone": "No own component found alone and pitch absent in mixture"
+  },
+  "strata": [
+    "source role",
+    "component count",
+    "distinct pitch count",
+    "pitch band below48/48-59/60-71/72+",
+    "strongest own-component RMS relative to loudest component: 0..-6/-6..-12/-12..-18/below-18 dB"
+  ],
+  "limits": [
+    "Original intended labels are retained; annotation does not guarantee the intended pitch is audible in every crop.",
+    "Mixture effects include feature normalization, phase interaction and classifier context; loss after summation does not by itself isolate physical masking.",
+    "An extra pitch present in a solo is an association, not proof that the component caused the mixture extra.",
+    "These source-disjoint roles have already been used for development; recording pass, protocol and content remain confounded.",
+    "Sampled sustained pitch sets do not measure string assignment, attacks/releases, native timing, MIDI delivery or live readiness.",
+    "The frozen model remains rejected. No fit, cutoff retune, exclusion, official-score rewrite, continuous replay or installed/default change."
+  ],
+  "scope": "One CPU GitHub observation, existing authorized inputs only; bulk remains remote.",
+  "max_worker_minutes": 45
+}
