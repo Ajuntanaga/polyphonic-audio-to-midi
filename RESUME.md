@@ -1,3 +1,11 @@
+## Feature-grid consistency screen: prepared
+
+Active checkpoint: `docs/recovery/github-harmonic-grid-consistency-20261121.json`; design: `docs/recovery/CODEX-M3-GRID-CONSISTENCY-PLAN-20261121.md`. One training-only consistency term compares original logits with a one-row translated feature grid. Original setwise supervision, 53x62 inputs, 14,465 parameters, training plan, optimizer steps, cutoff rule, labels and gates are fixed. No physical transposition; feature/source signatures move with rows.
+
+Finish the focused static review, commit/push the scoped implementation/workflow and dispatch once under standing CPU research authority. Checkpoint owns the exact source/worker revisions and run ID when registered. Three local synthetic/spec checks passed; four Torch checks deferred to GitHub. No local recorded audio/model/native execution. Reject any original gate failure; no automatic rerun or cutoff tuning. Compare against setwise44965135706, including isolated-note exact/extra/missing changes.
+
+Installed/default output and scoreboard unchanged. Claude remains paused; no fresh Claude review claimed. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Measured pitch halo final: held-out transfer rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-halo-context-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-HALO-RESULT-20261121.md`. CPU run 44978661693 final/success, source `2c2ced6ac975a34288b0a1dfc26db4c2f100c1a5`, worker `ca1fa82801caace567db76265d43c51157400fe8`. All 111 GitHub tests and source CI 44978616060 passed. Small report collected once with server digest verified; bulk remains remote. Do not poll, redownload or rerun this final job.

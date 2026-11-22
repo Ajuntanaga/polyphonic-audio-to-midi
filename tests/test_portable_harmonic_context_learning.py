@@ -34,7 +34,7 @@ class PortableContextTests(unittest.TestCase):
             def activity(self, features):
                 return np.zeros((len(features), 53))
         configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
-        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'level', 'whiten'))
+        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'level', 'whiten', 'grid'))
         configs.append((runner.HALO_MODEL_PARAMS, 'halo'))
         for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
@@ -70,12 +70,14 @@ class PortableContextTests(unittest.TestCase):
                     spec_data['harmonic_spectral_whitening'] = runner.WHITENING
                 if mode == 'halo':
                     spec_data['harmonic_halo_context'] = runner.HALO_PARAMETERS
+                if mode == 'grid':
+                    spec_data['training_grid_consistency'] = runner.GRID_CONSISTENCY
                 spec.write_text(json.dumps(spec_data))
                 def synthetic_examples(role, takes, waves, extractor, output):
                     (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
                     return (np.zeros((3, len(extractor.names))),
                             np.zeros((3, 53), bool), {})
-                def persist(path, model, extractor, model_params=None):
+                def persist(path, model, extractor, model_params=None, grid_consistency=None):
                     path.write_text(str(model.cutoff))
                 def replay_result(*args):
                     return dict(timing={}, arms=dict(primary_fifo=dict(comparison=dict(
@@ -102,7 +104,7 @@ class PortableContextTests(unittest.TestCase):
                         dict(decoded_sha256='synthetic-transposed-plan'))))
                     activity = stack.enter_context(patch.object(Model, 'activity', autospec=True,
                         side_effect=lambda self, x: np.zeros((len(x), 53))))
-                    stack.enter_context(patch.object(runner, 'save_model', side_effect=persist))
+                    saved = stack.enter_context(patch.object(runner, 'save_model', side_effect=persist))
                     stack.enter_context(patch.object(runner, 'fit_training_cutoff', return_value=dict(cutoff=.5, feasible=True)))
                     stack.enter_context(patch.object(runner, 'acceptance_gate', side_effect=sequence))
                     replay = stack.enter_context(patch.object(runner, 'continuous_dataset', side_effect=replay_result))
@@ -119,6 +121,18 @@ class PortableContextTests(unittest.TestCase):
                 self.assertTrue(all(np.all(c.args[1] == 0) for c in activity.call_args_list))
                 self.assertEqual(fit.call_args.kwargs['model_params'], params)
                 self.assertEqual(result['training_objective'], params['loss'])
+                self.assertEqual(fit.call_args.kwargs.get('grid_consistency'),
+                                 runner.GRID_CONSISTENCY if mode == 'grid' else None)
+                self.assertEqual(saved.call_args.kwargs.get('grid_consistency'),
+                                 runner.GRID_CONSISTENCY if mode == 'grid' else None)
+                if mode == 'grid':
+                    self.assertEqual(result['schema'], 'm3_harmonic_grid_consistency_v1')
+                    self.assertEqual(result['features']['per_candidate'], 62)
+                    self.assertEqual(fit_features.shape, (3, 53*62))
+                    self.assertTrue(all(type(c.args[3]) is runner.HarmonicFeatures
+                                        for c in examples.call_args_list))
+                    self.assertTrue(all(type(c.args[4]) is runner.HarmonicFeatures
+                                        for c in replay.call_args_list))
                 if mode == 'partial':
                     self.assertEqual(result['schema'], 'm3_harmonic_partial_variation_v1')
                     self.assertEqual(result['features']['per_candidate'], 62)

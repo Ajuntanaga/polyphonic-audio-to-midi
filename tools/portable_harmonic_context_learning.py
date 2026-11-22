@@ -29,6 +29,7 @@ from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeat
 from tools.harmonic_spectral_whitening import WHITENING, HarmonicWhitenedFeatures
 from tools.harmonic_halo_context import (HALO_PARAMETERS, HALO_MODEL_PARAMS, INPUT_NOTE_COUNT,
     HarmonicHaloFeatures, central_features)
+from tools.harmonic_grid_consistency import GRID_CONSISTENCY, shifted_grid, grid_consistency_loss
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 
@@ -41,10 +42,14 @@ def dependency_versions():
     return {name: version(name) for name in DEPENDENCIES}
 
 
-def fit_model(features, truth, model_params=None):
+def fit_model(features, truth, model_params=None, grid_consistency=None):
     remote_only()
     import torch
     params = MODEL_PARAMS if model_params is None else model_params
+    if grid_consistency is not None:
+        require_identity(grid_consistency, GRID_CONSISTENCY, 'fixed training grid consistency')
+        if params['padding'] != 'zero' or params['loss'] != SETWISE_PARAMS['loss']:
+            raise ValueError('Grid consistency requires the original zero-padded setwise network')
     torch.set_num_threads(params['torch_threads'])
     torch.use_deterministic_algorithms(params['deterministic'])
     torch.manual_seed(params['seed'])
@@ -76,22 +81,33 @@ def fit_model(features, truth, model_params=None):
         raise ValueError('Unknown frozen training objective')
     generator = torch.Generator().manual_seed(params['seed'])
     losses = []
+    supervised_losses, consistency_losses = [], []
     started = time.perf_counter()
     for epoch in range(params['epochs']):
         order = torch.randperm(len(inputs), generator=generator)
         total_loss = 0.0
+        supervised_total = consistency_total = 0.0
         for indices in order.split(params['batch_size']):
             optimizer.zero_grad(set_to_none=True)
-            loss = criterion(network(inputs[indices]), targets[indices])
+            logits = network(inputs[indices])
+            loss = criterion(logits, targets[indices])
+            if grid_consistency is not None:
+                consistency = grid_consistency_loss(logits, network(shifted_grid(inputs[indices])))
+                supervised_total += float(loss.detach())*len(indices)
+                consistency_total += float(consistency.detach())*len(indices)
+                loss = loss + GRID_CONSISTENCY['weight']*consistency
             if not torch.isfinite(loss):
                 raise ValueError('Nonfinite training loss')
             loss.backward()
             optimizer.step()
             total_loss += float(loss.detach())*len(indices)
         losses.append(total_loss/len(inputs))
+        if grid_consistency is not None:
+            supervised_losses.append(supervised_total/len(inputs))
+            consistency_losses.append(consistency_total/len(inputs))
         print(f'epoch {epoch+1}/{params["epochs"]}: loss={losses[-1]:.9g}', flush=True)
     network.eval()
-    return HarmonicContextModel(mean, scale, network, input_note_count=input_note_count), dict(seconds=time.perf_counter()-started,
+    fit = dict(seconds=time.perf_counter()-started,
         epochs=len(losses), mixtures=len(features), pooled_candidate_rows=len(features)*NOTE_COUNT,
         input_note_count=input_note_count, output_note_count=NOTE_COUNT,
         normalization_rows=len(features)*NOTE_COUNT,
@@ -99,12 +115,18 @@ def fit_model(features, truth, model_params=None):
         parameter_count=sum(p.numel() for p in network.parameters()),
         final_loss=losses[-1], loss_curve=losses, held_out_used=False, fits=1,
         objective=params['loss'])
+    if grid_consistency is not None:
+        fit.update(training_grid_consistency=dict(GRID_CONSISTENCY),
+            supervised_loss_curve=supervised_losses, consistency_loss_curve=consistency_losses,
+            optimizer_steps=params['epochs']*((len(inputs)+params['batch_size']-1)//params['batch_size']),
+            training_forwards_per_step=2, inference_forwards_per_batch=1)
+    return HarmonicContextModel(mean, scale, network, input_note_count=input_note_count), fit
 
 
-def save_model(path, model, extractor, model_params=None):
+def save_model(path, model, extractor, model_params=None, grid_consistency=None):
     remote_only()
     import torch
-    torch.save(dict(state_dict=model.network.state_dict(), mean=torch.from_numpy(model.mean),
+    saved = dict(state_dict=model.network.state_dict(), mean=torch.from_numpy(model.mean),
         scale=torch.from_numpy(model.scale), cutoff=model.cutoff,
         coordinate_names=extractor.coordinate_names, settings=SETTINGS,
         feature_parameters=PARAMETERS, feature_count=len(extractor.coordinate_names),
@@ -113,7 +135,11 @@ def save_model(path, model, extractor, model_params=None):
         whitening_parameters=getattr(extractor, 'whitening_parameters', None),
         halo_parameters=getattr(extractor, 'halo_parameters', None),
         input_note_count=model.input_note_count, output_note_count=NOTE_COUNT,
-        model_parameters=MODEL_PARAMS if model_params is None else model_params), path)
+        model_parameters=MODEL_PARAMS if model_params is None else model_params)
+    if grid_consistency is not None:
+        require_identity(grid_consistency, GRID_CONSISTENCY, 'persisted training grid consistency')
+        saved['training_grid_consistency'] = dict(GRID_CONSISTENCY)
+    torch.save(saved, path)
 
 
 def run(spec_path, output):
@@ -148,8 +174,12 @@ def run(spec_path, output):
         suppression = spec.get('harmonic_level_suppression')
         whitening = spec.get('harmonic_spectral_whitening')
         halo = spec.get('harmonic_halo_context')
-        if sum(value is not None for value in (variation, partial, transposition, contrast, suppression, whitening, halo)) > 1:
+        grid_consistency = spec.get('training_grid_consistency')
+        if sum(value is not None for value in (variation, partial, transposition, contrast, suppression, whitening, halo, grid_consistency)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
+        if grid_consistency is not None:
+            require_identity(grid_consistency, GRID_CONSISTENCY, 'fixed training-only grid consistency')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise architecture and supervised objective')
         if halo is not None:
             require_identity(halo, HALO_PARAMETERS, 'fixed measured halo and central output range')
             require_identity(params, HALO_MODEL_PARAMS, 'fixed valid-context setwise model')
@@ -192,6 +222,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_spectral_whitening_v1'
         if halo is not None:
             report['schema'] = 'm3_harmonic_halo_context_v1'
+        if grid_consistency is not None:
+            report['schema'] = 'm3_harmonic_grid_consistency_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -224,7 +256,8 @@ def run(spec_path, output):
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context=('Measured 36-pitch halo each side; valid convolutions, no padded boundary in any output receptive field.' if halo is not None
                               else 'Zero padding supplies incomplete context and can encode boundary position.'),
-            distinction=('Measured context replaces all padding; same central features, scaler rows, 14465 parameters and initialization. Added context and boundary removal change together.' if halo is not None else
+            distinction=('Training-only one-row feature-grid consistency; same features, network, scaler, plans, optimizer steps and inference as setwise baseline.' if grid_consistency is not None else
+                'Measured context replaces all padding; same central features, scaler rows, 14465 parameters and initialization. Added context and boundary removal change together.' if halo is not None else
                 'Only the current-frame spectral envelope is partially whitened; original RMS, 62 slots, network, plans and initialization are unchanged versus setwise baseline.' if whitening is not None else
                 'Only RMS coordinates 30 and 61 are zeroed; all 62 slots, other 60 values, model shape and initialization are unchanged versus setwise baseline.' if suppression is not None else
                 'Original 62 coordinates plus 44 peak-contrast coordinates; input layer gains 1408 parameters, no augmentation.' if contrast is not None else
@@ -272,13 +305,16 @@ def run(spec_path, output):
             report['fit']['optimizer_steps'] = params['epochs']*((len(fit_x)+params['batch_size']-1)//params['batch_size'])
             report['fit']['clean_and_companion_mixtures'] = len(fit_x)
             del fit_x, fit_y
+        elif grid_consistency is not None:
+            model, report['fit'] = fit_model(x, y, model_params=params, grid_consistency=grid_consistency)
         else:
             model, report['fit'] = fit_model(x, y, model_params=params)
         probability = model.activity(x)
         report['cutoff_fit'] = fit_training_cutoff(probability, y)
         model.cutoff = report['cutoff_fit']['cutoff']
         model_path = folders['bulk']/'frozen-harmonic-context-model.pt'
-        save_model(model_path, model, extractor, model_params=params)
+        save_model(model_path, model, extractor, model_params=params,
+                   **({'grid_consistency': grid_consistency} if grid_consistency is not None else {}))
         report['frozen_model'] = dict(sha256=digest(model_path), cutoff=model.cutoff,
             persisted_before_held_out_scoring=True, training_fits=1)
         measured = summarize(probability, y, model.cutoff)
@@ -335,7 +371,8 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                ('Measured halo adds spectral context and removes boundary cues together; no unique attribution to either. Very low halo pitches are FFT-unresolved; high probes may be weak.' if halo is not None else
+                ('Feature rows move together, retaining FFT and source signatures. This is not physical transposition or proof of source invariance. Consistency may propagate errors or remove useful position evidence; one seed and weight only.' if grid_consistency is not None else
+                 'Measured halo adds spectral context and removes boundary cues together; no unique attribution to either. Very low halo pitches are FFT-unresolved; high probes may be weak.' if halo is not None else
                  'Whitening can amplify leakage/noise and alter relative note strengths or remove useful timbre evidence. It uses only the present trailing frame, with no new silence or pitch gate.' if whitening is not None else
                  'Absolute RMS inputs are suppressed, but existing relative-power floors remain level-dependent at very low levels. Losing level evidence may increase quiet/noise false outputs; no added silence gate.' if suppression is not None else
                  'Peak contrast is learned evidence, with no hard harmonicity rejection; vibrato, inharmonicity and overlapping peaks can weaken it. Input capacity also increases.' if contrast is not None else
