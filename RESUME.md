@@ -1,3 +1,9 @@
+## Spectral whitening prepared: one source-transfer screen
+
+Active checkpoint: `docs/recovery/github-harmonic-whitening-20261121.json`; frozen design: `docs/recovery/CODEX-M3-HARMONIC-WHITENING-PLAN-20261121.md`. One frame-local critical-band partial whitening operation will precede the same62 harmonic features for every role. The model, original mixture plans, all555 source labels, training-only cutoff and all acceptance gates remain fixed. Source-pipeline review found no material construction bug. Seven local synthetic checks pass; one Torch-dependent check is deferred to GitHub. Focused static review passed. No job dispatched yet.
+
+Next: pin source/worker SHAs and dispatch one bounded CPU job under standing authorization. Require training five-pitch>=1771/2529 and every other unchanged gate before held-out and continuous work. No automatic rerun, tuning, installed/default change or new provider. Claude remains paused. Broader live-readiness goal remains active. Earlier entries below are historical.
+
 ## Independent partial variation final: training gate rejected
 
 Active checkpoint: `docs/recovery/github-harmonic-partial-variation-20261121.json`; result: `docs/recovery/CODEX-M3-HARMONIC-PARTIAL-VARIATION-RESULT-20261121.md`. CPU run44975092935 final/success, source `74f9a276712fc37a8d45b0caba70fb3d6ad81a91`, worker `f99030043abaae2edeaca9af5580058cbf9a494e`. All98 GitHub synthetic checks and source CI44975042554 passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload, rerun or retune this completed screen.

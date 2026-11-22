@@ -34,7 +34,7 @@ class PortableContextTests(unittest.TestCase):
             def activity(self, features):
                 return np.zeros((len(features), 53))
         configs = [(p, 'none') for p in (runner.MODEL_PARAMS, runner.COMPLETE_SET_PARAMS, runner.SETWISE_PARAMS)]
-        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'level'))
+        configs.extend((runner.SETWISE_PARAMS, mode) for mode in ('shelf', 'partial', 'transpose', 'contrast', 'level', 'whiten'))
         for (params, mode), sequence in product(configs,
                 ([False], [True,False,True], [True,True,False], [True,True,True])):
             with self.subTest(gates=sequence, loss=params['loss'], mode=mode), tempfile.TemporaryDirectory() as directory:
@@ -65,6 +65,8 @@ class PortableContextTests(unittest.TestCase):
                     spec_data['harmonic_peak_contrast'] = runner.CONTRAST
                 if mode == 'level':
                     spec_data['harmonic_level_suppression'] = runner.SUPPRESSION
+                if mode == 'whiten':
+                    spec_data['harmonic_spectral_whitening'] = runner.WHITENING
                 spec.write_text(json.dumps(spec_data))
                 def synthetic_examples(role, takes, waves, extractor, output):
                     (output/(role+'-mixture-plan.json.gz')).write_bytes(gzip.compress(b'[]'))
@@ -127,6 +129,13 @@ class PortableContextTests(unittest.TestCase):
                     self.assertTrue(all(isinstance(c.args[3], runner.HarmonicLevelBlindFeatures)
                                         for c in examples.call_args_list))
                     self.assertTrue(all(isinstance(c.args[4], runner.HarmonicLevelBlindFeatures)
+                                        for c in replay.call_args_list))
+                if mode == 'whiten':
+                    self.assertEqual(result['schema'], 'm3_harmonic_spectral_whitening_v1')
+                    self.assertEqual(result['features']['per_candidate'], 62)
+                    self.assertTrue(all(isinstance(c.args[3], runner.HarmonicWhitenedFeatures)
+                                        for c in examples.call_args_list))
+                    self.assertTrue(all(isinstance(c.args[4], runner.HarmonicWhitenedFeatures)
                                         for c in replay.call_args_list))
                 if params != runner.MODEL_PARAMS:
                     self.assertTrue(result['training_plan_identity']['verified'])

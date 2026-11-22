@@ -26,6 +26,7 @@ from tools.harmonic_partial_variation import PARTIAL_VARIATION, partial_examples
 from tools.harmonic_pitch_transposition import TRANSPOSITION, transposition_examples
 from tools.harmonic_peak_contrast import CONTRAST, HarmonicContrastFeatures, contrast_summary
 from tools.harmonic_level_suppression import SUPPRESSION, HarmonicLevelBlindFeatures
+from tools.harmonic_spectral_whitening import WHITENING, HarmonicWhitenedFeatures
 from tools.portable_basic_pitch_cached_diagnosis import require_identity
 from tools.portable_basic_pitch_comparison import captured_text, check_hash, remote_only, save_json
 
@@ -100,6 +101,7 @@ def save_model(path, model, extractor, model_params=None):
         feature_parameters=PARAMETERS, feature_count=len(extractor.coordinate_names),
         contrast_parameters=getattr(extractor, 'contrast_parameters', None),
         suppression_parameters=getattr(extractor, 'suppression_parameters', None),
+        whitening_parameters=getattr(extractor, 'whitening_parameters', None),
         model_parameters=MODEL_PARAMS if model_params is None else model_params), path)
 
 
@@ -133,8 +135,12 @@ def run(spec_path, output):
         transposition = spec.get('training_pitch_transposition')
         contrast = spec.get('harmonic_peak_contrast')
         suppression = spec.get('harmonic_level_suppression')
-        if sum(value is not None for value in (variation, partial, transposition, contrast, suppression)) > 1:
+        whitening = spec.get('harmonic_spectral_whitening')
+        if sum(value is not None for value in (variation, partial, transposition, contrast, suppression, whitening)) > 1:
             raise ValueError('Representation and augmentation changes cannot be combined in this screen')
+        if whitening is not None:
+            require_identity(whitening, WHITENING, 'fixed frame-local spectral whitening')
+            require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
         if partial is not None:
             require_identity(partial, PARTIAL_VARIATION, 'fixed independent partial envelopes')
             require_identity(params, SETWISE_PARAMS, 'unchanged setwise model and objective')
@@ -167,6 +173,8 @@ def run(spec_path, output):
             report['schema'] = 'm3_harmonic_peak_contrast_v1'
         if suppression is not None:
             report['schema'] = 'm3_harmonic_level_suppression_v1'
+        if whitening is not None:
+            report['schema'] = 'm3_harmonic_spectral_whitening_v1'
         report['provenance'] = dict(source_commit=source, worker_commit=os.environ['GITHUB_SHA'],
             run_id=os.environ['GITHUB_RUN_ID'], run_attempt=os.environ['GITHUB_RUN_ATTEMPT'],
             specification=spec, specification_sha256=digest(spec_path), python=sys.version,
@@ -186,7 +194,8 @@ def run(spec_path, output):
         report['inputs'] = [fetch_release(spec['worker_repository'], pin, folders['cache'],
             folders['inputs'], folders['logs']) for pin in spec['input_releases']]
         waves = source_waves(references['sources'], folders['inputs'])
-        extractor = (HarmonicLevelBlindFeatures() if suppression is not None else
+        extractor = (HarmonicWhitenedFeatures() if whitening is not None else
+                     HarmonicLevelBlindFeatures() if suppression is not None else
                      HarmonicContrastFeatures() if contrast is not None else HarmonicFeatures())
         report['features'] = dict(coordinate_names=extractor.coordinate_names,
             per_candidate=len(extractor.coordinate_names), candidate_count=NOTE_COUNT,
@@ -194,7 +203,8 @@ def run(spec_path, output):
             identity_features=False, exact_pitch_shift_equivariance=False,
             receptive_field_pitches=1+2*sum(MODEL_PARAMS['dilations']),
             boundary_context='Zero padding supplies incomplete context and can encode boundary position.',
-            distinction=('Only RMS coordinates 30 and 61 are zeroed; all 62 slots, other 60 values, model shape and initialization are unchanged versus setwise baseline.' if suppression is not None else
+            distinction=('Only the current-frame spectral envelope is partially whitened; original RMS, 62 slots, network, plans and initialization are unchanged versus setwise baseline.' if whitening is not None else
+                'Only RMS coordinates 30 and 61 are zeroed; all 62 slots, other 60 values, model shape and initialization are unchanged versus setwise baseline.' if suppression is not None else
                 'Original 62 coordinates plus 44 peak-contrast coordinates; input layer gains 1408 parameters, no augmentation.' if contrast is not None else
                 'Clean training plus transposed companions; same epochs, twice the optimizer steps.' if transposition is not None else
                 'Only training component partial envelopes change; same 62 features, model, examples and optimizer steps.' if partial is not None else
@@ -303,7 +313,8 @@ def run(spec_path, output):
                 'Harmonic-coordinate weight sharing is not exact shift equivariance at finite FFT resolution.',
                 'RMS-normalized sustained mixtures do not prove attacks, decays, lanes or unison multiplicity.',
                 'Joint-context binary outputs still do not enforce a valid complete chord or string assignment.',
-                ('Absolute RMS inputs are suppressed, but existing relative-power floors remain level-dependent at very low levels. Losing level evidence may increase quiet/noise false outputs; no added silence gate.' if suppression is not None else
+                ('Whitening can amplify leakage/noise and alter relative note strengths or remove useful timbre evidence. It uses only the present trailing frame, with no new silence or pitch gate.' if whitening is not None else
+                 'Absolute RMS inputs are suppressed, but existing relative-power floors remain level-dependent at very low levels. Losing level evidence may increase quiet/noise false outputs; no added silence gate.' if suppression is not None else
                  'Peak contrast is learned evidence, with no hard harmonicity rejection; vibrato, inharmonicity and overlapping peaks can weaken it. Input capacity also increases.' if contrast is not None else
                  'Training transposition shifts spectrum/formants and duration, using the same 200 sources; twice the optimizer steps confounds attribution. No independent recording content.' if transposition is not None else
                  'Independent partial envelopes use the intended training note, not verified pitch; crop-periodic spectral shaping is training-only and supplies no independent recording content. It can alter transients or suppress an already weak partial.' if partial is not None else
