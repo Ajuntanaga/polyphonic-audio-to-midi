@@ -1,3 +1,11 @@
+## Saved-label sensitivity final: disputed targets cannot accept the frozen model
+
+Active checkpoint: `docs/recovery/m3-saved-label-sensitivity-20261122.json`; result: `docs/recovery/CODEX-M3-LABEL-SENSITIVITY-RESULT-20261122.md`. One saved-array analysis of run44966587324; no new audio/model/native processing, fit or remote job. All source/prediction/plan identities pass; five synthetic tests pass. The newest model result remains the separately recorded rejected run44982269805 (`github-harmonic-full-gradient-consistency-20261122.json`). Do not repeat either completed job or this analysis.
+
+Original test exact1756/4096 (42.87%). Hypothetical substitution of the eight previously observed non-octave source targets gives2012/4096 (49.12%); this is not a corrected score or detector gain. Even granting all affected mixtures perfect output gives2329/4096 (56.86%); granting all fifteen flagged sources perfect output gives2780/4096 (67.87%), still88 short of TARGET2868. Original five-pitch group:24/327; broader ceiling189/327 (57.80%), TARGET229, GAP40. Known disagreements matter but cannot alone accept this frozen model. All555 sources and official labels, gates, installed/default output and scoreboard remain unchanged.
+
+Next: prepare exact crop/effective-level paired component/mixture inference on the frozen model, reproducing original mixture outputs first, to distinguish errors already present alone from errors introduced by summation. Existing saved solo/mixed comparisons are unpaired. No refit, retune or new job queued. Claude remains paused; no fresh review claimed. Broader live-readiness goal remains active; overall completion is not measured. Earlier entries are historical.
+
 ## Full-gradient consistency final: stable fit, held-out rejection
 
 Active checkpoint: `docs/recovery/github-harmonic-full-gradient-consistency-20261122.json`; result: `docs/recovery/CODEX-M3-FULL-GRADIENT-RESULT-20261122.md`. CPU run 44982269805 final/success, source `b48cee3a045709f074bec53c3156906461e1600e`, worker `5906f0527cea46aad6f0f674693c0270dc58476f`. All 121 GitHub tests and source CI 44982242913 passed. Small report collected once with server digest verified; bulk stays remote. Do not poll, redownload or rerun this final job.

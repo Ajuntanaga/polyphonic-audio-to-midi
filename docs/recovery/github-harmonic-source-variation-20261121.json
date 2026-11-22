@@ -3,7 +3,7 @@
   "state": "completed",
   "final": true,
   "created_at": "2026-11-22T00:22:54.439116+00:00",
-  "updated_at": "2026-11-22T00:49:53.827087+00:00",
+  "updated_at": "2026-11-22T04:10:38.747873+00:00",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "source_base_commit": "81fbfd6bfde2e3b20e6b7e8e188686ad789d1a4e",
@@ -1030,5 +1030,100 @@
     ],
     "decision": "diagnosis complete; original screen rejection unchanged",
     "next": "Design a distinct single-source transfer and false-pitch rejection change that also preserves complete chords, before another fit. Keep all 555 sources, original roles, labels, cutoff protocol and safety gates. The saved clean-solo/mixed contrast is unpaired and does not establish interference. No refit, exclusion, cutoff retune or new job queued."
+  },
+  "saved_label_sensitivity": {
+    "final": true,
+    "created_at": "2026-11-22T04:07:10.323435+00:00",
+    "checkpoint": "docs/recovery/m3-saved-label-sensitivity-20261122.json",
+    "result": "docs/recovery/CODEX-M3-LABEL-SENSITIVITY-RESULT-20261122.md",
+    "report": "build/recovery/m3-label-sensitivity-20261122/report.json",
+    "report_sha256": "a6b5062d0c2470d2a4c0820a6d88be33120e201d7665e938e3750a6215fcd073",
+    "analysis_script_sha256": "bae538cbaefb3016b21186a13eeee106c9e43b8f3d071bc47f48e71ddf008f54",
+    "analysis_runs": 1,
+    "synthetic_tests_passed": 5,
+    "identities_passed": true,
+    "official_scores_unchanged": true,
+    "test_overall": {
+      "original": {
+        "examples": 4096,
+        "expected": 10452,
+        "true_positive": 7994,
+        "false_positive": 2656,
+        "false_negative": 2458,
+        "complete_sets": 1756
+      },
+      "hypothetical": {
+        "examples": 4096,
+        "expected": 10501,
+        "true_positive": 8461,
+        "false_positive": 2189,
+        "false_negative": 2040,
+        "complete_sets": 2012
+      },
+      "optimistic_bounds": {
+        "eight_non_octave": {
+          "affected_examples": 582,
+          "affected_original_failures": 573,
+          "complete_set_upper_bound": 2329,
+          "percent": 56.8603515625,
+          "target_70_percent_count": 2868,
+          "gap_to_target": 539
+        },
+        "all_fifteen": {
+          "affected_examples": 1038,
+          "affected_original_failures": 1024,
+          "complete_set_upper_bound": 2780,
+          "percent": 67.87109375,
+          "target_70_percent_count": 2868,
+          "gap_to_target": 88
+        }
+      },
+      "examples_with_changed_targets": 575,
+      "cardinality_changed": 149,
+      "newly_exact": 262,
+      "lost_exact": 6
+    },
+    "test_original_five_pitch_group": {
+      "original": {
+        "examples": 327,
+        "expected": 1635,
+        "true_positive": 1098,
+        "false_positive": 298,
+        "false_negative": 537,
+        "complete_sets": 24
+      },
+      "hypothetical": {
+        "examples": 327,
+        "expected": 1618,
+        "true_positive": 1149,
+        "false_positive": 247,
+        "false_negative": 469,
+        "complete_sets": 35
+      },
+      "optimistic_bounds": {
+        "eight_non_octave": {
+          "affected_examples": 85,
+          "affected_original_failures": 85,
+          "complete_set_upper_bound": 109,
+          "percent": 33.333333333333336,
+          "target_70_percent_count": 229,
+          "gap_to_target": 120
+        },
+        "all_fifteen": {
+          "affected_examples": 165,
+          "affected_original_failures": 165,
+          "complete_set_upper_bound": 189,
+          "percent": 57.79816513761468,
+          "target_70_percent_count": 229,
+          "gap_to_target": 40
+        }
+      },
+      "examples_with_changed_targets": 85,
+      "cardinality_changed": 17,
+      "newly_exact": 11,
+      "lost_exact": 0
+    },
+    "decision": "known disputed targets alone cannot make the frozen model pass; original rejection unchanged",
+    "next": "Prepare paired component/mixture inference on the frozen source-variation model using exactly the original component crops and effective levels. Require original mixture-output reproduction first; separate source/level misses already present alone from errors introduced when the same components are summed. Preserve all sources, labels, roles and gates; no fit, cutoff retune or next job queued."
   }
 }

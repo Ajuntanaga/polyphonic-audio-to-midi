@@ -1,0 +1,1662 @@
+{
+  "schema": "m3_saved_label_sensitivity_v1",
+  "final": true,
+  "created_at": "2026-11-22T04:07:10.323435+00:00",
+  "run_id": "44966587324",
+  "source_commit": "7481905c4b38bad52770c59c7b9c0fdb3eca75a0",
+  "frozen_cutoff": 0.586877167224884,
+  "original_decision": "rejected at source-disjoint held-out gates",
+  "official_scores_unchanged": true,
+  "identities_passed": true,
+  "input_hashes": {
+    "build/github-results/harmonic-source-variation-44966587324/artifact/harmonic-source-variation-result/report/report.json": "05ecd04c986395620b9635814eed3f41ea73462730d68c2a25511dfe92d65971",
+    "docs/recovery/direct-spectrum-sources-20261121.json": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c",
+    "docs/recovery/source-consistency-20261121.json": "2a2a252af3a1fb29669ded93bd9f3e41cf61f8e6e897798aa246c6da11588fda",
+    "build/github-results/harmonic-source-variation-44966587324/prediction-evidence/train-predictions.npz": "a8ed47ae74aac1280de9398ea688bf85ba8108aaee9be0479d83d04d6c536a35",
+    "build/github-results/harmonic-source-variation-44966587324/prediction-evidence/train-mixture-plan.json.gz": "b20241de70b0621534e44b0e6e8ef1d444eb793eb4252d2b9f39aa3bcce3d9ba",
+    "build/github-results/harmonic-source-variation-44966587324/prediction-evidence/calibration-predictions.npz": "d23a9583d87b61455bb51577f5b3eecf3a36ac0f10b968ab6d5d195766c554df",
+    "build/github-results/harmonic-source-variation-44966587324/prediction-evidence/calibration-mixture-plan.json.gz": "e21ef49df5e43e33b0291b9b53e60033d0e9ee826356101cfe1cf1b31c8709b5",
+    "build/github-results/harmonic-source-variation-44966587324/prediction-evidence/test-predictions.npz": "6d253ce5ccc0ac6b3e842bab123dfc2ea9e00ab7b3672fca3b98c81889845ad8",
+    "build/github-results/harmonic-source-variation-44966587324/prediction-evidence/test-mixture-plan.json.gz": "045e42c8d53b03f1a62661d4e759a61ea0708a5d1fbc270a178a6b6490bc8cec"
+  },
+  "analysis_script_sha256": "bae538cbaefb3016b21186a13eeee106c9e43b8f3d071bc47f48e71ddf008f54",
+  "hypothetical_replacements": {
+    "string-01:56": 64,
+    "string-01:57": 68,
+    "string-01:58": 72,
+    "string-01:60": 80,
+    "string-01:61": 84,
+    "string-04:57": 48,
+    "string-08:63": 32,
+    "string-08:66": 32
+  },
+  "broader_source_keys": [
+    "string-01:50",
+    "string-01:51",
+    "string-01:53",
+    "string-01:54",
+    "string-01:56",
+    "string-01:57",
+    "string-01:58",
+    "string-01:60",
+    "string-01:61",
+    "string-04:54",
+    "string-04:55",
+    "string-04:57",
+    "string-06:68",
+    "string-08:63",
+    "string-08:66"
+  ],
+  "roles": {
+    "train": {
+      "overall": {
+        "original": {
+          "examples": 16384,
+          "expected": 45698,
+          "true_positive": 43798,
+          "false_positive": 442,
+          "false_negative": 1900,
+          "complete_sets": 14542
+        },
+        "hypothetical": {
+          "examples": 16384,
+          "expected": 45698,
+          "true_positive": 43798,
+          "false_positive": 442,
+          "false_negative": 1900,
+          "complete_sets": 14542
+        },
+        "optimistic_bounds": {
+          "eight_non_octave": {
+            "affected_examples": 0,
+            "affected_original_failures": 0,
+            "complete_set_upper_bound": 14542,
+            "percent": 88.75732421875,
+            "target_70_percent_count": 11469,
+            "gap_to_target": 0
+          },
+          "all_fifteen": {
+            "affected_examples": 0,
+            "affected_original_failures": 0,
+            "complete_set_upper_bound": 14542,
+            "percent": 88.75732421875,
+            "target_70_percent_count": 11469,
+            "gap_to_target": 0
+          }
+        },
+        "examples_with_changed_targets": 0,
+        "cardinality_changed": 0,
+        "newly_exact": 0,
+        "lost_exact": 0
+      },
+      "by_original_distinct_pitch_count": {
+        "0": {
+          "original": {
+            "examples": 820,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 820
+          },
+          "hypothetical": {
+            "examples": 820,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 820
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 820,
+              "percent": 100.0,
+              "target_70_percent_count": 574,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 820,
+              "percent": 100.0,
+              "target_70_percent_count": 574,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "1": {
+          "original": {
+            "examples": 3132,
+            "expected": 3132,
+            "true_positive": 3128,
+            "false_positive": 17,
+            "false_negative": 4,
+            "complete_sets": 3113
+          },
+          "hypothetical": {
+            "examples": 3132,
+            "expected": 3132,
+            "true_positive": 3128,
+            "false_positive": 17,
+            "false_negative": 4,
+            "complete_sets": 3113
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 3113,
+              "percent": 99.3933588761175,
+              "target_70_percent_count": 2193,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 3113,
+              "percent": 99.3933588761175,
+              "target_70_percent_count": 2193,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "2": {
+          "original": {
+            "examples": 3220,
+            "expected": 6440,
+            "true_positive": 6350,
+            "false_positive": 53,
+            "false_negative": 90,
+            "complete_sets": 3085
+          },
+          "hypothetical": {
+            "examples": 3220,
+            "expected": 6440,
+            "true_positive": 6350,
+            "false_positive": 53,
+            "false_negative": 90,
+            "complete_sets": 3085
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 3085,
+              "percent": 95.80745341614907,
+              "target_70_percent_count": 2254,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 3085,
+              "percent": 95.80745341614907,
+              "target_70_percent_count": 2254,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "3": {
+          "original": {
+            "examples": 3251,
+            "expected": 9753,
+            "true_positive": 9495,
+            "false_positive": 108,
+            "false_negative": 258,
+            "complete_sets": 2942
+          },
+          "hypothetical": {
+            "examples": 3251,
+            "expected": 9753,
+            "true_positive": 9495,
+            "false_positive": 108,
+            "false_negative": 258,
+            "complete_sets": 2942
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2942,
+              "percent": 90.49523223623501,
+              "target_70_percent_count": 2276,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2942,
+              "percent": 90.49523223623501,
+              "target_70_percent_count": 2276,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "4": {
+          "original": {
+            "examples": 3432,
+            "expected": 13728,
+            "true_positive": 13088,
+            "false_positive": 123,
+            "false_negative": 640,
+            "complete_sets": 2803
+          },
+          "hypothetical": {
+            "examples": 3432,
+            "expected": 13728,
+            "true_positive": 13088,
+            "false_positive": 123,
+            "false_negative": 640,
+            "complete_sets": 2803
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2803,
+              "percent": 81.67249417249417,
+              "target_70_percent_count": 2403,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2803,
+              "percent": 81.67249417249417,
+              "target_70_percent_count": 2403,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "5": {
+          "original": {
+            "examples": 2529,
+            "expected": 12645,
+            "true_positive": 11737,
+            "false_positive": 141,
+            "false_negative": 908,
+            "complete_sets": 1779
+          },
+          "hypothetical": {
+            "examples": 2529,
+            "expected": 12645,
+            "true_positive": 11737,
+            "false_positive": 141,
+            "false_negative": 908,
+            "complete_sets": 1779
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 1779,
+              "percent": 70.34400948991696,
+              "target_70_percent_count": 1771,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 1779,
+              "percent": 70.34400948991696,
+              "target_70_percent_count": 1771,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        }
+      },
+      "by_component_count": {
+        "0": {
+          "original": {
+            "examples": 820,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 820
+          },
+          "hypothetical": {
+            "examples": 820,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 820
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 820,
+              "percent": 100.0,
+              "target_70_percent_count": 574,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 820,
+              "percent": 100.0,
+              "target_70_percent_count": 574,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "1": {
+          "original": {
+            "examples": 3052,
+            "expected": 3052,
+            "true_positive": 3048,
+            "false_positive": 17,
+            "false_negative": 4,
+            "complete_sets": 3033
+          },
+          "hypothetical": {
+            "examples": 3052,
+            "expected": 3052,
+            "true_positive": 3048,
+            "false_positive": 17,
+            "false_negative": 4,
+            "complete_sets": 3033
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 3033,
+              "percent": 99.37745740498035,
+              "target_70_percent_count": 2137,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 3033,
+              "percent": 99.37745740498035,
+              "target_70_percent_count": 2137,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "2": {
+          "original": {
+            "examples": 3112,
+            "expected": 6147,
+            "true_positive": 6060,
+            "false_positive": 52,
+            "false_negative": 87,
+            "complete_sets": 2981
+          },
+          "hypothetical": {
+            "examples": 3112,
+            "expected": 6147,
+            "true_positive": 6060,
+            "false_positive": 52,
+            "false_negative": 87,
+            "complete_sets": 2981
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2981,
+              "percent": 95.79048843187661,
+              "target_70_percent_count": 2179,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2981,
+              "percent": 95.79048843187661,
+              "target_70_percent_count": 2179,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "3": {
+          "original": {
+            "examples": 3035,
+            "expected": 8927,
+            "true_positive": 8707,
+            "false_positive": 91,
+            "false_negative": 220,
+            "complete_sets": 2773
+          },
+          "hypothetical": {
+            "examples": 3035,
+            "expected": 8927,
+            "true_positive": 8707,
+            "false_positive": 91,
+            "false_negative": 220,
+            "complete_sets": 2773
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2773,
+              "percent": 91.36738056013179,
+              "target_70_percent_count": 2125,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2773,
+              "percent": 91.36738056013179,
+              "target_70_percent_count": 2125,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "4": {
+          "original": {
+            "examples": 3201,
+            "expected": 12408,
+            "true_positive": 11844,
+            "false_positive": 117,
+            "false_negative": 564,
+            "complete_sets": 2636
+          },
+          "hypothetical": {
+            "examples": 3201,
+            "expected": 12408,
+            "true_positive": 11844,
+            "false_positive": 117,
+            "false_negative": 564,
+            "complete_sets": 2636
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2636,
+              "percent": 82.3492658544205,
+              "target_70_percent_count": 2241,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2636,
+              "percent": 82.3492658544205,
+              "target_70_percent_count": 2241,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "5": {
+          "original": {
+            "examples": 3164,
+            "expected": 15164,
+            "true_positive": 14139,
+            "false_positive": 165,
+            "false_negative": 1025,
+            "complete_sets": 2299
+          },
+          "hypothetical": {
+            "examples": 3164,
+            "expected": 15164,
+            "true_positive": 14139,
+            "false_positive": 165,
+            "false_negative": 1025,
+            "complete_sets": 2299
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2299,
+              "percent": 72.66118836915297,
+              "target_70_percent_count": 2215,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 2299,
+              "percent": 72.66118836915297,
+              "target_70_percent_count": 2215,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        }
+      }
+    },
+    "calibration": {
+      "overall": {
+        "original": {
+          "examples": 4096,
+          "expected": 11553,
+          "true_positive": 10664,
+          "false_positive": 730,
+          "false_negative": 889,
+          "complete_sets": 2966
+        },
+        "hypothetical": {
+          "examples": 4096,
+          "expected": 11553,
+          "true_positive": 10664,
+          "false_positive": 730,
+          "false_negative": 889,
+          "complete_sets": 2966
+        },
+        "optimistic_bounds": {
+          "eight_non_octave": {
+            "affected_examples": 0,
+            "affected_original_failures": 0,
+            "complete_set_upper_bound": 2966,
+            "percent": 72.412109375,
+            "target_70_percent_count": 2868,
+            "gap_to_target": 0
+          },
+          "all_fifteen": {
+            "affected_examples": 0,
+            "affected_original_failures": 0,
+            "complete_set_upper_bound": 2966,
+            "percent": 72.412109375,
+            "target_70_percent_count": 2868,
+            "gap_to_target": 0
+          }
+        },
+        "examples_with_changed_targets": 0,
+        "cardinality_changed": 0,
+        "newly_exact": 0,
+        "lost_exact": 0
+      },
+      "by_original_distinct_pitch_count": {
+        "0": {
+          "original": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "hypothetical": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "1": {
+          "original": {
+            "examples": 753,
+            "expected": 753,
+            "true_positive": 742,
+            "false_positive": 55,
+            "false_negative": 11,
+            "complete_sets": 698
+          },
+          "hypothetical": {
+            "examples": 753,
+            "expected": 753,
+            "true_positive": 742,
+            "false_positive": 55,
+            "false_negative": 11,
+            "complete_sets": 698
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 698,
+              "percent": 92.69588313413014,
+              "target_70_percent_count": 528,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 698,
+              "percent": 92.69588313413014,
+              "target_70_percent_count": 528,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "2": {
+          "original": {
+            "examples": 777,
+            "expected": 1554,
+            "true_positive": 1503,
+            "false_positive": 110,
+            "false_negative": 51,
+            "complete_sets": 651
+          },
+          "hypothetical": {
+            "examples": 777,
+            "expected": 1554,
+            "true_positive": 1503,
+            "false_positive": 110,
+            "false_negative": 51,
+            "complete_sets": 651
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 651,
+              "percent": 83.78378378378379,
+              "target_70_percent_count": 544,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 651,
+              "percent": 83.78378378378379,
+              "target_70_percent_count": 544,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "3": {
+          "original": {
+            "examples": 837,
+            "expected": 2511,
+            "true_positive": 2374,
+            "false_positive": 171,
+            "false_negative": 137,
+            "complete_sets": 619
+          },
+          "hypothetical": {
+            "examples": 837,
+            "expected": 2511,
+            "true_positive": 2374,
+            "false_positive": 171,
+            "false_negative": 137,
+            "complete_sets": 619
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 619,
+              "percent": 73.95459976105137,
+              "target_70_percent_count": 586,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 619,
+              "percent": 73.95459976105137,
+              "target_70_percent_count": 586,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "4": {
+          "original": {
+            "examples": 885,
+            "expected": 3540,
+            "true_positive": 3240,
+            "false_positive": 201,
+            "false_negative": 300,
+            "complete_sets": 524
+          },
+          "hypothetical": {
+            "examples": 885,
+            "expected": 3540,
+            "true_positive": 3240,
+            "false_positive": 201,
+            "false_negative": 300,
+            "complete_sets": 524
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 524,
+              "percent": 59.2090395480226,
+              "target_70_percent_count": 620,
+              "gap_to_target": 96
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 524,
+              "percent": 59.2090395480226,
+              "target_70_percent_count": 620,
+              "gap_to_target": 96
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "5": {
+          "original": {
+            "examples": 639,
+            "expected": 3195,
+            "true_positive": 2805,
+            "false_positive": 193,
+            "false_negative": 390,
+            "complete_sets": 269
+          },
+          "hypothetical": {
+            "examples": 639,
+            "expected": 3195,
+            "true_positive": 2805,
+            "false_positive": 193,
+            "false_negative": 390,
+            "complete_sets": 269
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 269,
+              "percent": 42.09702660406886,
+              "target_70_percent_count": 448,
+              "gap_to_target": 179
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 269,
+              "percent": 42.09702660406886,
+              "target_70_percent_count": 448,
+              "gap_to_target": 179
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        }
+      },
+      "by_component_count": {
+        "0": {
+          "original": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "hypothetical": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "1": {
+          "original": {
+            "examples": 740,
+            "expected": 740,
+            "true_positive": 729,
+            "false_positive": 55,
+            "false_negative": 11,
+            "complete_sets": 685
+          },
+          "hypothetical": {
+            "examples": 740,
+            "expected": 740,
+            "true_positive": 729,
+            "false_positive": 55,
+            "false_negative": 11,
+            "complete_sets": 685
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 685,
+              "percent": 92.56756756756756,
+              "target_70_percent_count": 518,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 685,
+              "percent": 92.56756756756756,
+              "target_70_percent_count": 518,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "2": {
+          "original": {
+            "examples": 758,
+            "expected": 1503,
+            "true_positive": 1454,
+            "false_positive": 103,
+            "false_negative": 49,
+            "complete_sets": 639
+          },
+          "hypothetical": {
+            "examples": 758,
+            "expected": 1503,
+            "true_positive": 1454,
+            "false_positive": 103,
+            "false_negative": 49,
+            "complete_sets": 639
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 639,
+              "percent": 84.30079155672823,
+              "target_70_percent_count": 531,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 639,
+              "percent": 84.30079155672823,
+              "target_70_percent_count": 531,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "3": {
+          "original": {
+            "examples": 766,
+            "expected": 2268,
+            "true_positive": 2147,
+            "false_positive": 158,
+            "false_negative": 121,
+            "complete_sets": 569
+          },
+          "hypothetical": {
+            "examples": 766,
+            "expected": 2268,
+            "true_positive": 2147,
+            "false_positive": 158,
+            "false_negative": 121,
+            "complete_sets": 569
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 569,
+              "percent": 74.28198433420366,
+              "target_70_percent_count": 537,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 569,
+              "percent": 74.28198433420366,
+              "target_70_percent_count": 537,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "4": {
+          "original": {
+            "examples": 843,
+            "expected": 3269,
+            "true_positive": 2993,
+            "false_positive": 180,
+            "false_negative": 276,
+            "complete_sets": 516
+          },
+          "hypothetical": {
+            "examples": 843,
+            "expected": 3269,
+            "true_positive": 2993,
+            "false_positive": 180,
+            "false_negative": 276,
+            "complete_sets": 516
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 516,
+              "percent": 61.20996441281139,
+              "target_70_percent_count": 591,
+              "gap_to_target": 75
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 516,
+              "percent": 61.20996441281139,
+              "target_70_percent_count": 591,
+              "gap_to_target": 75
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "5": {
+          "original": {
+            "examples": 784,
+            "expected": 3773,
+            "true_positive": 3341,
+            "false_positive": 234,
+            "false_negative": 432,
+            "complete_sets": 352
+          },
+          "hypothetical": {
+            "examples": 784,
+            "expected": 3773,
+            "true_positive": 3341,
+            "false_positive": 234,
+            "false_negative": 432,
+            "complete_sets": 352
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 352,
+              "percent": 44.89795918367347,
+              "target_70_percent_count": 549,
+              "gap_to_target": 197
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 352,
+              "percent": 44.89795918367347,
+              "target_70_percent_count": 549,
+              "gap_to_target": 197
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        }
+      }
+    },
+    "test": {
+      "overall": {
+        "original": {
+          "examples": 4096,
+          "expected": 10452,
+          "true_positive": 7994,
+          "false_positive": 2656,
+          "false_negative": 2458,
+          "complete_sets": 1756
+        },
+        "hypothetical": {
+          "examples": 4096,
+          "expected": 10501,
+          "true_positive": 8461,
+          "false_positive": 2189,
+          "false_negative": 2040,
+          "complete_sets": 2012
+        },
+        "optimistic_bounds": {
+          "eight_non_octave": {
+            "affected_examples": 582,
+            "affected_original_failures": 573,
+            "complete_set_upper_bound": 2329,
+            "percent": 56.8603515625,
+            "target_70_percent_count": 2868,
+            "gap_to_target": 539
+          },
+          "all_fifteen": {
+            "affected_examples": 1038,
+            "affected_original_failures": 1024,
+            "complete_set_upper_bound": 2780,
+            "percent": 67.87109375,
+            "target_70_percent_count": 2868,
+            "gap_to_target": 88
+          }
+        },
+        "examples_with_changed_targets": 575,
+        "cardinality_changed": 149,
+        "newly_exact": 262,
+        "lost_exact": 6
+      },
+      "by_original_distinct_pitch_count": {
+        "0": {
+          "original": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "hypothetical": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "1": {
+          "original": {
+            "examples": 869,
+            "expected": 869,
+            "true_positive": 743,
+            "false_positive": 357,
+            "false_negative": 126,
+            "complete_sets": 602
+          },
+          "hypothetical": {
+            "examples": 869,
+            "expected": 870,
+            "true_positive": 794,
+            "false_positive": 306,
+            "false_negative": 76,
+            "complete_sets": 651
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 51,
+              "affected_original_failures": 51,
+              "complete_set_upper_bound": 653,
+              "percent": 75.14384349827388,
+              "target_70_percent_count": 609,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 94,
+              "affected_original_failures": 93,
+              "complete_set_upper_bound": 695,
+              "percent": 79.97698504027618,
+              "target_70_percent_count": 609,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 51,
+          "cardinality_changed": 1,
+          "newly_exact": 49,
+          "lost_exact": 0
+        },
+        "2": {
+          "original": {
+            "examples": 950,
+            "expected": 1900,
+            "true_positive": 1556,
+            "false_positive": 576,
+            "false_negative": 344,
+            "complete_sets": 452
+          },
+          "hypothetical": {
+            "examples": 950,
+            "expected": 1916,
+            "true_positive": 1656,
+            "false_positive": 476,
+            "false_negative": 260,
+            "complete_sets": 516
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 111,
+              "affected_original_failures": 107,
+              "complete_set_upper_bound": 559,
+              "percent": 58.8421052631579,
+              "target_70_percent_count": 665,
+              "gap_to_target": 106
+            },
+            "all_fifteen": {
+              "affected_examples": 204,
+              "affected_original_failures": 199,
+              "complete_set_upper_bound": 651,
+              "percent": 68.52631578947368,
+              "target_70_percent_count": 665,
+              "gap_to_target": 14
+            }
+          },
+          "examples_with_changed_targets": 109,
+          "cardinality_changed": 24,
+          "newly_exact": 67,
+          "lost_exact": 3
+        },
+        "3": {
+          "original": {
+            "examples": 932,
+            "expected": 2796,
+            "true_positive": 2202,
+            "false_positive": 725,
+            "false_negative": 594,
+            "complete_sets": 319
+          },
+          "hypothetical": {
+            "examples": 932,
+            "expected": 2832,
+            "true_positive": 2325,
+            "false_positive": 602,
+            "false_negative": 507,
+            "complete_sets": 392
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 157,
+              "affected_original_failures": 153,
+              "complete_set_upper_bound": 472,
+              "percent": 50.64377682403433,
+              "target_70_percent_count": 653,
+              "gap_to_target": 181
+            },
+            "all_fifteen": {
+              "affected_examples": 275,
+              "affected_original_failures": 269,
+              "complete_set_upper_bound": 588,
+              "percent": 63.09012875536481,
+              "target_70_percent_count": 653,
+              "gap_to_target": 65
+            }
+          },
+          "examples_with_changed_targets": 154,
+          "cardinality_changed": 54,
+          "newly_exact": 75,
+          "lost_exact": 2
+        },
+        "4": {
+          "original": {
+            "examples": 813,
+            "expected": 3252,
+            "true_positive": 2395,
+            "false_positive": 700,
+            "false_negative": 857,
+            "complete_sets": 154
+          },
+          "hypothetical": {
+            "examples": 813,
+            "expected": 3265,
+            "true_positive": 2537,
+            "false_positive": 558,
+            "false_negative": 728,
+            "complete_sets": 213
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 178,
+              "affected_original_failures": 177,
+              "complete_set_upper_bound": 331,
+              "percent": 40.71340713407134,
+              "target_70_percent_count": 570,
+              "gap_to_target": 239
+            },
+            "all_fifteen": {
+              "affected_examples": 300,
+              "affected_original_failures": 298,
+              "complete_set_upper_bound": 452,
+              "percent": 55.59655596555965,
+              "target_70_percent_count": 570,
+              "gap_to_target": 118
+            }
+          },
+          "examples_with_changed_targets": 176,
+          "cardinality_changed": 53,
+          "newly_exact": 60,
+          "lost_exact": 1
+        },
+        "5": {
+          "original": {
+            "examples": 327,
+            "expected": 1635,
+            "true_positive": 1098,
+            "false_positive": 298,
+            "false_negative": 537,
+            "complete_sets": 24
+          },
+          "hypothetical": {
+            "examples": 327,
+            "expected": 1618,
+            "true_positive": 1149,
+            "false_positive": 247,
+            "false_negative": 469,
+            "complete_sets": 35
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 85,
+              "affected_original_failures": 85,
+              "complete_set_upper_bound": 109,
+              "percent": 33.333333333333336,
+              "target_70_percent_count": 229,
+              "gap_to_target": 120
+            },
+            "all_fifteen": {
+              "affected_examples": 165,
+              "affected_original_failures": 165,
+              "complete_set_upper_bound": 189,
+              "percent": 57.79816513761468,
+              "target_70_percent_count": 229,
+              "gap_to_target": 40
+            }
+          },
+          "examples_with_changed_targets": 85,
+          "cardinality_changed": 17,
+          "newly_exact": 11,
+          "lost_exact": 0
+        }
+      },
+      "by_component_count": {
+        "0": {
+          "original": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "hypothetical": {
+            "examples": 205,
+            "expected": 0,
+            "true_positive": 0,
+            "false_positive": 0,
+            "false_negative": 0,
+            "complete_sets": 205
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 0,
+              "affected_original_failures": 0,
+              "complete_set_upper_bound": 205,
+              "percent": 100.0,
+              "target_70_percent_count": 144,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 0,
+          "cardinality_changed": 0,
+          "newly_exact": 0,
+          "lost_exact": 0
+        },
+        "1": {
+          "original": {
+            "examples": 809,
+            "expected": 809,
+            "true_positive": 687,
+            "false_positive": 315,
+            "false_negative": 122,
+            "complete_sets": 570
+          },
+          "hypothetical": {
+            "examples": 809,
+            "expected": 809,
+            "true_positive": 737,
+            "false_positive": 265,
+            "false_negative": 72,
+            "complete_sets": 619
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 50,
+              "affected_original_failures": 50,
+              "complete_set_upper_bound": 620,
+              "percent": 76.63782447466008,
+              "target_70_percent_count": 567,
+              "gap_to_target": 0
+            },
+            "all_fifteen": {
+              "affected_examples": 85,
+              "affected_original_failures": 85,
+              "complete_set_upper_bound": 655,
+              "percent": 80.96415327564895,
+              "target_70_percent_count": 567,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 50,
+          "cardinality_changed": 0,
+          "newly_exact": 49,
+          "lost_exact": 0
+        },
+        "2": {
+          "original": {
+            "examples": 791,
+            "expected": 1528,
+            "true_positive": 1257,
+            "false_positive": 433,
+            "false_negative": 271,
+            "complete_sets": 408
+          },
+          "hypothetical": {
+            "examples": 791,
+            "expected": 1527,
+            "true_positive": 1330,
+            "false_positive": 360,
+            "false_negative": 197,
+            "complete_sets": 462
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 80,
+              "affected_original_failures": 80,
+              "complete_set_upper_bound": 488,
+              "percent": 61.694058154235144,
+              "target_70_percent_count": 554,
+              "gap_to_target": 66
+            },
+            "all_fifteen": {
+              "affected_examples": 151,
+              "affected_original_failures": 150,
+              "complete_set_upper_bound": 558,
+              "percent": 70.54361567635904,
+              "target_70_percent_count": 554,
+              "gap_to_target": 0
+            }
+          },
+          "examples_with_changed_targets": 80,
+          "cardinality_changed": 3,
+          "newly_exact": 54,
+          "lost_exact": 0
+        },
+        "3": {
+          "original": {
+            "examples": 765,
+            "expected": 2109,
+            "true_positive": 1659,
+            "false_positive": 569,
+            "false_negative": 450,
+            "complete_sets": 284
+          },
+          "hypothetical": {
+            "examples": 765,
+            "expected": 2113,
+            "true_positive": 1748,
+            "false_positive": 480,
+            "false_negative": 365,
+            "complete_sets": 339
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 111,
+              "affected_original_failures": 109,
+              "complete_set_upper_bound": 393,
+              "percent": 51.372549019607845,
+              "target_70_percent_count": 536,
+              "gap_to_target": 143
+            },
+            "all_fifteen": {
+              "affected_examples": 211,
+              "affected_original_failures": 208,
+              "complete_set_upper_bound": 492,
+              "percent": 64.31372549019608,
+              "target_70_percent_count": 536,
+              "gap_to_target": 44
+            }
+          },
+          "examples_with_changed_targets": 110,
+          "cardinality_changed": 22,
+          "newly_exact": 57,
+          "lost_exact": 2
+        },
+        "4": {
+          "original": {
+            "examples": 772,
+            "expected": 2759,
+            "true_positive": 2080,
+            "false_positive": 645,
+            "false_negative": 679,
+            "complete_sets": 178
+          },
+          "hypothetical": {
+            "examples": 772,
+            "expected": 2779,
+            "true_positive": 2196,
+            "false_positive": 529,
+            "false_negative": 583,
+            "complete_sets": 229
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 145,
+              "affected_original_failures": 142,
+              "complete_set_upper_bound": 320,
+              "percent": 41.45077720207254,
+              "target_70_percent_count": 541,
+              "gap_to_target": 221
+            },
+            "all_fifteen": {
+              "affected_examples": 251,
+              "affected_original_failures": 246,
+              "complete_set_upper_bound": 424,
+              "percent": 54.92227979274612,
+              "target_70_percent_count": 541,
+              "gap_to_target": 117
+            }
+          },
+          "examples_with_changed_targets": 144,
+          "cardinality_changed": 52,
+          "newly_exact": 53,
+          "lost_exact": 2
+        },
+        "5": {
+          "original": {
+            "examples": 754,
+            "expected": 3247,
+            "true_positive": 2311,
+            "false_positive": 694,
+            "false_negative": 936,
+            "complete_sets": 111
+          },
+          "hypothetical": {
+            "examples": 754,
+            "expected": 3273,
+            "true_positive": 2450,
+            "false_positive": 555,
+            "false_negative": 823,
+            "complete_sets": 158
+          },
+          "optimistic_bounds": {
+            "eight_non_octave": {
+              "affected_examples": 196,
+              "affected_original_failures": 192,
+              "complete_set_upper_bound": 303,
+              "percent": 40.185676392572944,
+              "target_70_percent_count": 528,
+              "gap_to_target": 225
+            },
+            "all_fifteen": {
+              "affected_examples": 340,
+              "affected_original_failures": 335,
+              "complete_set_upper_bound": 446,
+              "percent": 59.15119363395225,
+              "target_70_percent_count": 528,
+              "gap_to_target": 82
+            }
+          },
+          "examples_with_changed_targets": 191,
+          "cardinality_changed": 72,
+          "newly_exact": 49,
+          "lost_exact": 2
+        }
+      }
+    }
+  },
+  "limitations": [
+    "Hypothetical targets are not verified replacement labels or acceptance scores.",
+    "The optimistic bound grants every affected row a perfect result, not a realizable policy.",
+    "Original pitch-cardinality groups stay fixed even if a hypothetical unison changes size.",
+    "Other source labels may be uncertain; the named sets are not exhaustive.",
+    "Saved source-variation model only; no new inference, audio, training, or installed gain."
+  ],
+  "analysis_kind": "saved_predictions_only",
+  "state": "completed",
+  "analysis_runs": 1,
+  "result": "docs/recovery/CODEX-M3-LABEL-SENSITIVITY-RESULT-20261122.md",
+  "plan": "docs/recovery/CODEX-M3-LABEL-SENSITIVITY-PLAN-20261122.md",
+  "local_report": "build/recovery/m3-label-sensitivity-20261122/report.json",
+  "local_report_sha256": "a6b5062d0c2470d2a4c0820a6d88be33120e201d7665e938e3750a6215fcd073",
+  "affected_examples": "build/recovery/m3-label-sensitivity-20261122/affected-examples.json",
+  "affected_examples_sha256": "89db03f22a4e67c8f7522e85b045f5a4e6a796db129c1fc74762c872cf7d9207",
+  "script": "tools/saved_label_sensitivity.py",
+  "validation": {
+    "synthetic_tests_passed": 5,
+    "command": "python3 -m unittest tests.test_saved_label_sensitivity -v"
+  },
+  "decision": "known disputed targets alone cannot make the frozen model pass; original rejection unchanged",
+  "installed_output_changed": false,
+  "labels_changed": false,
+  "source_filter_applied": false,
+  "new_remote_job": false,
+  "new_fit": false,
+  "claude_status": "paused; no fresh review claimed",
+  "latest_model_checkpoint": "docs/recovery/github-harmonic-full-gradient-consistency-20261122.json",
+  "latest_model_run_id": 44982269805,
+  "latest_model_decision": "rejected",
+  "next": "Prepare paired component/mixture inference on the frozen source-variation model using exactly the original component crops and effective levels. Require original mixture-output reproduction first; separate source/level misses already present alone from errors introduced when the same components are summed. Preserve all sources, labels, roles and gates; no fit, cutoff retune or next job queued."
+}
