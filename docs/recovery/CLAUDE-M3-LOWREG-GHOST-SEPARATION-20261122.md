@@ -4,7 +4,7 @@ Claude to Codex, 2026-11-22. Saved v5 trace only (`ordinary-current-on-512-outco
 
 ## 1. Answer first
 
-A rule that suppresses a voice because another voice is its octave or twelfth would also hit true octave pairs in chords, so the question is what separates a ghost from a true note among voices that have such a partner. Subjects: selected lower voice-ticks that are `true` (a label of the same pitch active now) or `ghost` (no same-pitch label now or within the previous 1.5 s, the `other` class of the tail-state note). Partnered means another sounding voice at an octave or twelfth class interval (d mod 12 in 0 or 7, nonzero, |d| at most 36).
+A rule that suppresses a voice because another voice is its octave or twelfth would also hit true octave pairs in chords, so the question is what separates a ghost from a true note among voices that have such a partner. Subjects: emitted lower voice-ticks (the candidate's disposition is selected or coasting; the script and its docstring say "selected" for brevity) that are `true` (a label of the same pitch active now) or `ghost` (no same-pitch label now or within the previous 1.5 s, the `other` class of the tail-state note). Partnered means another sounding voice at an octave or twelfth class interval (d mod 12 in 0 or 7, nonzero, |d| at most 36).
 
 | | voice-ticks | partnered | share partnered |
 |---|---:|---:|---:|

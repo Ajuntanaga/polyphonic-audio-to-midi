@@ -1,0 +1,54 @@
+{
+ "counts": {
+  "substitution_ticks": 44411,
+  "target_logged_label_free": 18353,
+  "zero_decoys": 18084,
+  "free_and_zero_decoys": 6411,
+  "free_with_decoys": 11942,
+  "target_best_fund_ratio": 9577
+ },
+ "label_free_existence_rate": 0.413,
+ "base_rate_non_label_lower_pitch": 0.0977,
+ "existence_over_base": 4.23,
+ "decoy_count_histogram_ticks": {
+  "0": 18084,
+  "1": 17380,
+  "2": 6952,
+  "3": 1995
+ },
+ "zero_decoy_share": 0.407,
+ "target_best_share_when_free_and_decoys": 0.802,
+ "free_and_zero_decoy_share": 0.144,
+ "by_class": {
+  "octave": {
+   "ticks": 22632,
+   "free": 10626,
+   "zero_decoys": 10831,
+   "free_and_zero": 4373,
+   "free_with_decoys": 6253,
+   "target_best": 5648,
+   "free_rate": 0.47,
+   "free_and_zero_share": 0.193
+  },
+  "fifth": {
+   "ticks": 12932,
+   "free": 5668,
+   "zero_decoys": 5146,
+   "free_and_zero": 1585,
+   "free_with_decoys": 4083,
+   "target_best": 3187,
+   "free_rate": 0.438,
+   "free_and_zero_share": 0.123
+  },
+  "near": {
+   "ticks": 8847,
+   "free": 2059,
+   "zero_decoys": 2107,
+   "free_and_zero": 453,
+   "free_with_decoys": 1606,
+   "target_best": 742,
+   "free_rate": 0.233,
+   "free_and_zero_share": 0.051
+  }
+ }
+}

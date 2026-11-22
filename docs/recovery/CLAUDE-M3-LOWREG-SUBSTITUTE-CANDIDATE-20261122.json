@@ -1,0 +1,68 @@
+{
+ "counts": {
+  "ghost_selected_ticks": 92957,
+  "ghost_with_related_label": 72736,
+  "ghost_related_but_covered": 28325,
+  "substitution_ticks": 44411,
+  "substitution_unique": 33877,
+  "target_present": 44411,
+  "target_absent": 0,
+  "target_emitted": 3256,
+  "target_not_emitted": 41155,
+  "target_is_the_ghosts_own_detected_note": 2,
+  "target_is_another_voices_detected_note": 0
+ },
+ "target_disposition": {
+  "quiet": 0,
+  "below_threshold": 30920,
+  "spectral_rejected": 3568,
+  "dp_evicted": 6667,
+  "selected": 3135,
+  "coasting": 121
+ },
+ "ghost_own_candidate_disposition": {
+  "quiet": 0,
+  "below_threshold": 0,
+  "spectral_rejected": 0,
+  "dp_evicted": 0,
+  "selected": 33028,
+  "coasting": 11383
+ },
+ "existence_rate": 1.0,
+ "not_emitted_share_of_present": 0.927,
+ "base_rate_non_label_lower_pitch": 0.1334,
+ "existence_over_base": 7.5,
+ "by_class": {
+  "octave": {
+   "ticks": 22632,
+   "present": 22632,
+   "unselected": 21217,
+   "existence_rate": 1.0
+  },
+  "fifth": {
+   "ticks": 12932,
+   "present": 12932,
+   "unselected": 12096,
+   "existence_rate": 1.0
+  },
+  "near": {
+   "ticks": 8847,
+   "present": 8847,
+   "unselected": 7842,
+   "existence_rate": 1.0
+  }
+ },
+ "target_greater_share": {
+  "fund_ratio": 0.836,
+  "band_fund": 0.641,
+  "direct": 0.532,
+  "fund_energy": 0.445
+ },
+ "direct_target_equal_share": 0.304,
+ "compared_ticks": {
+  "fund_ratio": 44411,
+  "band_fund": 44411,
+  "direct": 44411,
+  "fund_energy": 44411
+ }
+}
