@@ -22,5 +22,13 @@
   "conclusion": "",
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45037966575",
   "output_directory": "build/github-results/basic-pitch-release-adaptation-45037966575",
-  "stage": "GitHub CPU preparation then fixed fresh fit"
+  "stage": "Fixed fresh release-context fit running",
+  "source_ci": {
+    "run_id": 45037917689,
+    "state": "completed",
+    "conclusion": "success",
+    "source_commit": "fc3ad86d5af286d1cfbf4aba5041d0fdc460d316",
+    "observation": "build/recovery/basic-pitch-release-adaptation-observations/source_ci-1529.stdout"
+  },
+  "last_observed_at": "2026-11-22T15:39:50.649000+00:00"
 }

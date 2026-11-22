@@ -32,8 +32,11 @@ def create(destination):
         origin = 0 if frames == 172 else 164
         row = np.arange(origin, origin+frames, dtype=np.float32)[:, None]
         pitch = np.arange(88, dtype=np.float32)[None, :]
-        note = (row/256 + pitch/65536)[None]
-        onset = (.5 + row/512 + pitch/65536)[None]
+        # NumPy 1.x promotes a float32 array divided by the integer 65536.
+        # Keep every operand float32 to match the ONNX FLOAT interface.
+        note = (row/np.float32(256) + pitch/np.float32(65536))[None]
+        onset = (np.float32(.5) + row/np.float32(512) + pitch/np.float32(65536))[None]
+        assert note.dtype == onset.dtype == np.dtype('float32')
         tensors = [numpy_helper.from_array(note, 'note_values'),
                    numpy_helper.from_array(onset, 'onset_values'),
                    numpy_helper.from_array(np.array(1/64, np.float32), 'scale')]

@@ -2,7 +2,7 @@
 
 Active checkpoint: `docs/recovery/github-basic-pitch-release-adaptation-20261122.json`. Source `fc3ad86d5af286d1cfbf4aba5041d0fdc460d316`, worker `5eadbb3b0ee23b1e8c2255f7f275042bcaec7ad2`. One GitHub CPU fit, original4096 plus2048 component-ending windows; all555 takes and original evaluation plans retained. Prior/release paired at164/165 with unchanged strict safety/numerical/runtime gates. Small reports only; model/tape evidence remote. Installed/default unchanged. No duplicate dispatch.
 
-Claude independently owns the synthetic mixed-level probe; equal peers through2026-11-22 18:25 UTC. Shorter166 comparison is final and rejected as recorded below.
+Claude completed the independent mixed-level probe45038177513; its frozen contrasts do not support a normalization change. Equal peers through2026-11-22 18:25 UTC. Shorter166 remains rejected. Codex adapter check45039213332 is final/failure before native compilation due to fixture float64 promotion; logs collected once and fixture corrected to float32. Checkpoint `docs/recovery/github-neural-adapter-contract-20261122.json`. A separately recorded corrected execution follows; release-training45037966575 continues independently.
 
 # Shorter lookahead final: quality rejected
 
