@@ -1,0 +1,619 @@
+{
+ "schema": "m3_rapid_mute_cut_anatomy_v1",
+ "post_hoc": true,
+ "trace_raw_sha256": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93",
+ "marked_runs": 127,
+ "aggregate": {
+  "current_present": 13525345,
+  "cut_present": 12447355,
+  "aggregate_loss": 1077990,
+  "per_label_loss_sum": 1077990,
+  "sums_match": true,
+  "cut_failing_labels": [
+   19,
+   31,
+   42,
+   70,
+   91,
+   123,
+   128,
+   159,
+   174,
+   178,
+   200,
+   225,
+   239,
+   245,
+   263,
+   302,
+   306,
+   349,
+   355,
+   364,
+   456,
+   459,
+   470
+  ]
+ },
+ "scorer_mismatches": [],
+ "labels_losing_present": 23,
+ "tally_by_category": {
+  "merged_across_window": {
+   "labels": 23,
+   "lost": 1077990,
+   "labels_over_budget": 23,
+   "wholly_lost": 18
+  }
+ },
+ "merged_previous_relation_tally": {
+  "other": 18,
+  "same pitch": 15,
+  "whole tone": 8,
+  "none in the previous 200 ms": 5,
+  "fifth": 3,
+  "semitone": 3,
+  "octave": 2
+ },
+ "oracle_restart": {
+  "present": 13525345,
+  "wrong": 2924033,
+  "gap": 1739580,
+  "false": 4663613,
+  "precision_pct": 74.36,
+  "runs": 551,
+  "budget_passes": true,
+  "cut_false": 4663613,
+  "current_false": 11429794
+ },
+ "rows": [
+  {
+   "label": 19,
+   "midi": 54,
+   "start": 326608,
+   "end": 398400,
+   "current_present": 71792,
+   "lost": 71792,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 741.51,
+   "span_end_after_label_ms": 171.99,
+   "cut_point_vs_label_start_ms": -63.5,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    37,
+    54,
+    56,
+    57,
+    71
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 31,
+   "midi": 55,
+   "start": 489817,
+   "end": 561600,
+   "current_present": 9510,
+   "lost": 9510,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 780.94,
+   "span_end_after_label_ms": 0.0,
+   "cut_point_vs_label_start_ms": -62.26,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    39,
+    53,
+    55,
+    63,
+    76
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 42,
+   "midi": 60,
+   "start": 653030,
+   "end": 724800,
+   "current_present": 45785,
+   "lost": 45785,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 779.07,
+   "span_end_after_label_ms": 0.0,
+   "cut_point_vs_label_start_ms": -50.4,
+   "same_pitch_labels_in_span": 1,
+   "previous_chord_pitches": [],
+   "previous_relations": [],
+   "over_budget": true
+  },
+  {
+   "label": 70,
+   "midi": 48,
+   "start": 1224217,
+   "end": 1296000,
+   "current_present": 3494,
+   "lost": 3494,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 1622.27,
+   "span_end_after_label_ms": 0.0,
+   "cut_point_vs_label_start_ms": -912.26,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    37,
+    46,
+    64,
+    67
+   ],
+   "previous_relations": [
+    "fifth",
+    "other",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 91,
+   "midi": 44,
+   "start": 1632230,
+   "end": 1704000,
+   "current_present": 71706,
+   "lost": 27033,
+   "lost_share_pct": 37.7,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 567.74,
+   "span_end_after_label_ms": 319.99,
+   "cut_point_vs_label_start_ms": -74.4,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    44,
+    45,
+    46,
+    65,
+    69
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch",
+    "semitone",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 123,
+   "midi": 37,
+   "start": 2203417,
+   "end": 2275200,
+   "current_present": 71783,
+   "lost": 71783,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 808.27,
+   "span_end_after_label_ms": 311.32,
+   "cut_point_vs_label_start_ms": -61.59,
+   "same_pitch_labels_in_span": 1,
+   "previous_chord_pitches": [
+    38,
+    53,
+    60,
+    61,
+    69
+   ],
+   "previous_relations": [
+    "octave",
+    "other",
+    "semitone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 128,
+   "midi": 45,
+   "start": 2285008,
+   "end": 2356800,
+   "current_present": 42096,
+   "lost": 34415,
+   "lost_share_pct": 81.8,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 786.84,
+   "span_end_after_label_ms": 171.99,
+   "cut_point_vs_label_start_ms": -63.5,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    37,
+    45,
+    61,
+    69
+   ],
+   "previous_relations": [
+    "octave",
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 159,
+   "midi": 47,
+   "start": 2856230,
+   "end": 2894506,
+   "current_present": 38276,
+   "lost": 38276,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 747.74,
+   "span_end_after_label_ms": 646.22,
+   "cut_point_vs_label_start_ms": -61.73,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    40,
+    45,
+    47,
+    56,
+    84
+   ],
+   "previous_relations": [
+    "fifth",
+    "other",
+    "same pitch",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 174,
+   "midi": 44,
+   "start": 3101030,
+   "end": 3172800,
+   "current_present": 71770,
+   "lost": 71770,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 775.07,
+   "span_end_after_label_ms": 169.99,
+   "cut_point_vs_label_start_ms": -62.4,
+   "same_pitch_labels_in_span": 3,
+   "previous_chord_pitches": [
+    35,
+    44,
+    65,
+    67
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 178,
+   "midi": 44,
+   "start": 3182617,
+   "end": 3254400,
+   "current_present": 65511,
+   "lost": 6502,
+   "lost_share_pct": 9.9,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 1624.94,
+   "span_end_after_label_ms": 526.66,
+   "cut_point_vs_label_start_ms": -912.26,
+   "same_pitch_labels_in_span": 3,
+   "previous_chord_pitches": [
+    44,
+    54,
+    60,
+    62,
+    71
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 200,
+   "midi": 50,
+   "start": 3590630,
+   "end": 3662400,
+   "current_present": 27801,
+   "lost": 27801,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 783.07,
+   "span_end_after_label_ms": 0.0,
+   "cut_point_vs_label_start_ms": -58.4,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [],
+   "previous_relations": [],
+   "over_budget": true
+  },
+  {
+   "label": 225,
+   "midi": 46,
+   "start": 3998577,
+   "end": 4070400,
+   "current_present": 71695,
+   "lost": 3150,
+   "lost_share_pct": 4.4,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 733.85,
+   "span_end_after_label_ms": 119.32,
+   "cut_point_vs_label_start_ms": -67.84,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    44,
+    46,
+    49,
+    63,
+    74
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 239,
+   "midi": 48,
+   "start": 4324999,
+   "end": 4380106,
+   "current_present": 55107,
+   "lost": 55107,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 789.42,
+   "span_end_after_label_ms": 1205.89,
+   "cut_point_vs_label_start_ms": -60.07,
+   "same_pitch_labels_in_span": 3,
+   "previous_chord_pitches": [
+    42,
+    48,
+    76
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 245,
+   "midi": 48,
+   "start": 4406586,
+   "end": 4478400,
+   "current_present": 71814,
+   "lost": 71814,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 1639.28,
+   "span_end_after_label_ms": 181.99,
+   "cut_point_vs_label_start_ms": -909.94,
+   "same_pitch_labels_in_span": 3,
+   "previous_chord_pitches": [],
+   "previous_relations": [],
+   "over_budget": true
+  },
+  {
+   "label": 263,
+   "midi": 33,
+   "start": 4733039,
+   "end": 4766453,
+   "current_present": 32838,
+   "lost": 3344,
+   "lost_share_pct": 10.2,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 1073.83,
+   "span_end_after_label_ms": 620.77,
+   "cut_point_vs_label_start_ms": -907.82,
+   "same_pitch_labels_in_span": 1,
+   "previous_chord_pitches": [],
+   "previous_relations": [],
+   "over_budget": true
+  },
+  {
+   "label": 302,
+   "midi": 43,
+   "start": 5548937,
+   "end": 5601737,
+   "current_present": 52800,
+   "lost": 52800,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 752.1,
+   "span_end_after_label_ms": 557.23,
+   "cut_point_vs_label_start_ms": -57.43,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    41,
+    43,
+    50,
+    73,
+    76
+   ],
+   "previous_relations": [
+    "fifth",
+    "other",
+    "same pitch",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 306,
+   "midi": 42,
+   "start": 5630617,
+   "end": 5702400,
+   "current_present": 71783,
+   "lost": 71783,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 798.27,
+   "span_end_after_label_ms": 165.32,
+   "cut_point_vs_label_start_ms": -65.59,
+   "same_pitch_labels_in_span": 1,
+   "previous_chord_pitches": [],
+   "previous_relations": [],
+   "over_budget": true
+  },
+  {
+   "label": 349,
+   "midi": 54,
+   "start": 6691439,
+   "end": 6763200,
+   "current_present": 71761,
+   "lost": 71761,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 770.5,
+   "span_end_after_label_ms": 198.66,
+   "cut_point_vs_label_start_ms": -65.16,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    54,
+    83
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 355,
+   "midi": 39,
+   "start": 6772999,
+   "end": 6844800,
+   "current_present": 71801,
+   "lost": 71801,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 766.08,
+   "span_end_after_label_ms": 217.32,
+   "cut_point_vs_label_start_ms": -61.41,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    39,
+    54,
+    84
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 364,
+   "midi": 42,
+   "start": 7017737,
+   "end": 7089600,
+   "current_present": 71863,
+   "lost": 71863,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 480.1,
+   "span_end_after_label_ms": 295.99,
+   "cut_point_vs_label_start_ms": -50.76,
+   "same_pitch_labels_in_span": 1,
+   "previous_chord_pitches": [
+    33,
+    43,
+    72
+   ],
+   "previous_relations": [
+    "other",
+    "semitone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 456,
+   "midi": 47,
+   "start": 9302617,
+   "end": 9374400,
+   "current_present": 71783,
+   "lost": 71783,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 748.27,
+   "span_end_after_label_ms": 321.99,
+   "cut_point_vs_label_start_ms": -64.93,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    47,
+    65
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 459,
+   "midi": 45,
+   "start": 9384084,
+   "end": 9456000,
+   "current_present": 71916,
+   "lost": 71916,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 798.22,
+   "span_end_after_label_ms": 211.32,
+   "cut_point_vs_label_start_ms": -65.54,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    45,
+    47,
+    55,
+    56,
+    71
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch",
+    "whole tone"
+   ],
+   "over_budget": true
+  },
+  {
+   "label": 470,
+   "midi": 44,
+   "start": 9710630,
+   "end": 9763337,
+   "current_present": 52707,
+   "lost": 52707,
+   "lost_share_pct": 100.0,
+   "category": "merged_across_window",
+   "span_start_before_label_ms": 795.07,
+   "span_end_after_label_ms": 407.9,
+   "cut_point_vs_label_start_ms": -69.73,
+   "same_pitch_labels_in_span": 2,
+   "previous_chord_pitches": [
+    44,
+    58,
+    79
+   ],
+   "previous_relations": [
+    "other",
+    "same pitch"
+   ],
+   "over_budget": true
+  }
+ ]
+}
