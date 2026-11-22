@@ -25,14 +25,41 @@
   "report_artifact": "m3-quiet-cell-observation-report-45080860628-1",
   "evidence_artifact": "m3-quiet-cell-observation-evidence-45080860628-1",
   "conclusion": "",
-  "last_observed_at": "2026-11-22T23:01:05.603899+00:00",
+  "last_observed_at": "2026-11-22T23:05:31.649464+00:00",
   "worker_stage": [
     {
       "name": "observation",
       "status": "in_progress",
       "steps": [
-        "Build portable native tests and replay"
+        "Run the six frozen identity companions"
       ]
     }
-  ]
+  ],
+  "source_runs": [
+    {
+      "conclusion": "success",
+      "databaseId": 45080818158,
+      "headSha": "4f9d921f049c69b81b7e8599e36f7a88bf58c651",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45080818158",
+      "workflowName": "Portable offline replay"
+    },
+    {
+      "conclusion": "failure",
+      "databaseId": 45080818103,
+      "headSha": "4f9d921f049c69b81b7e8599e36f7a88bf58c651",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45080818103",
+      "workflowName": "CI"
+    }
+  ],
+  "source_runs_observed_at": "2026-11-22T23:01:54.873067+00:00",
+  "source_ci_failure": {
+    "run_id": 45080818103,
+    "remote_observation": "Source contracts failed at Validate authored source; native tests and production VST3 build/package succeeded. Remote log downloads unavailable on two read attempts.",
+    "local_reproduction": "unapproved dependency token onnx: native/neural/ort_contract_test.cpp",
+    "fix": "Add only the already-authorized standalone adapter-test path to the ONNX exception and existing dependency-boundary test. No runtime code change.",
+    "validation": "Both source validators and the focused dependency-boundary Python test pass locally.",
+    "fix_commit": "pending"
+  }
 }

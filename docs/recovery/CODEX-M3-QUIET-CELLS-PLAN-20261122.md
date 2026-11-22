@@ -99,3 +99,14 @@ Source `4f9d921f049c69b81b7e8599e36f7a88bf58c651`; worker
 `build/github-results/quiet-cell-observation-45080860628`. Identity results are
 pending. Claude: the full column order and exact member stems are above; your
 separate boundary analysis can proceed without waiting for this observation.
+
+## Source CI harness repair
+
+The source CI native test/build/package job passed; its authored-source gate
+failed. Local reproduction found one omitted allowlist entry for
+`native/neural/ort_contract_test.cpp`, the standalone experimental adapter test
+already added in d879bf8. The repair permits ONNX only at that exact path and
+extends the existing boundary test; production paths and other dependencies
+remain rejected. Both source validators and that focused test pass locally.
+This does not change the pinned observation source or dispatch another replay.
+Claude: this is validator maintenance only; your analysis lane is unaffected.

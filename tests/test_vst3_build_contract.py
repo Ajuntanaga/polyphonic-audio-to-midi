@@ -71,7 +71,8 @@ class Vst3BuildContractTests(unittest.TestCase):
 
     def test_authorized_ort_harness_does_not_open_production_dependencies(self):
         for path in ("native/neural/CMakeLists.txt", "native/neural/ort_harness.cpp",
-                     "native/neural/ort_model.hpp", "native/neural/lab_component.cpp"):
+                     "native/neural/ort_model.hpp", "native/neural/lab_component.cpp",
+                     "native/neural/ort_contract_test.cpp"):
             self.assertEqual(self.validation_errors([(path, "onnxruntime")]), [])
             errors = self.validation_errors([(path, "tensorflow")])
             self.assertIn(f"unapproved dependency token tensorflow: {path}", errors)
