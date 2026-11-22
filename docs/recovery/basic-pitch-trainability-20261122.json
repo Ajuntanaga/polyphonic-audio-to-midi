@@ -1,0 +1,39 @@
+{
+  "schema": "m3_basic_pitch_trainability_spec_v1",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "upstream_commit": "fa5997af0a8210982619003269994a1be25eddf3",
+  "tensorflow_path": "basic_pitch/saved_models/icassp_2022/nmp",
+  "onnx_path": "basic_pitch/saved_models/icassp_2022/nmp.onnx",
+  "files": {
+    "basic_pitch/saved_models/icassp_2022/nmp/saved_model.pb": {
+      "bytes": 1084140,
+      "git_blob_sha1": "3a22fc986be8c436987debb7f899a2b0371166b3"
+    },
+    "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.data-00000-of-00001": {
+      "bytes": 219309,
+      "git_blob_sha1": "a473eb08150b66f7a3a02cdb6dbb84893024b875"
+    },
+    "basic_pitch/saved_models/icassp_2022/nmp/variables/variables.index": {
+      "bytes": 4794,
+      "git_blob_sha1": "dba4ca40bf5d1b64a32a82c5a6ffd6a542650bbd"
+    },
+    "basic_pitch/saved_models/icassp_2022/nmp.onnx": {
+      "bytes": 230444,
+      "git_blob_sha1": "c30e5f9438e798604b7177aa26be1fe64482f767",
+      "sha256": "2c3c1d144bfa61ad236e92e169c13535c880469a12a047d4e73451f2c059a0ec"
+    }
+  },
+  "sample_rate": 22050,
+  "input_samples": 43844,
+  "output_frames": 172,
+  "first_output_note": 21,
+  "output_bins": {"note": 88, "onset": 88, "contour": 264},
+  "onnx_outputs": {"note": "StatefulPartitionedCall:1", "onset": "StatefulPartitionedCall:2", "contour": "StatefulPartitionedCall:0"},
+  "synthetic_cases": {"silence": [], "low_a": [45], "five_pitch": [40, 47, 52, 56, 59]},
+  "seed": 20261122,
+  "backend_max_absolute": 0.0001,
+  "learning_rate": 0.001,
+  "clip_global_norm": 1.0,
+  "steps": 1,
+  "protocol": "One fixed synthetic note-BCE gradient step in inference mode; report loss, finite/nonzero gradients, changed weights/output and exact restoration. Backend differences and threshold crossings reported for all outputs. No recordings, fitted detector, quality gate or retained modified weights. CPU only. No rerun or tuning."
+}
