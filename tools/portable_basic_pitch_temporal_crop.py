@@ -44,8 +44,11 @@ def validate_spec(spec):
 class ReadoutBackend:
     output_frame_start = 164
 
-    def __init__(self, path):
+    def __init__(self, path, *, readout_start=164):
         remote_only()
+        if type(readout_start) is not int or readout_start not in (164, 166):
+            raise ValueError('Readout backend must start at frame164 or frame166')
+        self.output_frame_start = readout_start
         import soundfile as sf
         import onnxruntime as ort
         self.np, self.sf = np, sf
@@ -61,7 +64,7 @@ class ReadoutBackend:
         self.predict(np.zeros(43844, dtype=np.float32))
         self.metadata = dict(onnxruntime_version=ort.__version__, providers=['CPUExecutionProvider'],
             intra_op_threads=2, inter_op_threads=1, graph_optimizations='disabled',
-            output_frame_start=164, output_shape=[1,2,88],
+            output_frame_start=readout_start, output_shape=[1,2,88],
             warmup='One all-zero window; excluded from service', warmup_ns=time.perf_counter_ns()-started)
 
     def predict(self, window):

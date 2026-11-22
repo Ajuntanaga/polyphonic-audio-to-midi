@@ -28,6 +28,8 @@ class TemporalCropTest(unittest.TestCase):
         self.assertEqual([(r['required_start'],r['required_end']) for r in required_input_interval()],
                          [(163,167),(160,170),(157,172),(155,172),(154,172)])
         self.assertEqual(required_input_interval(163,165)[-1]['required_start'],153)
+        self.assertEqual([(r['required_start'],r['required_end']) for r in required_input_interval(166,168)],
+                         [(165,169),(162,172),(159,172),(157,172),(156,172)])
 
     def test_threshold_event_and_numeric_gates_are_independent(self):
         a = dict(note=np.zeros((2,88),np.float32), onset=np.zeros((2,88),np.float32))

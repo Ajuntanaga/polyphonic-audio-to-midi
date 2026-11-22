@@ -128,40 +128,81 @@ class CausalTests(unittest.TestCase):
             self.assertIn('requires GitHub Actions', result.stderr)
             self.assertFalse(output.exists())
 
+    def test_shorter_readout_is_fresh_causal_context_not_a_frame_shift(self):
+        import numpy as np
+        from scipy.signal import upfirdn
+        source = np.random.default_rng(19).normal(0,.1,12000).astype(np.float32)
+
+        class Backend:
+            def __init__(self):
+                self.windows = []
+
+            def predict(self, window):
+                self.windows.append(window.copy())
+                notes = np.zeros((172,88), dtype=np.float32)
+                # Only the requested later output contains this note.
+                notes[166:168,39] = .7
+                return notes, notes.copy()
+
+        backend = Backend()
+        result = stream_blocks((source[i:i+640] for i in range(0,len(source),640)),
+                               backend, readout_start=166)
+        direct = upfirdn(CausalResampler().h, source, up=147, down=640)
+        for k, window in enumerate(backend.windows):
+            end = 1348+512*k
+            expected = np.pad(direct[max(0,end-43844):end], (max(0,43844-end),0))
+            np.testing.assert_allclose(window,expected,atol=1e-7,rtol=1e-6)
+        self.assertEqual(result['frames'][0][:3], (0,0,1348))
+        for frame, nominal, end, source_end in result['frames']:
+            self.assertEqual(nominal,frame*256)
+            self.assertLess((end-1)*96000,source_end*22050)
+            self.assertIn(end-nominal,(1348,1092))
+        self.assertEqual(result['events'][0]['frame'],0)
+        self.assertEqual(result['open_decoder_pitches'],[60])
+        for invalid in (165,168,166.,True):
+            with self.assertRaises(ValueError):
+                stream_blocks(iter(()),backend,readout_start=invalid)
+        with self.assertRaises(ValueError):
+            stream_blocks(iter(()),backend,readout_start=166,additional_readout_start=160)
+
     def test_readout_only_contract_preserves_frames_events_and_input(self):
         import numpy as np
         source = np.arange(32000, dtype=np.float32)/64000
 
         class Backend:
-            def __init__(self, start):
+            def __init__(self, start, readout=164):
                 self.output_frame_start = start
+                self.readout = readout
                 self.windows = []
 
             def predict(self, window):
                 self.windows.append(window.copy())
                 values = np.zeros((172,88), dtype=np.float32)
-                values[164:166,39] = .7
+                values[self.readout:self.readout+2,39] = .7
                 return ((values, values.copy()) if self.output_frame_start == 0
-                        else (values[164:166], values[164:166].copy()))
+                        else (values[self.readout:self.readout+2], values[self.readout:self.readout+2].copy()))
 
-        results, backends = [], []
-        for start in (0,164):
-            backend = Backend(start)
-            clock = iter(range(0,10000))
-            results.append(stream_blocks((source[i:i+640] for i in range(0,len(source),640)),
-                                         backend, clock_ns=lambda: next(clock)))
-            backends.append(backend)
-        self.assertGreater(results[0]['model_calls'], 0)
-        self.assertEqual(len(results[0]['events']), 1)
-        for key in ('events','frames','timing','open_decoder_pitches','model_calls'):
-            self.assertEqual(results[0][key], results[1][key])
-        for key in ('notes','onsets'):
-            np.testing.assert_array_equal(results[0][key], results[1][key])
-        np.testing.assert_array_equal(backends[0].windows, backends[1].windows)
+        for readout in (164,166):
+            results, backends = [], []
+            for start in (0,readout):
+                backend = Backend(start,readout)
+                clock = iter(range(0,10000))
+                results.append(stream_blocks((source[i:i+640] for i in range(0,len(source),640)),
+                    backend,clock_ns=lambda: next(clock),readout_start=readout))
+                backends.append(backend)
+            self.assertGreater(results[0]['model_calls'], 0)
+            self.assertEqual(len(results[0]['events']), 1)
+            for key in ('events','frames','timing','open_decoder_pitches','model_calls'):
+                self.assertEqual(results[0][key], results[1][key])
+            for key in ('notes','onsets'):
+                np.testing.assert_array_equal(results[0][key], results[1][key])
+            np.testing.assert_array_equal(backends[0].windows, backends[1].windows)
         with self.assertRaisesRegex(ValueError, 'earlier frame'):
             stream_blocks(iter(()), Backend(164), additional_readout_start=160)
         with self.assertRaisesRegex(ValueError, 'frame origin'):
             stream_blocks(iter(()), Backend(162))
+        with self.assertRaisesRegex(ValueError, 'frame origin'):
+            stream_blocks(iter(()), Backend(164),readout_start=166)
         wrong = Backend(164)
         wrong.predict = Backend(0).predict
         with self.assertRaisesRegex(ValueError, 'output shape'):

@@ -1,0 +1,133 @@
+{
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "input_release": {
+    "release": "corpus-20261108",
+    "asset": "recovery-inputs.tar.gz",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254"
+  },
+  "baseline": {
+    "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+    "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_rate": 96000,
+      "sample_count": 10689600,
+      "wav_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+      "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+    },
+    "extended-middle": {
+      "sample_rate": 96000,
+      "sample_count": 2241600,
+      "wav_sha256": "591d0d73ee5b020f4773c9a19cd94a9035a999628d9c5c92678a3b852003e02a",
+      "labels_sha256": "976c066b95cc1ff30d1c9b03770553a615ee46ec36295d92eab7e63b98af3708"
+    }
+  },
+  "streaming": {
+    "source_rate": 96000,
+    "source_block": 640,
+    "model_rate": 22050,
+    "up": 147,
+    "down": 640,
+    "filter_taps": 12801,
+    "filter_kaiser_beta": 5.0,
+    "model_samples": 43844,
+    "model_frames": 172,
+    "model_pitches": 88,
+    "first_midi_note": 21,
+    "frame_hop": 256,
+    "window_hop": 512,
+    "readout_frames": [
+      164,
+      165
+    ],
+    "onset_threshold": 0.5,
+    "frame_threshold": 0.3,
+    "attack_frames": 3,
+    "release_frames": 3,
+    "intra_op_threads": 2,
+    "inter_op_threads": 1
+  },
+  "synthetic": {
+    "input_samples": 43844,
+    "sample_rate": 22050,
+    "synthetic_cases": {
+      "silence": [],
+      "low_a": [
+        45
+      ],
+      "five_pitch": [
+        40,
+        47,
+        52,
+        56,
+        59
+      ]
+    },
+    "seed": 20261122
+  },
+  "weight_fingerprints": {
+    "adapted": "32e5894a81b666dd664da5720ce2c3e84e3dfc4fd0b424c83f95e92c9dbd7c61"
+  },
+  "schema": "m3_basic_pitch_shorter_lookahead_spec_v1",
+  "workflow": "basic-pitch-shorter-lookahead.yml",
+  "onnxruntime_version": "1.20.1",
+  "max_absolute": 0.0001,
+  "service_p99_limit_ns": 20000000,
+  "queue_max_limit_ns": 26666667,
+  "artifact": {
+    "id": 14756974499,
+    "name": "m3-basic-pitch-flat-normalization-evidence-45029161409-1",
+    "run_id": 45029161409,
+    "worker_commit": "85dee308e281ff30a5e10e03eb74382ed85cbf79",
+    "source_commit": "797b693a647de7e80ca21aadea05c7a27922a5ef",
+    "bytes": 29870783,
+    "sha256": "1a59d97e31c6dc4b5a03a19ba0d8fbf2363540b081bdfc72429a4db1669d8633"
+  },
+  "reference_members": {
+    "adapted.onnx": {
+      "bytes": 482905,
+      "sha256": "64df1a20cce24a302b54170cb32f24415576ad96ce0a3c4ce0b5c239beadf4ce"
+    },
+    "adapted_onnx/ordinary-stream.npz": {
+      "bytes": 5826131,
+      "sha256": "cb24925d06ec9700c9aee81f247135d2450afc9669b2275064158eba2dcf4bea"
+    },
+    "adapted_onnx/ordinary-events.json": {
+      "bytes": 170853,
+      "sha256": "5da7fbd1a2e964cb37f935230d27d863c0d4e7ce0a581e884bb1fa18e2a2544e"
+    },
+    "adapted_onnx/extended-middle-stream.npz": {
+      "bytes": 1191498,
+      "sha256": "d921a33a3afdce7c8bec1d1b193e308843c80ba778da59936fbcf9c14a4d030f"
+    },
+    "adapted_onnx/extended-middle-events.json": {
+      "bytes": 6330,
+      "sha256": "5cf1ed7c0d7072b0c5fc60bbe6ab0b0f7cc12d9432e4779fcbc1909115216236"
+    }
+  },
+  "protocol": {
+    "dispatches": 1,
+    "fits": 0,
+    "automatic_retry": false,
+    "installed_change": false,
+    "promotion": false,
+    "primary": "Fixed control164 cropped, reference166 full, candidate166 cropped order on ordinary and extended-middle: six causal passes, adapted weights, ORT optimizations disabled. Measured FIFO completion is primary; source availability diagnostic.",
+    "change": "Readout166/167 instead164/165, first window end1348 instead1860, global nominal frame0 remains sample0. Exactly512/22050 seconds less right context; full input, weights, normalization, FIR, thresholds and decoder unchanged. Different context and boundary padding require fresh inference; no saved-event shift.",
+    "parity": "Three fixed synthetic inputs at each readout precede recordings; max absolute1e-4, no0.3/0.5 crossings, decoder event identity.166 cropped consumed probabilities, frame coordinates, availability event/cleanup identity against166 full.164 cropped control reproduces saved adapted disabled-ORT content. Bit identity reported separately.",
+    "runtime": "Both cropped arms on both recordings: inference-block service p99<=20ms, maximum FIFO backlog<=26.666667ms. Native callback allocations, host and hardware are unmeasured.",
+    "quality": "Candidate166 versus control164: no extra or gap voice-sample increase, no exact-set or all-expected decrease, and no label loses present time or longest hold. Report first-present delay and full per-label deltas; CURRENT replacement comparison remains separate. Ordinary is reused development audio; extended-middle held out from fitting.",
+    "numerical_provenance": "Prior TensorFlow versus ORT numerical failures and adaptation label/false-output failures remain rejected. Runtime or context results do not repair them.",
+    "resources": "One existing GitHub CPU job;25minute process35minute job; source archive29.9MB and selected reference members8.4MB. Compact report collected; models and tapes stay remote."
+  },
+  "arms": [
+    "control164",
+    "reference166",
+    "candidate166"
+  ],
+  "readouts": [
+    164,
+    166
+  ]
+}

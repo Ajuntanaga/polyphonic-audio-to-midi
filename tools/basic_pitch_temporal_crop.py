@@ -1,7 +1,8 @@
 """Fixed readout-only crop of one expensive convolution; no weight changes.
 
-The model hash is pinned by the caller. Only final frames164/165 are valid and
-exposed. Full input, CQT and normalization remain untouched. Learned-model
+The model hash is pinned by the caller. Only the selected two final frames
+(164/165 by default, or166/167) are valid and exposed. Full input, CQT and
+normalization remain untouched. Learned-model
 loading, transformation and inference are restricted to GitHub Actions.
 """
 import hashlib
@@ -16,9 +17,6 @@ from tools.portable_basic_pitch_comparison import remote_only
 PREFIX = 'StatefulPartitionedCall/' * 4
 TARGET = PREFIX + 'conv2d_1/StatefulPartitionedCall/BiasAdd'
 READOUT_OUTPUTS = {'note': 'm3_readout_note', 'onset': 'm3_readout_onset'}
-CROP_START = 154
-READOUT_START = 164
-READOUT_END = 166
 
 
 def validate_graph_interface(node_count, input_names, output_names):
@@ -44,8 +42,10 @@ def required_input_interval(start=164, end=166):
     return stages
 
 
-def crop_model(source, destination):
+def crop_model(source, destination, *, readout_start=164):
     remote_only()
+    if type(readout_start) is not int or readout_start not in (164, 166):
+        raise ValueError('Crop readout must be frame164 or frame166')
     import onnx
     from onnx import TensorProto, helper, numpy_helper
 
@@ -56,7 +56,10 @@ def crop_model(source, destination):
     nodes_before = len(graph.node)
     validate_graph_interface(nodes_before, [value.name for value in graph.input],
                              [value.name for value in graph.output])
-    if required_input_interval()[-1]['required_start'] != CROP_START:
+    readout_end = readout_start+2
+    dependency = required_input_interval(readout_start, readout_end)
+    crop_start = dependency[-1]['required_start']
+    if crop_start != readout_start-10 or dependency[-1]['required_end'] != 172:
         raise ValueError('Crop dependency differs')
     nodes = {node.name: node for node in graph.node}
     checks = {'conv2d_1': ([3,39], [1,19,1,19], [1,1]),
@@ -78,9 +81,9 @@ def crop_model(source, destination):
     if shapes[target.input[1]] != [8,8,3,39] or shapes[target.input[2]] != [8]:
         raise ValueError('Expensive convolution weight shape differs')
     original_input, original_output = target.input[0], target.output[0]
-    constants = {'starts': [CROP_START], 'ends': [172], 'axis': [2], 'steps': [1],
-                 'pads': [0,0,CROP_START,0,0,0,0,0],
-                 'readout_start': [READOUT_START], 'readout_end': [READOUT_END],
+    constants = {'starts': [crop_start], 'ends': [172], 'axis': [2], 'steps': [1],
+                 'pads': [0,0,crop_start,0,0,0,0,0],
+                 'readout_start': [readout_start], 'readout_end': [readout_end],
                  'readout_axis': [1]}
     for name, values in constants.items():
         graph.initializer.append(numpy_helper.from_array(np.array(values, dtype=np.int64),
@@ -110,11 +113,11 @@ def crop_model(source, destination):
         raise ValueError('Original tensor changed')
     onnx.checker.check_model(model, full_check=True)
     onnx.save(model, str(destination))
-    return dict(input_rows=[154,172], output_frames=[164,165], dependency=required_input_interval(),
+    return dict(input_rows=[crop_start,172], output_frames=[readout_start,readout_start+1], dependency=dependency,
         nodes_before=nodes_before, nodes_after=len(graph.node), original_initializers=len(initial),
         original_initializers_identical=True,
         original_initializer_fingerprint=hashlib.sha256(b''.join(initial[k] for k in sorted(initial))).hexdigest(),
-        output_contract=dict(frame_origin=164, shape=[1,2,88]),
+        output_contract=dict(frame_origin=readout_start, shape=[1,2,88]),
         limitation='Earlier outputs are invalid and are not exposed; not a full-window model.')
 
 

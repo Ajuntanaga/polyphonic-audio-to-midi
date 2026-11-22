@@ -75,7 +75,8 @@ def assess(datasets):
             'do not override strict losses and do not establish native/host/live acceptance.')
 
 
-def measure(name, config, reference, offline, inputs, bulk, backend, context_cache=None):
+def measure(name, config, reference, offline, inputs, bulk, backend, context_cache=None,
+            *, readout_start=164):
     remote_only()
     wav = inputs/'corpus'/(name+'.wav')
     info = backend.sf.info(str(wav))
@@ -91,7 +92,8 @@ def measure(name, config, reference, offline, inputs, bulk, backend, context_cac
                 yield chunk
         result = stream_blocks(chunks(), backend,
             progress=lambda calls, samples: print(f'{name}: {calls} windows, {samples}/{info.frames} samples', flush=True),
-            additional_readout_start=160 if context_cache is not None else None)
+            additional_readout_start=160 if context_cache is not None else None,
+            readout_start=readout_start)
     if result['source_samples'] != info.frames:
         raise ValueError('Incomplete source consumption')
     if not result['model_calls']:

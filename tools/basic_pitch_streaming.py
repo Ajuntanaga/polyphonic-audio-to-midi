@@ -94,7 +94,7 @@ class FifoClock:
 
 
 def stream_blocks(blocks, backend, progress=None, clock_ns=time.perf_counter_ns,
-                  additional_readout_start=None):
+                  additional_readout_start=None, *, readout_start=164):
     """Single FIFO simulation, using measured compute on each incoming block.
 
     Iterating blocks (file read) and retaining evidence are outside service time.
@@ -104,13 +104,17 @@ def stream_blocks(blocks, backend, progress=None, clock_ns=time.perf_counter_ns,
     has its own decoder. Negative nominal frames at startup are not consumed.
     """
     import numpy as np
+    if type(readout_start) is not int or readout_start not in (164, 166):
+        raise ValueError('Primary readout must be frame164 or frame166')
+    if readout_start != 164 and additional_readout_start is not None:
+        raise ValueError('Additional context is only defined for primary frame164')
     if additional_readout_start is not None and (
             type(additional_readout_start) is not int
             or not 0 <= additional_readout_start < 164
             or additional_readout_start % 2):
         raise ValueError('Additional readout must be an earlier even frame')
     output_start = getattr(backend, 'output_frame_start', 0)
-    if type(output_start) is not int or output_start not in (0, 164):
+    if type(output_start) is not int or output_start not in (0, readout_start):
         raise ValueError('Unsupported model output frame origin')
     if output_start and additional_readout_start is not None:
         raise ValueError('Readout-only backend cannot supply an earlier frame')
@@ -120,7 +124,7 @@ def stream_blocks(blocks, backend, progress=None, clock_ns=time.perf_counter_ns,
     extra_events, extra_frames, extra_notes, extra_onsets = [], [], [], []
     buffer = np.empty(0, dtype=np.float32)
     buffer_start = produced = source_end = calls = 0
-    next_end = FIRST_END
+    next_end = SETTINGS['model_samples'] - readout_start * SETTINGS['frame_hop']
     events, timing, frames, note_arrays, onset_arrays = [], [], [], [], []
     for block in blocks:
         started = clock_ns()
@@ -148,9 +152,9 @@ def stream_blocks(blocks, backend, progress=None, clock_ns=time.perf_counter_ns,
             if notes.shape != (output_frames, 88) or onsets.shape != (output_frames, 88):
                 raise ValueError('Unexpected model output shape')
             decoded_at = clock_ns()
-            readout_start = 164-output_start
-            readout = (notes[readout_start:readout_start+2].copy(),
-                       onsets[readout_start:readout_start+2].copy())
+            output_offset = readout_start-output_start
+            readout = (notes[output_offset:output_offset+2].copy(),
+                       onsets[output_offset:output_offset+2].copy())
             for j in range(2):
                 frame = decoder.next_frame
                 batch_events.extend(decoder.consume(readout[0][j], readout[1][j], frame))
