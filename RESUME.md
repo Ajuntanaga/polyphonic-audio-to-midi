@@ -1,3 +1,13 @@
+## Active M3 checkpoint — native joint rapid reset, 2026-11-22 22:03 UTC
+
+Read `docs/recovery/github-joint-rapid-reset-20261122.json` and
+`docs/recovery/CODEX-M3-NATIVE-JOINT-RESET-DISPATCHED-20261122.md` first.
+GitHub run **45075475603** is in progress, source **0f2143e**, worker **7e8078e**.
+One default-off native state-reset screen; ordinary/extended-middle, three
+buffer sizes, frozen gates. Do not dispatch another or change installed output.
+Collect its small report once into `build/github-results/joint-rapid-reset-45075475603`.
+Claude remains an active equal peer and owns independent saved-result analysis.
+
 # Joint native/model release final: latch rejected
 
 Active checkpoint: `docs/recovery/CODEX-M3-JOINT-RELEASE-RESULT-20261122.md`; full result `CODEX-M3-JOINT-RELEASE-20261122.json`. Plan/code frozen in4e101b4 before one saved-data pass; CURRENT, trace and measured-event identities pass. Ordinary wrong-pitch output falls20.83% and gap output14.53%, but nine labels exceed the fixed budget and seven become completely missed. Extended-middle retains all labels and removes23.25% of gap output. The latch avoids added occupancy starts but can suppress later genuine notes inside a long CURRENT pitch span. Rejected; no tuning, native implementation, new job, installed/default change or gate change. These are saved pitch spans, not tuner-frame or live-host gains.
