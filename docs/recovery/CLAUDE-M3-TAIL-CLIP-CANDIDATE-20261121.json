@@ -1,0 +1,373 @@
+{
+ "schema": "claude_m3_tail_clip_v1",
+ "datasets": {
+  "ordinary": {
+   "horizon": 10681922,
+   "clip_counts": {
+    "lower_spans": 517,
+    "with_A_overlap": 304,
+    "clipped": 199,
+    "clipped_samples": 5179050
+   },
+   "compact": {
+    "CURRENT": {
+     "present": 13525345,
+     "expected": 33819101,
+     "coverage_percent": 39.9932,
+     "exact_pitch_set": 53249,
+     "wrong_pitch": 7808309,
+     "gap": 3621485
+    },
+    "H_split": {
+     "present": 21341759,
+     "expected": 33819101,
+     "coverage_percent": 63.1056,
+     "exact_pitch_set": 1291237,
+     "wrong_pitch": 8037880,
+     "gap": 4658102
+    },
+    "H_T": {
+     "present": 20601349,
+     "expected": 33819101,
+     "coverage_percent": 60.9163,
+     "exact_pitch_set": 1531759,
+     "wrong_pitch": 4473500,
+     "gap": 3783842
+    }
+   },
+   "bands": {
+    "lt60": {
+     "expected": 19413231,
+     "present": 12243144,
+     "extra": 3980300,
+     "gap": 2648837
+    },
+    "ge60": {
+     "expected": 14405870,
+     "present": 8358205,
+     "extra": 493200,
+     "gap": 1135005
+    },
+    "below48": {
+     "expected": 9561144,
+     "present": 6133799,
+     "extra": 3225970,
+     "gap": 1505703
+    },
+    "48to59": {
+     "expected": 9852087,
+     "present": 6109345,
+     "extra": 754330,
+     "gap": 1143134
+    },
+    "60to71": {
+     "expected": 9319146,
+     "present": 5408846,
+     "extra": 322398,
+     "gap": 817207
+    },
+    "72plus": {
+     "expected": 5086724,
+     "present": 2949359,
+     "extra": 170802,
+     "gap": 317798
+    }
+   },
+   "hybrid_tail_vs_current": {
+    "current_pitch_coverage_percent": 39.993212711360954,
+    "model_pitch_coverage_percent": 60.916311761214466,
+    "pitch_coverage_gain_pp": 20.923099049853512,
+    "current_exact_pitch_set_percent": 0.597307679019558,
+    "model_exact_pitch_set_percent": 17.182133243954237,
+    "sample_deltas": {
+     "annotated_samples": 0,
+     "expected_pitch_samples": 0,
+     "present_pitch_samples": 7076004,
+     "all_expected_pitches_samples": 2137537,
+     "exact_pitch_set_samples": 1478510,
+     "one_voice_per_pitch_samples": 1478510,
+     "extra_pitch_voice_samples": -3334809,
+     "duplicate_expected_pitch_voice_samples": 0
+    },
+    "extra_gap_pitch_samples_delta": 162357,
+    "label_bands": {
+     "below48": {
+      "annotated_label_samples": 9561144,
+      "current_present_label_samples": 6690873,
+      "model_present_label_samples": 6133799,
+      "lost_labels": 18
+     },
+     "48to59": {
+      "annotated_label_samples": 9852087,
+      "current_present_label_samples": 6292681,
+      "model_present_label_samples": 6109345,
+      "lost_labels": 13
+     },
+     "60to71": {
+      "annotated_label_samples": 9319146,
+      "current_present_label_samples": 541791,
+      "model_present_label_samples": 5408846,
+      "lost_labels": 5
+     },
+     "72plus": {
+      "annotated_label_samples": 5086724,
+      "current_present_label_samples": 0,
+      "model_present_label_samples": 2949359,
+      "lost_labels": 0
+     }
+    },
+    "no_pitch_safety_regression": false,
+    "promotion_accepted": false
+   },
+   "labels": {
+    "lower_lt60": {
+     "labels": 286,
+     "annotated_samples": 19413231,
+     "present": {
+      "current": 12983554,
+      "arm": 10225084,
+      "hybrid": 12243144
+     },
+     "hybrid_vs_current": {
+      "gained": 0,
+      "lost": 31,
+      "unchanged": 255
+     },
+     "hybrid_vs_arm": {
+      "gained": 187,
+      "lost": 60,
+      "unchanged": 39
+     },
+     "labels_with_zero_present": {
+      "current": 61,
+      "arm": 67,
+      "hybrid": 65
+     },
+     "median_first_present_delay_ms": {
+      "current": 68.91,
+      "arm": 145.21,
+      "hybrid": 69.25
+     }
+    },
+    "upper_ge60": {
+     "labels": 213,
+     "annotated_samples": 14405870,
+     "present": {
+      "current": 541791,
+      "arm": 8358205,
+      "hybrid": 8358205
+     },
+     "hybrid_vs_current": {
+      "gained": 166,
+      "lost": 5,
+      "unchanged": 42
+     },
+     "hybrid_vs_arm": {
+      "gained": 0,
+      "lost": 0,
+      "unchanged": 213
+     },
+     "labels_with_zero_present": {
+      "current": 204,
+      "arm": 43,
+      "hybrid": 43
+     },
+     "median_first_present_delay_ms": {
+      "current": 55.59,
+      "arm": 98.7,
+      "hybrid": 98.7
+     }
+    }
+   },
+   "false_total": {
+    "CURRENT": 11429794,
+    "H_split": 12695982,
+    "H_T": 8257342
+   }
+  },
+  "extended-middle": {
+   "horizon": 2233574,
+   "clip_counts": {
+    "lower_spans": 10,
+    "with_A_overlap": 7,
+    "clipped": 5,
+    "clipped_samples": 28200
+   },
+   "compact": {
+    "CURRENT": {
+     "present": 2021510,
+     "expected": 2073600,
+     "coverage_percent": 97.4879,
+     "exact_pitch_set": 1516739,
+     "wrong_pitch": 528259,
+     "gap": 183006
+    },
+    "H_split": {
+     "present": 2021510,
+     "expected": 2073600,
+     "coverage_percent": 97.4879,
+     "exact_pitch_set": 1599509,
+     "wrong_pitch": 445489,
+     "gap": 177985
+    },
+    "H_T": {
+     "present": 2021510,
+     "expected": 2073600,
+     "coverage_percent": 97.4879,
+     "exact_pitch_set": 1599509,
+     "wrong_pitch": 445489,
+     "gap": 149785
+    }
+   },
+   "bands": {
+    "lt60": {
+     "expected": 2073600,
+     "present": 2021510,
+     "extra": 187010,
+     "gap": 135607
+    },
+    "ge60": {
+     "expected": 0,
+     "present": 0,
+     "extra": 258479,
+     "gap": 14178
+    },
+    "below48": {
+     "expected": 0,
+     "present": 0,
+     "extra": 0,
+     "gap": 0
+    },
+    "48to59": {
+     "expected": 2073600,
+     "present": 2021510,
+     "extra": 187010,
+     "gap": 135607
+    },
+    "60to71": {
+     "expected": 0,
+     "present": 0,
+     "extra": 258479,
+     "gap": 14178
+    },
+    "72plus": {
+     "expected": 0,
+     "present": 0,
+     "extra": 0,
+     "gap": 0
+    }
+   },
+   "hybrid_tail_vs_current": {
+    "current_pitch_coverage_percent": 97.4879436728395,
+    "model_pitch_coverage_percent": 97.4879436728395,
+    "pitch_coverage_gain_pp": 0.0,
+    "current_exact_pitch_set_percent": 73.14520640432099,
+    "model_exact_pitch_set_percent": 77.13681520061728,
+    "sample_deltas": {
+     "annotated_samples": 0,
+     "expected_pitch_samples": 0,
+     "present_pitch_samples": 0,
+     "all_expected_pitches_samples": 0,
+     "exact_pitch_set_samples": 82770,
+     "one_voice_per_pitch_samples": 82770,
+     "extra_pitch_voice_samples": -82770,
+     "duplicate_expected_pitch_voice_samples": 0
+    },
+    "extra_gap_pitch_samples_delta": -33221,
+    "label_bands": {
+     "below48": {
+      "annotated_label_samples": 0,
+      "current_present_label_samples": 0,
+      "model_present_label_samples": 0,
+      "lost_labels": 0
+     },
+     "48to59": {
+      "annotated_label_samples": 2073600,
+      "current_present_label_samples": 2021510,
+      "model_present_label_samples": 2021510,
+      "lost_labels": 0
+     },
+     "60to71": {
+      "annotated_label_samples": 0,
+      "current_present_label_samples": 0,
+      "model_present_label_samples": 0,
+      "lost_labels": 0
+     },
+     "72plus": {
+      "annotated_label_samples": 0,
+      "current_present_label_samples": 0,
+      "model_present_label_samples": 0,
+      "lost_labels": 0
+     }
+    },
+    "no_pitch_safety_regression": true,
+    "promotion_accepted": false
+   },
+   "labels": {
+    "lower_lt60": {
+     "labels": 6,
+     "annotated_samples": 2073600,
+     "present": {
+      "current": 2021510,
+      "arm": 2031528,
+      "hybrid": 2021510
+     },
+     "hybrid_vs_current": {
+      "gained": 0,
+      "lost": 0,
+      "unchanged": 6
+     },
+     "hybrid_vs_arm": {
+      "gained": 5,
+      "lost": 1,
+      "unchanged": 0
+     },
+     "labels_with_zero_present": {
+      "current": 0,
+      "arm": 0,
+      "hybrid": 0
+     },
+     "median_first_present_delay_ms": {
+      "current": 47.99,
+      "arm": 72.71,
+      "hybrid": 47.99
+     }
+    },
+    "upper_ge60": {
+     "labels": 0,
+     "annotated_samples": 0,
+     "present": {
+      "current": 0,
+      "arm": 0,
+      "hybrid": 0
+     },
+     "hybrid_vs_current": {
+      "gained": 0,
+      "lost": 0,
+      "unchanged": 0
+     },
+     "hybrid_vs_arm": {
+      "gained": 0,
+      "lost": 0,
+      "unchanged": 0
+     },
+     "labels_with_zero_present": {
+      "current": 0,
+      "arm": 0,
+      "hybrid": 0
+     },
+     "median_first_present_delay_ms": {
+      "current": null,
+      "arm": null,
+      "hybrid": null
+     }
+    }
+   },
+   "false_total": {
+    "CURRENT": 711265,
+    "H_split": 623474,
+    "H_T": 595274
+   }
+  }
+ }
+}

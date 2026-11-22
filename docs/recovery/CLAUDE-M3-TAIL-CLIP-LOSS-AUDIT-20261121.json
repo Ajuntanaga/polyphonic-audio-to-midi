@@ -1,0 +1,215 @@
+{
+ "schema": "claude_m3_tail_clip_audit_v1",
+ "datasets": {
+  "ordinary": {
+   "horizon": 10681922,
+   "lower_spans": 517,
+   "clipped": 199,
+   "clipped_multi": 41,
+   "multi_overlap_spans": 49,
+   "primary": {
+    "compact": {
+     "present": 20601349,
+     "expected": 33819101,
+     "coverage_percent": 60.9163,
+     "exact_pitch_set": 1531759,
+     "wrong_pitch": 4473500,
+     "gap": 3783842
+    },
+    "false": 8257342,
+    "summary": {
+     "lower_labels_lost": 31,
+     "total_loss_samples": 740410,
+     "total_loss_ms": 7712.6,
+     "loss_ms": {
+      "min": 12.2,
+      "p25": 73.3,
+      "median": 185.5,
+      "p75": 381.1,
+      "max": 747.9
+     },
+     "under_20ms": 1,
+     "over_500ms": 3,
+     "share_of_label_lost": 0.376,
+     "by_pitch": {
+      "35": 1,
+      "38": 2,
+      "39": 1,
+      "42": 4,
+      "43": 2,
+      "44": 3,
+      "46": 3,
+      "47": 2,
+      "48": 2,
+      "49": 1,
+      "52": 2,
+      "53": 1,
+      "55": 2,
+      "56": 3,
+      "57": 1,
+      "58": 1
+     },
+     "longest_only": 0
+    },
+    "gap_delta": 162357
+   },
+   "v2": {
+    "compact": {
+     "present": 19533545,
+     "expected": 33819101,
+     "coverage_percent": 57.7589,
+     "exact_pitch_set": 1329290,
+     "wrong_pitch": 4117746,
+     "gap": 3396160
+    },
+    "false": 7513906,
+    "summary": {
+     "lower_labels_lost": 60,
+     "total_loss_samples": 1808214,
+     "total_loss_ms": 18835.6,
+     "loss_ms": {
+      "min": 12.0,
+      "p25": 118.9,
+      "median": 285.3,
+      "p75": 475.7,
+      "max": 748.1
+     },
+     "under_20ms": 2,
+     "over_500ms": 12,
+     "share_of_label_lost": 0.515,
+     "by_pitch": {
+      "34": 1,
+      "35": 2,
+      "37": 1,
+      "38": 2,
+      "39": 1,
+      "40": 3,
+      "41": 3,
+      "42": 5,
+      "43": 3,
+      "44": 6,
+      "45": 2,
+      "46": 3,
+      "47": 5,
+      "48": 5,
+      "49": 2,
+      "50": 3,
+      "52": 2,
+      "53": 2,
+      "54": 1,
+      "55": 2,
+      "56": 3,
+      "57": 2,
+      "58": 1
+     },
+     "longest_only": 0
+    },
+    "gap_delta": -225325
+   },
+   "top_primary_losses": [
+    {
+     "midi": 39,
+     "start": 6772999,
+     "annotated": 71801,
+     "present_loss": 71801,
+     "present_current": 71801,
+     "longest_loss": 71801
+    },
+    {
+     "midi": 42,
+     "start": 5630617,
+     "annotated": 71783,
+     "present_loss": 71783,
+     "present_current": 71783,
+     "longest_loss": 71783
+    },
+    {
+     "midi": 43,
+     "start": 5548937,
+     "annotated": 52800,
+     "present_loss": 52800,
+     "present_current": 52800,
+     "longest_loss": 52800
+    },
+    {
+     "midi": 60,
+     "start": 653030,
+     "annotated": 71770,
+     "present_loss": 45785,
+     "present_current": 45785,
+     "longest_loss": 45785
+    },
+    {
+     "midi": 47,
+     "start": 9302617,
+     "annotated": 71783,
+     "present_loss": 44639,
+     "present_current": 71783,
+     "longest_loss": 44639
+    },
+    {
+     "midi": 53,
+     "start": 7425839,
+     "annotated": 71761,
+     "present_loss": 43082,
+     "present_current": 66625,
+     "longest_loss": 43082
+    },
+    {
+     "midi": 46,
+     "start": 1142599,
+     "annotated": 71801,
+     "present_loss": 37003,
+     "present_current": 58241,
+     "longest_loss": 37003
+    },
+    {
+     "midi": 46,
+     "start": 7589017,
+     "annotated": 71783,
+     "present_loss": 36693,
+     "present_current": 63297,
+     "longest_loss": 36693
+    }
+   ]
+  },
+  "extended-middle": {
+   "horizon": 2233574,
+   "lower_spans": 10,
+   "clipped": 5,
+   "clipped_multi": 0,
+   "multi_overlap_spans": 0,
+   "primary": {
+    "compact": {
+     "present": 2021510,
+     "expected": 2073600,
+     "coverage_percent": 97.4879,
+     "exact_pitch_set": 1599509,
+     "wrong_pitch": 445489,
+     "gap": 149785
+    },
+    "false": 595274,
+    "summary": {
+     "lower_labels_lost": 0
+    },
+    "gap_delta": -33221
+   },
+   "v2": {
+    "compact": {
+     "present": 2021510,
+     "expected": 2073600,
+     "coverage_percent": 97.4879,
+     "exact_pitch_set": 1599509,
+     "wrong_pitch": 445489,
+     "gap": 149785
+    },
+    "false": 595274,
+    "summary": {
+     "lower_labels_lost": 0
+    },
+    "gap_delta": -33221
+   },
+   "top_primary_losses": []
+  }
+ }
+}
