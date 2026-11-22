@@ -25,6 +25,16 @@ class CropIdentityTests(unittest.TestCase):
             (folder/'frames.tsv').write_text('frame\tsource_end\n'+''.join(f'{i}\t{640*(i+1)}\n' for i in range(4)))
             cached['note'].tofile(folder/'notes.f32');cached['onset'].tofile(folder/'onsets.f32')
             self.assertTrue(crop_identity(folder,cached,original,opened,2560)['passed'])
+            # A legacy or merely close full/crop result cannot certify the new
+            # corrected adapter, even when the cached decoder agrees exactly.
+            self.assertFalse(crop_identity(folder,cached,original,opened,2560,corrected=True)['passed'])
+            summary=dict(paired_identity_pass=True,source_samples=2560,frames=4,
+                         corrected_temporal_contract=True,readouts_bit_identical=True)
+            (folder/'summary.json').write_text(json.dumps(summary))
+            self.assertTrue(crop_identity(folder,cached,original,opened,2560,corrected=True)['passed'])
+            summary['readouts_bit_identical']=False
+            (folder/'summary.json').write_text(json.dumps(summary))
+            self.assertFalse(crop_identity(folder,cached,original,opened,2560,corrected=True)['passed'])
             changed=cached['note'].copy();changed[0,0]+=np.float32(4e-7);changed.tofile(folder/'notes.f32')
             report=crop_identity(folder,cached,original,opened,2560)
             self.assertTrue(report['gates']['cached_note_error'])

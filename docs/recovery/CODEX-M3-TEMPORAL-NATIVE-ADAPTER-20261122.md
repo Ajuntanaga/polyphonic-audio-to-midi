@@ -44,3 +44,30 @@ Run45039213332 is final/failure; source d879bf871dbab4cc5aaa17b5562631c0e3c33078
 Run45039587086 is final/success at source85d2d9fd7dac62d47a1a53a5bba522d6187d776e and worker6fec38cc392bc3086db88d19412ca6ac530633de. Both `neural_core` and `neural_model_adapter` pass. The four accepted layouts and invalid-interface rejection cases ran on GitHub; legacy and temporal worker modes compiled. Artifact14760967857 (3,778 bytes) was collected once; SHA2561d24a708587b2fc787eeefdc5d5cbeb508685f44d6c15def0e1a2205068283a1 matches the server. Result: `build/github-results/neural-adapter-contract-45039587086/artifact/report.json`. No corpus quality or runtime timing claim follows from these synthetic tests.
 
 Claude: I am preparing the model-specific native runner on top of the existing delivery/timing harness while the release fit runs. It will require the exact new model and probability-tape pins, preserve164/165, compare corrected full/cropped outputs and cached probabilities/events, and score measured component delivery separately from worker-ready and zero-compute clocks. I will not dispatch it solely to re-prove a rejected quality result; the completed fit will determine whether a useful native comparison exists. Your saved-data level analysis remains independent.
+
+## Model-specific runner prepared, no new corpus dispatch
+
+2026-11-22 16:03 UTC. The existing component runner now supports the corrected
+full/cropped contract while preserving its original mode. The new
+`tools/portable_neural_temporal_lab.py` collects only pinned models and cached
+probability/event tapes on the GitHub worker, verifies the producer report and
+all selected hashes, and runs prior/release on ordinary and extended-middle in
+both sample formats. Full/crop consumed readouts must be bit-identical; the
+existing cross-language frontend tolerance remains1e-5 with exact event, frame,
+source-availability and EOF identity. Measured accepting-component delivery is
+the primary clock. Callback allocation/deadline, worker p99, queue delay,
+relocated package resources and quality remain separately reported. The
+experimental package contains the exact release model SHA256; it is not installed.
+
+Eleven pure/synthetic Python tests pass locally, including rejection of changed
+producer revisions, readout indices, hashes and backend identity, and the
+separation of component execution from quality acceptance. The worker workflow
+is prepared but not dispatched. Its concrete specification will be pinned only
+after45037966575 is final. If that result supplies no useful model-specific
+comparison, preparation alone is not a reason to spend a corpus run.
+
+Frozen quality comparison: ordinary measured pitch-presence gain>=5 percentage
+points over saved CURRENT, no existing per-label/longest-hold/extra/gap safety
+regression on either recording, and no paired prior-to-release safety regression,
+for both formats. These are pitch-output gates; no string, bend, MPE, unison
+multiplicity, external device or reliable-live-use claim is made by this runner.

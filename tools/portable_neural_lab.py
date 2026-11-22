@@ -30,7 +30,7 @@ CROP = dict(schema=CROP_SCHEMA, retained_time_range=[144,172], original_readout=
     generated_event_identity=True, paired_every_window=True)
 
 
-def crop_identity(folder,cached,original,open_notes,source_samples):
+def crop_identity(folder,cached,original,open_notes,source_samples,corrected=False):
     """Numerical and event gates against both same-run original and saved Python."""
     import numpy as np
     summary=json.loads((folder/'summary.json').read_text())
@@ -48,6 +48,12 @@ def crop_identity(folder,cached,original,open_notes,source_samples):
         cached_note_error=errors['note']<=CROP['activation_absolute_tolerance'],
         cached_onset_error=errors['onset']<=CROP['activation_absolute_tolerance'],
         cached_generated_sequence=decoded==original,cached_eof_owners=opened==open_notes)
+    if corrected:
+        # The two native graphs share the same input cells. Python's resampler
+        # is a separate numerical implementation: retain its existing 1e-5
+        # activation limit and exact event/frame/EOF gates above.
+        gates.update(corrected_temporal_contract=summary.get('corrected_temporal_contract') is True,
+                     same_native_readouts_bit_identical=summary.get('readouts_bit_identical') is True)
     return dict(paired=summary,cached_maximum_activation_error=errors,gates=gates,passed=all(gates.values()))
 
 
@@ -143,12 +149,14 @@ def measure(name,config,references,inputs,cache,model,harness,scratch,logs,bulk,
     if crop:
         folder=work/'paired';tag=name+'-paired'
         with (logs/(tag+'.stdout')).open('wb') as stdout,(logs/(tag+'.stderr')).open('wb') as stderr:
-            process=subprocess.run([str(crop['checker']),str(work/'mono.f32'),str(work/'coefficients.f64'),
-                str(crop['original']),str(model),str(folder)],stdout=stdout,stderr=stderr,check=False)
+            command=[str(crop['checker']),str(work/'mono.f32'),str(work/'coefficients.f64'),
+                str(crop['original']),str(model),str(folder)]
+            if crop.get('corrected'): command.append('--corrected')
+            process=subprocess.run(command,stdout=stdout,stderr=stderr,check=False)
         retained=retain(folder,bulk,tag) if folder.exists() else {}
         if not (folder/'summary.json').is_file():
             raise RuntimeError(f'{tag}: exit {process.returncode}, no summary; see captured logs')
-        paired=crop_identity(folder,cached,original,open_notes,len(mono))
+        paired=crop_identity(folder,cached,original,open_notes,len(mono),corrected=crop.get('corrected',False))
         paired.update(native_exit=process.returncode,bulk=retained)
         if process.returncode or not paired['passed']:
             return dict(formats={str(f):dict(state='crop_identity_failed',integration_pass=False)
@@ -197,8 +205,9 @@ def measure(name,config,references,inputs,cache,model,harness,scratch,logs,bulk,
             measured=score(spans,labels,**clock)
             row['views'][view]=dict(measurement=measured,event_audit=event_audit,
                 comparison_to_current=compare(baseline['measurement'],measured),
-                comparison_to_python_causal=compare(reference['measurement'],measured),
-                comparison_to_offline=compare(references['offline']['datasets'][name],measured))
+                comparison_to_python_causal=compare(reference['measurement'],measured))
+            if 'offline' in references:
+                row['views'][view]['comparison_to_offline']=compare(references['offline']['datasets'][name],measured)
         row['compact']={k:compact_measurement(v['measurement']) for k,v in row['views'].items()}
         row.update(state='measured',delivery_audit=audit)
     return dict(formats=formats,crop_identity=paired,cross_format_generated_identity=len(sequences)==2 and sequences['32']==sequences['64'],
