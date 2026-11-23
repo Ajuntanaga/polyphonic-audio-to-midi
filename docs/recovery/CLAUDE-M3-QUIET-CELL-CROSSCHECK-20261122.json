@@ -1,0 +1,393 @@
+{
+ "f2_vs_codex_spearman": [
+  {
+   "cls": "positive",
+   "feature": "interval_fundamental_share",
+   "n": 23,
+   "spearman": 0.6808300395256917,
+   "window": "in_run"
+  },
+  {
+   "cls": "negative",
+   "feature": "interval_fundamental_share",
+   "n": 224,
+   "spearman": 0.24686632500533845,
+   "window": "in_run"
+  },
+  {
+   "cls": "both",
+   "feature": "interval_fundamental_share",
+   "n": 247,
+   "spearman": 0.309307281397223,
+   "window": "in_run"
+  },
+  {
+   "cls": "positive",
+   "feature": "interval_harmonic_share",
+   "n": 23,
+   "spearman": 0.39031620553359686,
+   "window": "in_run"
+  },
+  {
+   "cls": "negative",
+   "feature": "interval_harmonic_share",
+   "n": 224,
+   "spearman": 0.2152743967542174,
+   "window": "in_run"
+  },
+  {
+   "cls": "both",
+   "feature": "interval_harmonic_share",
+   "n": 247,
+   "spearman": 0.24928011034060973,
+   "window": "in_run"
+  },
+  {
+   "cls": "positive",
+   "feature": "recent_to_raw_harmonics",
+   "n": 23,
+   "spearman": 0.45553359683794464,
+   "window": "in_run"
+  },
+  {
+   "cls": "negative",
+   "feature": "recent_to_raw_harmonics",
+   "n": 224,
+   "spearman": 0.16184497117232544,
+   "window": "in_run"
+  },
+  {
+   "cls": "both",
+   "feature": "recent_to_raw_harmonics",
+   "n": 247,
+   "spearman": 0.2197773757155098,
+   "window": "in_run"
+  },
+  {
+   "cls": "positive",
+   "feature": "raw_fundamental_share",
+   "n": 23,
+   "spearman": -0.43280632411067194,
+   "window": "in_run"
+  },
+  {
+   "cls": "negative",
+   "feature": "raw_fundamental_share",
+   "n": 224,
+   "spearman": -0.4365994020926756,
+   "window": "in_run"
+  },
+  {
+   "cls": "both",
+   "feature": "raw_fundamental_share",
+   "n": 247,
+   "spearman": -0.4324474337207784,
+   "window": "in_run"
+  },
+  {
+   "cls": "positive",
+   "feature": "interval_fundamental_share",
+   "n": 23,
+   "spearman": 0.7430830039525692,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "negative",
+   "feature": "interval_fundamental_share",
+   "n": 224,
+   "spearman": 0.6692654281443519,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "both",
+   "feature": "interval_fundamental_share",
+   "n": 247,
+   "spearman": 0.692212131733437,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "positive",
+   "feature": "interval_harmonic_share",
+   "n": 23,
+   "spearman": 0.6264822134387352,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "negative",
+   "feature": "interval_harmonic_share",
+   "n": 224,
+   "spearman": 0.25485799701046336,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "both",
+   "feature": "interval_harmonic_share",
+   "n": 247,
+   "spearman": 0.30360390779041657,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "positive",
+   "feature": "recent_to_raw_harmonics",
+   "n": 23,
+   "spearman": 0.038537549407114624,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "negative",
+   "feature": "recent_to_raw_harmonics",
+   "n": 224,
+   "spearman": -0.06256566303651505,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "both",
+   "feature": "recent_to_raw_harmonics",
+   "n": 247,
+   "spearman": -0.06860373259603042,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "positive",
+   "feature": "raw_fundamental_share",
+   "n": 23,
+   "spearman": 0.5592885375494071,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "negative",
+   "feature": "raw_fundamental_share",
+   "n": 224,
+   "spearman": 0.06932842195174034,
+   "window": "by_25ms"
+  },
+  {
+   "cls": "both",
+   "feature": "raw_fundamental_share",
+   "n": 247,
+   "spearman": 0.14381627523993668,
+   "window": "by_25ms"
+  }
+ ],
+ "mapping": {
+  "codex_continuing_units": 2,
+  "my_pair_kinds": {
+   "primary/negative": 224,
+   "primary/positive": 23,
+   "secondary/negative": 16
+  },
+  "runs_equal": 247,
+  "shared": {
+   "negative": 224,
+   "positive": 23
+  },
+  "spans_equal": 247,
+  "unmapped": {
+   "negative": 30
+  },
+  "unmapped_reason": {
+   "matches_my_secondary_negative_pair": 16,
+   "other_run_inside_a_positive_span": 14
+  }
+ },
+ "pins": {
+  "codex_compact": {
+   "ok": true,
+   "path": "docs/recovery/CODEX-M3-QUIET-CELL-RESTART-RESULT-20261122.json",
+   "sha256": "7404e5c90800ae45ddce2db94d9b1ce1c463de170a236bd02053891d129658b9"
+  },
+  "codex_report": {
+   "ok": true,
+   "path": "build/github-results/quiet-cell-restart-45087140206/report/quiet-cell-restart/report/report.json",
+   "sha256": "edfcaad6ea998524b787d7535828d110daee2b37583a0654b03dace25b6174cf"
+  },
+  "my_census": {
+   "ok": true,
+   "path": "docs/recovery/CLAUDE-M3-BOUNDARY-EVIDENCE-CENSUS-20261122.json",
+   "sha256": "8ab2ca37a5e43d85158a46ab552ee02b94603c6400ad761b4e31ee161e15c47f"
+  }
+ },
+ "plumbing_ok": true,
+ "post_hoc": true,
+ "reproduction": {
+  "rows": [
+   {
+    "feature": "interval_fundamental_share",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.6081821294077371,
+    "reported": 0.6081821294077371,
+    "window": "in_run"
+   },
+   {
+    "feature": "interval_harmonic_share",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.5840465593974666,
+    "reported": 0.5840465593974666,
+    "window": "in_run"
+   },
+   {
+    "feature": "recent_to_raw_harmonics",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.609380349195481,
+    "reported": 0.609380349195481,
+    "window": "in_run"
+   },
+   {
+    "feature": "raw_fundamental_share",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.47740499828825744,
+    "reported": 0.47740499828825744,
+    "window": "in_run"
+   },
+   {
+    "feature": "interval_fundamental_share",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.6843546730571722,
+    "reported": 0.6843546730571722,
+    "window": "by_25ms"
+   },
+   {
+    "feature": "interval_harmonic_share",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.6330023964395755,
+    "reported": 0.6330023964395755,
+    "window": "by_25ms"
+   },
+   {
+    "feature": "recent_to_raw_harmonics",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.4279356384799726,
+    "reported": 0.4279356384799726,
+    "window": "by_25ms"
+   },
+   {
+    "feature": "raw_fundamental_share",
+    "missing_neg": 0,
+    "missing_pos": 0,
+    "n_neg": 254,
+    "n_pos": 23,
+    "recomputed": 0.687778158165012,
+    "reported": 0.687778158165012,
+    "window": "by_25ms"
+   }
+  ],
+  "worst_abs_difference": 0.0
+ },
+ "schema": "claude_m3_quiet_cell_crosscheck_v1",
+ "shared_pair_auc": [
+  {
+   "auc": 0.5561917701863354,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "F1",
+   "source": "mine",
+   "window": "pair window"
+  },
+  {
+   "auc": 0.6939052795031055,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "F2",
+   "source": "mine",
+   "window": "pair window"
+  },
+  {
+   "auc": 0.624805900621118,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "F3",
+   "source": "mine",
+   "window": "pair window"
+  },
+  {
+   "auc": 0.6032608695652174,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "interval_fundamental_share",
+   "source": "codex",
+   "window": "in_run"
+  },
+  {
+   "auc": 0.595108695652174,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "interval_harmonic_share",
+   "source": "codex",
+   "window": "in_run"
+  },
+  {
+   "auc": 0.6162655279503105,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "recent_to_raw_harmonics",
+   "source": "codex",
+   "window": "in_run"
+  },
+  {
+   "auc": 0.453610248447205,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "raw_fundamental_share",
+   "source": "codex",
+   "window": "in_run"
+  },
+  {
+   "auc": 0.6857531055900621,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "interval_fundamental_share",
+   "source": "codex",
+   "window": "by_25ms"
+  },
+  {
+   "auc": 0.640722049689441,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "interval_harmonic_share",
+   "source": "codex",
+   "window": "by_25ms"
+  },
+  {
+   "auc": 0.42430124223602483,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "recent_to_raw_harmonics",
+   "source": "codex",
+   "window": "by_25ms"
+  },
+  {
+   "auc": 0.6857531055900621,
+   "n_neg": 224,
+   "n_pos": 23,
+   "score": "raw_fundamental_share",
+   "source": "codex",
+   "window": "by_25ms"
+  }
+ ],
+ "unit_classes": {
+  "continuing": 2,
+  "negative": 254,
+  "positive": 23
+ }
+}
