@@ -1,0 +1,119 @@
+{
+  "schema": 1,
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "native-candidate-temporal.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "6fa215986366e8e39b0c2d81f015efbd3287681b",
+  "worker_sha": "f44967008517cddcb2ae7fb62afbebb1aacf0f7f",
+  "source_ref": "work/tuner-stability-20261027",
+  "state": "completed",
+  "final": true,
+  "spec_path": "docs/recovery/native-candidate-temporal-20261123.json",
+  "spec_sha256": "6347d4989a5897bfbeeee1a838a39f8075b6e6fbdd68960de46c6c24c46d8999",
+  "plan_path": "docs/recovery/CODEX-M3-NATIVE-CANDIDATE-TEMPORAL-PLAN-20261123.md",
+  "dispatch_count": 1,
+  "prepared_at": "2026-11-23T17:14:07.940367+00:00",
+  "scope": "One frozen native candidate joint/temporal classifier feasibility screen on saved v5 traces; GitHub CPU only; no audio, native replay, threshold tuning or installed changes.",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "local_checks": {
+    "synthetic_tests_passed": 35,
+    "workflow_parse": true,
+    "diff_check": true,
+    "source_push_confirmed": true,
+    "worker_push_confirmed": true,
+    "predispatch_existing_runs": []
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "promotion_accepted": false,
+  "collection_state": "small_report_collected_once_digest_verified",
+  "next": "Fixed screen closed; no tuning, rerun or native integration. Preserve the performance lab and pursue a materially different design only with an explicit mechanism and frozen screen.",
+  "dispatch_directory": "build/recovery/native-candidate-temporal-20261123",
+  "dispatch_started_at": "2026-11-23T17:14:15.906412+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_completed_at": "2026-11-23T17:14:18.964431+00:00",
+  "dispatch_capture": {
+    "stdout": "build/recovery/native-candidate-temporal-20261123/dispatch.stdout",
+    "stderr": "build/recovery/native-candidate-temporal-20261123/dispatch.stderr"
+  },
+  "run_id": 45225444392,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45225444392",
+  "local_output_directory": "build/github-results/native-candidate-temporal-45225444392",
+  "small_artifact_name": "m3-native-candidate-temporal-report-45225444392-1",
+  "bulk_artifact_name": "m3-native-candidate-temporal-evidence-45225444392-1",
+  "conclusion": "success",
+  "observed_at": "2026-11-23T17:17:02.033575+00:00",
+  "dispatched_at": "2026-11-23T17:14:18Z",
+  "source_verification_runs": [
+    {
+      "id": 45224840872,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "6fa215986366e8e39b0c2d81f015efbd3287681b",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45224840872"
+    }
+  ],
+  "small_artifact": {
+    "id": 14843525468,
+    "name": "m3-native-candidate-temporal-report-45225444392-1",
+    "bytes": 115898,
+    "sha256": "8139db8b72e694c8745dc64e551feaae3d20d251821cc07a5b9a785caccaafdc",
+    "digest_verified": true,
+    "archive_path": "build/github-results/native-candidate-temporal-45225444392/report.zip",
+    "collected_at": "2026-11-23T17:17:32.756272+00:00",
+    "receipt_path": "build/github-results/native-candidate-temporal-45225444392/collection.json"
+  },
+  "bulk_artifact": {
+    "id": 14842124759,
+    "node_id": "MDg6QXJ0aWZhY3QxNDg0MjEyNDc1OQ==",
+    "name": "m3-native-candidate-temporal-evidence-45225444392-1",
+    "size_in_bytes": 3014588,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14842124759",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14842124759/zip",
+    "expired": false,
+    "digest": "sha256:86ca09106bd7a647548b05d7fd1db6e6799ead6900b784a1191e5c5c1c0925a8",
+    "created_at": "2026-11-23T17:15:50Z",
+    "updated_at": "2026-11-23T17:15:50Z",
+    "expires_at": "2026-12-07T17:15:49Z",
+    "workflow_run": {
+      "id": 45225444392,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "f44967008517cddcb2ae7fb62afbebb1aacf0f7f"
+    }
+  },
+  "decision": "REJECTED",
+  "feasibility_passed": false,
+  "report_path": "build/github-results/native-candidate-temporal-45225444392/report/native-candidate-temporal-result/report/report.json",
+  "report_sha256": "d7b5f5aa686f010afd008599320ce46e812e2f4de883f51a7efe7b52dba9fb2c",
+  "result_note": "docs/recovery/CODEX-M3-NATIVE-CANDIDATE-TEMPORAL-RESULT-20261123.md",
+  "gates": {
+    "calibration_no_false_growth": true,
+    "ordinary_test_no_regression": true,
+    "ordinary_test_gain_at_least_1pp": false,
+    "ordinary_test_at_least_5_gaining_labels": false,
+    "middle_test_no_regression": true
+  },
+  "updated_at": "2026-11-23T17:20:13.047752+00:00",
+  "summary": {
+    "ordinary_test_current_present": 1973489,
+    "ordinary_test_candidate_present": 2011632,
+    "ordinary_test_expected": 4328055,
+    "ordinary_test_gain_pp": 0.881296563929987,
+    "required_gain_pp": 1.0,
+    "labels_gaining": 3,
+    "required_labels_gaining": 5,
+    "ordinary_false_delta": 0,
+    "ordinary_gap_delta": 0,
+    "middle_present": 2021510,
+    "middle_expected": 2073600,
+    "middle_unchanged": true,
+    "ordinary_segments": [
+      74,
+      138
+    ],
+    "all_35_tests_passed": true
+  }
+}
