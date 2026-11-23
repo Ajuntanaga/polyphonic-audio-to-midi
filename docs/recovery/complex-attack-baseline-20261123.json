@@ -1,0 +1,53 @@
+{
+  "schema": "m3_complex_attack_baseline_spec_v1",
+  "reference_run_id": 45155740922,
+  "reference_report": {
+    "artifact_id": 14807523635,
+    "artifact_name": "m3-controlled-repluck-report-45155740922-1",
+    "archive_sha256": "e25f1423410ebfaff7eed59cdc8b9761e5972399fc0ea91d2e1056bd70067ff3",
+    "report_sha256": "e2764707e56a7dd63394a5131ac4ae9fa0518923c455404669c4915393a46076"
+  },
+  "reference_evidence": {
+    "artifact_id": 14808656500,
+    "artifact_name": "m3-controlled-repluck-evidence-45155740922-1",
+    "archive_sha256": "4a89a38f2293bd0934af149b51470f93fd052278fb0db5f991ce69a0e316a518"
+  },
+  "sample_rate": 96000,
+  "samples": 432000,
+  "datasets": {
+    "physical-highmid": {
+      "note": 56,
+      "fixtures": {
+        "single": "a6361204a2b47d549fdff6dcbfbe9e3c9bcc95f738f81083af1601f075071b44",
+        "overlap": "6f644b7f187dfb26f8f39a5c1c6bbe7628972c8671dfb294b6c0d0920f417e15",
+        "separated": "00933f0862d01fec390834027b5e9d4d018f9c6f8f7650f940b6bad079744ddb"
+      }
+    },
+    "physical-high": {
+      "note": 60,
+      "fixtures": {
+        "single": "55156405c8bcc24f6eb482cea0309e74ea4a9c01f237419cc01daa5ec1274486",
+        "overlap": "6774d22e7ee0efdb0e053a8e550d35631f42b6367ce378ca5ea5560996766b50",
+        "separated": "b6d0b95c3f9e3e22e9994c9d13bc34d011e47c2d8ee7c5ab0fbde421c2ea5394"
+      }
+    }
+  },
+  "aubio": {
+    "version": "0.4.9",
+    "sdist_url": "https://files.pythonhosted.org/packages/cd/80/302d89240603e5347c7f8026c8b02c59f8dfaec66c91a743d82de7c86006/aubio-0.4.9.tar.gz",
+    "sdist_sha256": "df1244f6c4cf5bea382c8c2d35aa43bc31f4cf631fe325ae3992c219546a4202",
+    "method": "complex",
+    "fft_samples": 2048,
+    "hop_samples": 512,
+    "threshold": 0.15,
+    "minioi_ms": 50.0,
+    "silence_db": -70.0,
+    "adaptive_whitening": 1,
+    "compression": 1.0,
+    "nominal_delay_samples": 2355
+  },
+  "input_gain": 1.0,
+  "primary_clock": "exclusive end of the input hop needed to return the event; no backdating",
+  "scope": "Six frozen constructed-copy WAVs only; one standalone complex-domain onset setting; no M3 replay, detector edit or plugin integration.",
+  "reading_rule": "After archive/member/shape/config/prefix integrity: exactly one causal cue per inserted copy, each after that copy insertion and no later than its saved per-voice first response; no other cues in the whole fixture. All six must pass to support a bounded attack cue. Failure rejects this fixed setting, not all onset detectors. No tuning, sweep, acoustic acceptance or promotion."
+}

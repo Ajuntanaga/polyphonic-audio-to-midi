@@ -1,3 +1,14 @@
+## Active M3 checkpoint — dedicated attack baseline prepared, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-COMPLEX-ATTACK-PLAN-20261123.md` and
+`docs/recovery/github-complex-attack-baseline-20261123.json` first.
+Codex owns a standalone aubio 0.4.9 complex-domain attack comparison on the six
+exact frozen WAVs from run 45155740922. One FFT2048/hop512 setting, 96 kHz;
+causal hop-end timestamps; no M3 replay, source policy or installed change.
+11 pure metadata contracts pass. Commit/push and one GitHub CPU dispatch next.
+No sweep or tuning. This does not overlap Claude's ordinary acoustic lane.
+The core/component/REAPER batch-cell comparisons below are complete.
+
 ## Active M3 checkpoint — production-shaped REAPER comparison PASSED, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-BATCH-CELL-LAB-HOST-RESULT-20261123.md` and

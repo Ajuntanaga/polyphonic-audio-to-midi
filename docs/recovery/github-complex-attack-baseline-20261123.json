@@ -1,0 +1,23 @@
+{
+  "schema": "m3_complex_attack_baseline_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "m3-complex-attack-baseline.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": null,
+  "worker_sha": null,
+  "state": "prepared",
+  "final": false,
+  "dispatch_count": 0,
+  "observed_at": "2026-11-23T12:39:30.298516+00:00",
+  "plan": "docs/recovery/CODEX-M3-COMPLEX-ATTACK-PLAN-20261123.md",
+  "spec": "docs/recovery/complex-attack-baseline-20261123.json",
+  "spec_sha256": "5f25312e3e17a6a8741b065198c50fe34993e6bc01eebd8b94ab0c3417c67b42",
+  "reference_run_id": 45155740922,
+  "local_contracts_passed": 11,
+  "local_native_audio_execution": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "acoustic_repluck_preservation": "not measured",
+  "scope": "Standalone aubio 0.4.9 complex onset; six pinned copied-waveform fixtures; one fixed setting; no M3 replay or plugin integration",
+  "next": "Commit/push the named implementation and worker; one dispatch, collect small report once; no parameter tuning."
+}
