@@ -1,0 +1,170 @@
+{
+  "schema": 1,
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "m3-ordinary-attack-envelope.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "0489447b84e1b52179a89609f586d469b7de0aea",
+  "worker_sha": "821fdd4b0aa9f3cd5162415dcf41e4b1a36475d2",
+  "source_ref": "work/tuner-stability-20261027",
+  "state": "completed",
+  "final": true,
+  "spec_path": "docs/recovery/ordinary-attack-envelope-20261123.json",
+  "spec_sha256": "d73e3a6183a1b748c209256f41b4abc5df681ad5e7c814cd5a4b06f9ac6670ac",
+  "plan_path": "docs/recovery/CODEX-M3-ORDINARY-ATTACK-ENVELOPE-20261123.md",
+  "prepared_at": "2026-11-23T17:54:49.527783+00:00",
+  "dispatch_count": 1,
+  "scope": "One frozen GitHub CPU observation of 58 suppressed and 262 retained ordinary attack-zone events; no local audio, policy, native replay or installation.",
+  "authorization": "docs/recovery/m3-standing-job-authorization-20261121.json",
+  "local_checks": {
+    "metadata_tests_passed": 7,
+    "pinned_event_population_reproduced": true,
+    "workflow_parse": true,
+    "diff_check": true,
+    "source_push_confirmed": true,
+    "worker_push_confirmed": true,
+    "predispatch_existing_runs": [],
+    "predispatch_api_failure_then_read_only_retry": true
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "promotion_accepted": false,
+  "acoustic_repluck_preservation": "not measured",
+  "collection_state": "small_report_collected_once",
+  "dispatch_directory": "build/recovery/ordinary-attack-envelope-20261123",
+  "next": "This frozen observation is closed. No rerun, tuning or promotion. Use the practical-capture plan for independent performance and annotated re-pluck verification; preserve installed output.",
+  "dispatch_started_at": "2026-11-23T17:54:49.564368+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_completed_at": "2026-11-23T17:54:56.631392+00:00",
+  "dispatch_capture": {
+    "stdout": "build/recovery/ordinary-attack-envelope-20261123/dispatch.stdout",
+    "stderr": "build/recovery/ordinary-attack-envelope-20261123/dispatch.stderr"
+  },
+  "run_id": 45232749979,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45232749979",
+  "local_output_directory": "build/github-results/ordinary-attack-envelope-45232749979",
+  "small_artifact_name": "m3-ordinary-attack-envelope-report-45232749979-1",
+  "bulk_artifact_name": "m3-ordinary-attack-envelope-curves-45232749979-1",
+  "conclusion": "success",
+  "dispatched_at": "2026-11-23T17:54:56Z",
+  "observed_at": "2026-11-23T18:01:53.075552+00:00",
+  "source_verification_runs": [
+    {
+      "id": 45232520540,
+      "name": "Portable offline replay",
+      "status": "completed",
+      "conclusion": "success",
+      "head_sha": "0489447b84e1b52179a89609f586d469b7de0aea",
+      "html_url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45232520540"
+    }
+  ],
+  "stage": "descriptive comparison complete",
+  "completed_at": "2026-11-23T17:55:50Z",
+  "report_completed_at": "2026-11-23T17:55:43.064326+00:00",
+  "collection_receipt": "build/github-results/ordinary-attack-envelope-45232749979/collection.json",
+  "report_path": "build/github-results/ordinary-attack-envelope-45232749979/report/ordinary-attack-envelope/report.json",
+  "report_sha256": "d56f916961ed3191ef1eee55e8d9325dcff24e6c277c26080a8dfd0522aff5d8",
+  "report_bytes": 364414,
+  "small_artifact": {
+    "id": 14845759344,
+    "node_id": "MDg6QXJ0aWZhY3QxNDg0NTc1OTM0NA==",
+    "name": "m3-ordinary-attack-envelope-report-45232749979-1",
+    "size_in_bytes": 47859,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14845759344",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14845759344/zip",
+    "expired": false,
+    "digest": "sha256:3882525ba8a8b0c906009f0ff2051078e044805fc6d859ea630aac54d7ef409d",
+    "created_at": "2026-11-23T17:55:44Z",
+    "updated_at": "2026-11-23T17:55:44Z",
+    "expires_at": "2026-12-07T17:55:43Z",
+    "workflow_run": {
+      "id": 45232749979,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "821fdd4b0aa9f3cd5162415dcf41e4b1a36475d2"
+    }
+  },
+  "bulk_artifact": {
+    "id": 14847003989,
+    "node_id": "MDg6QXJ0aWZhY3QxNDg0NzAwMzk4OQ==",
+    "name": "m3-ordinary-attack-envelope-curves-45232749979-1",
+    "size_in_bytes": 1798697,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14847003989",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14847003989/zip",
+    "expired": false,
+    "digest": "sha256:e39887b525c4ca8ad24f629c49ff20dbf8411b9f68cafd2d60cbff839e85ab67",
+    "created_at": "2026-11-23T17:55:46Z",
+    "updated_at": "2026-11-23T17:55:46Z",
+    "expires_at": "2026-11-30T17:55:44Z",
+    "workflow_run": {
+      "id": 45232749979,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "821fdd4b0aa9f3cd5162415dcf41e4b1a36475d2"
+    }
+  },
+  "bulk_collected": false,
+  "download_count": 1,
+  "server_digest_verified": true,
+  "integrity": {
+    "all_input_hashes": true,
+    "label_tuples_equal_saved_reference": true,
+    "frozen_population": true,
+    "waveform_geometry": true
+  },
+  "population": {
+    "source_events": 11851,
+    "callbacks": 8623,
+    "suppressed_pairs": 1614,
+    "labels": 499,
+    "attack_events": 320,
+    "suppressed_attack_events": 58,
+    "retained_attack_events": 262,
+    "labels_with_attack_events": 169,
+    "labels_with_suppressed_attack_events": 33
+  },
+  "result_summary": {
+    "suppressed": {
+      "events": 58,
+      "local_rise_ratio": {
+        "min": 1.0126239992628818,
+        "p10": 1.0436837774766143,
+        "median": 1.0929731373479181,
+        "p90": 1.190363656958569,
+        "max": 2.6855659826717653
+      },
+      "rise_bins": {
+        "le_1": 0,
+        "gt_1_lt_2": 57,
+        "ge_2": 1
+      }
+    },
+    "retained": {
+      "events": 262,
+      "local_rise_ratio": {
+        "min": 0.9552130414243989,
+        "p10": 1.0415452060246266,
+        "median": 1.1349565611234567,
+        "p90": 1.372176683339519,
+        "max": 2.6714710791152214
+      },
+      "rise_bins": {
+        "le_1": 5,
+        "gt_1_lt_2": 255,
+        "ge_2": 2
+      }
+    }
+  },
+  "descriptive_counterexample": {
+    "sequence": 5217,
+    "sample": 3183935,
+    "note": 44,
+    "label_index": 178,
+    "offset_samples": 1318,
+    "local_rise_ratio": 2.6855659826717653,
+    "interpretation": "Not proof of an acoustic re-pluck; the envelope comparison cannot establish preservation."
+  },
+  "verdict": "observation complete; acoustic re-pluck preservation not measured",
+  "result_note": "docs/recovery/CODEX-M3-ORDINARY-ATTACK-ENVELOPE-RESULT-20261123.md"
+}
