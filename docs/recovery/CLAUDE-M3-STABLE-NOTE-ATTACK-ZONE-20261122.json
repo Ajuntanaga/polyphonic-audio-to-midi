@@ -1,0 +1,84 @@
+{
+ "schema": "claude_m3_stable_note_attack_zone_v1",
+ "plumbing": {
+  "events": 11851,
+  "callbacks": 8623,
+  "merged_pairs": 1614,
+  "labels": 499
+ },
+ "primary": {
+  "zones": {
+   "attack": {
+    "ons": 320,
+    "removed": 58,
+    "tagged": 66,
+    "removed_rate": 0.18125
+   },
+   "inside": {
+    "ons": 3889,
+    "removed": 1090,
+    "tagged": 1591,
+    "removed_rate": 0.2802777063512471
+   },
+   "outside": {
+    "ons": 1717,
+    "removed": 466,
+    "tagged": 657,
+    "removed_rate": 0.27140361094933024
+   }
+  },
+  "labels_with_attack_zone_noteon": 169,
+  "labels_with_removed_attack_noteon": 33,
+  "labels_total": 499
+ },
+ "sensitivity_50ms": {
+  "zones": {
+   "attack": {
+    "ons": 63,
+    "removed": 8,
+    "tagged": 8,
+    "removed_rate": 0.12698412698412698
+   },
+   "inside": {
+    "ons": 4146,
+    "removed": 1140,
+    "tagged": 1649,
+    "removed_rate": 0.27496382054992763
+   },
+   "outside": {
+    "ons": 1717,
+    "removed": 466,
+    "tagged": 657,
+    "removed_rate": 0.27140361094933024
+   }
+  },
+  "labels_with_attack_zone_noteon": 43,
+  "labels_with_removed_attack_noteon": 6,
+  "labels_total": 499
+ },
+ "sensitivity_200ms": {
+  "zones": {
+   "attack": {
+    "ons": 775,
+    "removed": 211,
+    "tagged": 259,
+    "removed_rate": 0.27225806451612905
+   },
+   "inside": {
+    "ons": 3434,
+    "removed": 937,
+    "tagged": 1398,
+    "removed_rate": 0.272859638905067
+   },
+   "outside": {
+    "ons": 1717,
+    "removed": 466,
+    "tagged": 657,
+    "removed_rate": 0.27140361094933024
+   }
+  },
+  "labels_with_attack_zone_noteon": 219,
+  "labels_with_removed_attack_noteon": 73,
+  "labels_total": 499
+ }
+}
