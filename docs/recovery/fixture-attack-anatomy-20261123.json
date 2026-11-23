@@ -1,0 +1,71 @@
+{
+  "schema": "m3_fixture_attack_anatomy_spec_v1",
+  "reference_run": 45155740922,
+  "reference_report": {
+    "artifact_id": 14807523635,
+    "artifact_name": "m3-controlled-repluck-report-45155740922-1",
+    "archive_sha256": "e25f1423410ebfaff7eed59cdc8b9761e5972399fc0ea91d2e1056bd70067ff3",
+    "report_sha256": "e2764707e56a7dd63394a5131ac4ae9fa0518923c455404669c4915393a46076"
+  },
+  "reference_evidence": {
+    "artifact_id": 14808656500,
+    "artifact_name": "m3-controlled-repluck-evidence-45155740922-1",
+    "archive_sha256": "4a89a38f2293bd0934af149b51470f93fd052278fb0db5f991ce69a0e316a518"
+  },
+  "sample_rate": 96000,
+  "samples": 432000,
+  "measurement": {
+    "fft_samples": 2048,
+    "hop_samples": 480,
+    "bands_hz": [
+      [
+        0,
+        500
+      ],
+      [
+        500,
+        2000
+      ],
+      [
+        2000,
+        8000
+      ],
+      [
+        8000,
+        20000
+      ]
+    ],
+    "nominal_relative_half_width": 0.04,
+    "nominal_smoothing_ms": 5,
+    "broad_window_ms": 10,
+    "range_ms": [
+      -100,
+      1200
+    ]
+  },
+  "datasets": {
+    "physical-highmid": {
+      "note": 56,
+      "source_sha256": "8145168a384c6c75105354f004d5495261ed38599d562c1c474f17923f1f1c17",
+      "source_marker": 912159,
+      "wave_sha256": "a6361204a2b47d549fdff6dcbfbe9e3c9bcc95f738f81083af1601f075071b44",
+      "marker": 48000,
+      "cues_ms": {
+        "first_saved_cue": 35,
+        "late_saved_cue": 335
+      }
+    },
+    "physical-high": {
+      "note": 60,
+      "source_sha256": "2deb090343ca005009d25f1e92687765b1851d40f9b625d385ec2133e9d0e44d",
+      "source_marker": 1610335,
+      "wave_sha256": "55156405c8bcc24f6eb482cea0309e74ea4a9c01f237419cc01daa5ec1274486",
+      "marker": 48000,
+      "cues_ms": {
+        "first_saved_cue": 30,
+        "late_saved_cue": 275
+      }
+    }
+  },
+  "interpretation": "Centered noncausal descriptive observation. No detector acceptance, single-attack truth, parameter tuning or promotion."
+}
