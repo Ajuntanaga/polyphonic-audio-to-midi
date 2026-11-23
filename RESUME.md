@@ -1,17 +1,20 @@
-## Active M3 checkpoint — host setup recovery running, 2026-11-23
+## Active M3 checkpoint — production-shaped REAPER comparison PASSED, 2026-11-23
 
-Read `docs/recovery/CODEX-M3-BATCH-CELL-LAB-HOST-RECOVERY-20261123.md` and
+Read `docs/recovery/CODEX-M3-BATCH-CELL-LAB-HOST-RESULT-20261123.md` and
 `docs/recovery/github-batch-cell-lab-host-apt-recovery-20261123.json` first.
-One recovery run **45171884366** is dispatched at frozen source **8631bac**,
-worker **434be31**. Only runner setup changed: HTTPS Ubuntu mirror and bounded
-download timeouts. Scientific configuration and gates remain identical.
-Prior run **45164257964** is terminal/cancelled at its 45-minute deadline in
-package update; small report collected once, seven report tests passed,
-no native build or host measurement. Do not repoll or redownload that run.
-Follow **45171884366** only; collect its small report once on completion.
-Core/component gates below remain complete; real host acceptance is open.
-No installed/default output or score changed. Claude's acoustic lane remains
-independent; remaining ordinary attack-zone work is in the peer note.
+Run **45171884366**, source **8631bac**, worker **434be31**, is final/success,
+small report collected once and digest verified. All **22/22** scalar/batch
+host checks pass: full 10,689,600-sample ordinary recording, exactly **1,040**
+MIDI events at identical samples/offsets, unchanged dry audio, state restore
+and Panic cleanup. Both production-shaped native realtime suites, diagnostic
+native suite and package validators pass. Real REAPER 7.86 / JACK dummy,
+96 kHz / 512; no offline policy macros. No physical-device/live-guitar or
+musical-quality acceptance, promotion, installation or scoreboard change.
+The planned batch-cell core, component and host comparisons are complete.
+Do not repoll/rerun/redownload; bundles/events remain remote. Earlier setup
+run **45164257964** is terminal/cancelled, collected, and superseded for setup.
+Next: selective articulation/tracking work; repeated-attack preservation is
+still open. Claude's independent ordinary attack-zone lane remains separate.
 
 ## Active M3 checkpoint — onset observation complete; no safe memory rule established, 2026-11-23
 

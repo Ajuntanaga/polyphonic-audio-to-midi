@@ -1,7 +1,7 @@
 {
   "schema": "m3_batch_cell_lab_host_apt_recovery_checkpoint_v1",
-  "state": "in_progress",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
@@ -33,18 +33,189 @@
   "scoreboard_changed": false,
   "prepared_at": "2026-11-23T12:10:11.784103+00:00",
   "launch_receipts": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123",
-  "next": "Observe this recorded recovery run only, collect the small report once when final, keep bulk remote. No duplicate dispatch, installed/default change or promotion.",
+  "next": "Host optimization observation complete. Retain uninstalled candidate remotely; no repoll/rerun/redownload or automatic promotion. Physical-device/live-guitar acceptance, chord quality and acoustic re-pluck preservation remain open; peer acoustic work is independent.",
   "dispatch_started_at": "2026-11-23T12:11:04.405226+00:00",
   "published_note_commit": "d680c99",
   "dispatch_returncode": 0,
   "dispatch_capture": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123/20261123T121104Z-dispatch",
   "run_id": 45171884366,
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45171884366",
-  "conclusion": null,
+  "conclusion": "success",
   "run_attempt": 1,
-  "observed_at": "2026-11-23T12:11:24.888416+00:00",
-  "run_metadata_capture": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123/20261123T121124Z-run",
+  "observed_at": "2026-11-23T12:23:58.045915+00:00",
+  "run_metadata_capture": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123/20261123T122104Z-run",
   "output_directory": "build/github-results/batch-cell-lab-host-45171884366",
   "report_artifact": "m3-batch-cell-host-report-45171884366-1",
-  "evidence_artifact": "m3-batch-cell-host-evidence-45171884366-1"
+  "evidence_artifact": "m3-batch-cell-host-evidence-45171884366-1",
+  "last_job_observation": {
+    "observed_at": "2026-11-23T12:18:56.363753+00:00",
+    "capture": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123/20261123T121856Z-jobs",
+    "jobs": [
+      {
+        "id": 137683221110,
+        "status": "in_progress",
+        "conclusion": null,
+        "steps": [
+          {
+            "name": "Set up job",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Check bounded dispatch",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/checkout@v7",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Run actions/setup-python@v7",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Record source pin and test report logic",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Install isolated build and host dependencies",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Build production-shaped pair and native tests",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Native allocation and timing suites and package validators",
+            "status": "completed",
+            "conclusion": "success"
+          },
+          {
+            "name": "Compare scalar and batch in real REAPER",
+            "status": "in_progress",
+            "conclusion": null
+          }
+        ]
+      }
+    ]
+  },
+  "passed": true,
+  "completed_at": "2026-11-23T12:19:56Z",
+  "result_note": "docs/recovery/CODEX-M3-BATCH-CELL-LAB-HOST-RESULT-20261123.md",
+  "report": "build/github-results/batch-cell-lab-host-45171884366/report/batch-host-result/report/report.json",
+  "report_sha256": "e057ce7416b257a028122155464856a03322c9acae254dfa18fd92775aeb498e",
+  "collection_receipt": "build/github-results/batch-cell-lab-host-45171884366/collection.json",
+  "report_artifact_id": 14816963465,
+  "report_archive_bytes": 55950,
+  "report_archive_sha256": "fb9141f137d53b6adb7e3c355c8f6d2669a2fdc96f7d26c86e1087d227cb82bb",
+  "server_digest_verified": true,
+  "report_downloads": 1,
+  "bulk_downloaded": false,
+  "evidence_artifact_metadata": {
+    "id": 14816993329,
+    "node_id": "MDg6QXJ0aWZhY3QxNDgxNjk5MzMyOQ==",
+    "name": "m3-batch-cell-host-evidence-45171884366-1",
+    "size_in_bytes": 2603755,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14816993329",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14816993329/zip",
+    "expired": false,
+    "digest": "sha256:4f7f258acb5b2c340509b9a4943a1b2a1e3fadb4e804ced77c5c0449e481d6a0",
+    "created_at": "2026-11-23T12:19:52Z",
+    "updated_at": "2026-11-23T12:19:52Z",
+    "expires_at": "2026-12-07T12:19:50Z",
+    "workflow_run": {
+      "id": 45171884366,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "434be315603bf9a8c9ffb4815927e7ccdf1e3454"
+    }
+  },
+  "last_job_observation_is_historical": true,
+  "result": {
+    "host": "REAPER 7.86, JACK dummy 96000/512",
+    "gates_passed": 22,
+    "gates_total": 22,
+    "identity": {
+      "passed": true,
+      "scalar_events": 1040,
+      "batch_events": 1040,
+      "first_mismatch": null,
+      "compared_fields": [
+        "phase",
+        "sample",
+        "offset",
+        "status",
+        "note",
+        "velocity"
+      ],
+      "time_shift_samples": 0,
+      "tolerance_samples": 0
+    },
+    "arms": {
+      "scalar": {
+        "recorded_samples": 10689600,
+        "recording_wall_seconds": 111.368124283,
+        "dry_changed_samples": 0,
+        "dry_max_error": 0.0,
+        "raw_pairing": {
+          "duplicate_ons": 0,
+          "unmatched_offs": 0,
+          "final_open": 0,
+          "panic_note_ons": 0,
+          "interpretation": "Descriptive; scalar pairing defects are not repaired by batching."
+        },
+        "state_restored": true,
+        "panic_pass": true,
+        "binary_sha256": "f4a38f9f7fbdb59aff2a9b868e22802b0f09585b5efbe2aa169cd3de5a7315dc"
+      },
+      "batch": {
+        "recorded_samples": 10689600,
+        "recording_wall_seconds": 111.357132517,
+        "dry_changed_samples": 0,
+        "dry_max_error": 0.0,
+        "raw_pairing": {
+          "duplicate_ons": 0,
+          "unmatched_offs": 0,
+          "final_open": 0,
+          "panic_note_ons": 0,
+          "interpretation": "Descriptive; scalar pairing defects are not repaired by batching."
+        },
+        "state_restored": true,
+        "panic_pass": true,
+        "binary_sha256": "b55357fd1d737b7d7db2ecd18a9848ffe832076c614fd1d4e064567ad471bc7f"
+      }
+    },
+    "native_test_targets_passed": 3,
+    "report_logic_tests_passed": 7,
+    "sdk_package_validators_passed": 2,
+    "realtime_suite_timing_ns": {
+      "scalar": {
+        "wall_p99": 105102,
+        "wall_max": 181324,
+        "cpu_p99": 104782,
+        "cpu_max": 171777,
+        "wall_deadline_exceedances": 0,
+        "cpu_deadline_exceedances": 0
+      },
+      "batch": {
+        "wall_p99": 99895,
+        "wall_max": 136492,
+        "cpu_p99": 99631,
+        "cpu_max": 136150,
+        "wall_deadline_exceedances": 0,
+        "cpu_deadline_exceedances": 0
+      }
+    },
+    "interpretation": "Real REAPER on dummy audio; production-shaped scalar/batch comparison. No installed, device, live-guitar, acoustic re-pluck or note-quality acceptance.",
+    "new_note_quality_measurement": false,
+    "hardware_tested": false,
+    "installed_output_changed": false
+  }
 }
