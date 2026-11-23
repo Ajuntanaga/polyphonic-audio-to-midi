@@ -1,0 +1,37 @@
+{
+  "schema": "m3_batch_cell_lab_host_apt_recovery_checkpoint_v1",
+  "state": "prepared",
+  "final": false,
+  "repository": "Ajuntanaga/m3-offload",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_branch": "work/tuner-stability-20261027",
+  "workflow": "batch-cell-lab-host.yml",
+  "source_commit": "8631bacf2ca9c8ef1fc6d11d1f93634d9bcccd86",
+  "worker_commit": "434be315603bf9a8c9ffb4815927e7ccdf1e3454",
+  "previous_setup_run": 45164257964,
+  "specification": "docs/recovery/batch-cell-lab-host-20261123.json",
+  "specification_sha256": "acbfbad179bfe602070da94b5112315a2cd27e07ec7ddfacb32c657c378bd823",
+  "plan": "docs/recovery/CODEX-M3-BATCH-CELL-LAB-PLAN-20261123.md",
+  "recovery_note": "docs/recovery/CODEX-M3-BATCH-CELL-LAB-HOST-RECOVERY-20261123.md",
+  "authorization": "Standing user authorization for scoped M3 CPU-only GitHub work; separate uninstalled lab, no promotion or installed/default change.",
+  "scope": "One distinct recovery dispatch of the same frozen host observation; only runner apt mirror/timeouts changed. No source, dependency set, waveform, configuration, or gate change.",
+  "setup_change": {
+    "mirror": "https://archive.ubuntu.com/ubuntu",
+    "retries": 1,
+    "transfer_timeout_seconds": 20,
+    "update_timeout_seconds": 300,
+    "install_timeout_seconds": 600,
+    "step_timeout_minutes": 16
+  },
+  "local_verification": {
+    "yaml_parsed": true,
+    "all_shell_blocks_bash_syntax_pass": true,
+    "diff_check_pass": true,
+    "native_audio_executed_locally": false
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "prepared_at": "2026-11-23T12:10:11.784103+00:00",
+  "launch_receipts": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123",
+  "next": "Publish scoped worker setup fix, dispatch once at frozen source SHA, record run ID; then observe that run only and collect the small report once."
+}

@@ -1,7 +1,7 @@
 {
   "schema": "m3_batch_cell_lab_host_checkpoint_v1",
-  "state": "in_progress",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
@@ -22,7 +22,7 @@
     "native_audio_executed_locally": false,
     "static_native_review": "One independent pass; no blocking defect. Native compilation, package validation and host playback remain GitHub checks."
   },
-  "next": "Observe this existing run only, collect its small report once on completion; no retry or installed change.",
+  "next": "Terminal and collected. Do not repoll or redownload. Follow the distinct apt-setup recovery checkpoint; execution source/spec remain frozen.",
   "installed_output_changed": false,
   "scoreboard_changed": false,
   "prepared_at": "2026-11-23T11:17:24.353253+00:00",
@@ -31,8 +31,62 @@
   "dispatch_started_at": "2026-11-23T11:20:04.462807+00:00",
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45164257964",
   "run_attempt": 1,
-  "observed_at": "2026-11-23T11:20:16.150405+00:00",
+  "observed_at": "2026-11-23T12:10:11.784103+00:00",
   "output_directory": "build/github-results/batch-cell-lab-host-45164257964",
   "report_artifact": "m3-batch-cell-host-report-45164257964-1",
-  "evidence_artifact": "m3-batch-cell-host-evidence-45164257964-1"
+  "evidence_artifact": "m3-batch-cell-host-evidence-45164257964-1",
+  "last_job_observation": {
+    "observed_at": "2026-11-23T12:10:11.784103+00:00",
+    "capture": "build/recovery/batch-cell-lab-host-launch-20261123/20261123T120554Z-run.stdout",
+    "status": "completed",
+    "conclusion": "cancelled"
+  },
+  "conclusion": "cancelled",
+  "completed_at": "2026-11-23T12:05:27Z",
+  "failure": {
+    "stage": "Install isolated build and host dependencies / apt-get update",
+    "classification": "runner dependency setup; no native or host measurement",
+    "description": "Regional HTTP Ubuntu mirror repeatedly retried; the job ended at its 45-minute deadline before compilation. HTTPS archive mirror responded in the captured log.",
+    "native_build_started": false,
+    "host_started": false,
+    "pure_report_tests_passed": 7
+  },
+  "collection": {
+    "run_id": 45164257964,
+    "artifact_id": 14817150818,
+    "artifact_name": "m3-batch-cell-host-report-45164257964-1",
+    "server_digest": "sha256:6ea4b68326a316f6ff1ababbbcf9168117ec25d95b814f8ef1cb2b8901eb6ad9",
+    "archive_sha256": "6ea4b68326a316f6ff1ababbbcf9168117ec25d95b814f8ef1cb2b8901eb6ad9",
+    "bytes": 862,
+    "collected_at": "2026-11-23T12:06:20.938096+00:00",
+    "digest_verified": true,
+    "download_attempts": 1,
+    "successful_downloads": 1,
+    "audio_downloaded": false,
+    "bulk_downloaded": false,
+    "evidence": null,
+    "members": [
+      {
+        "path": "build/github-results/batch-cell-lab-host-45164257964/report/host-logs/apt-update.log",
+        "bytes": 1746,
+        "sha256": "b5bb26fc594b39a59a4626f0aaa9ec135d34912e5624298f12bd23370a7f6d09"
+      },
+      {
+        "path": "build/github-results/batch-cell-lab-host-45164257964/report/host-logs/source-sha.txt",
+        "bytes": 41,
+        "sha256": "07fbe5d41cd41d99e43c602bfe68ba8cc2f34da68734829985688ab3f50a2b62"
+      },
+      {
+        "path": "build/github-results/batch-cell-lab-host-45164257964/report/host-logs/report-tests.log",
+        "bytes": 105,
+        "sha256": "74c03fc16fde9a2dfeff03db0ec8f472a5a8dfed04e9e982a912b4b7f64faee3"
+      }
+    ],
+    "job_log": {
+      "capture": "build/github-results/batch-cell-lab-host-45164257964/job.log",
+      "returncode": 1,
+      "bytes": 0
+    }
+  },
+  "replacement_checkpoint": "docs/recovery/github-batch-cell-lab-host-apt-recovery-20261123.json"
 }
