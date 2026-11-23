@@ -1,12 +1,14 @@
-## Active M3 checkpoint — dedicated attack baseline prepared, 2026-11-23
+## Active M3 checkpoint — dedicated attack baseline rejected, 2026-11-23
 
-Read `docs/recovery/CODEX-M3-COMPLEX-ATTACK-PLAN-20261123.md` and
+Read `docs/recovery/CODEX-M3-COMPLEX-ATTACK-RESULT-20261123.md` and
 `docs/recovery/github-complex-attack-baseline-20261123.json` first.
-Codex owns a standalone aubio 0.4.9 complex-domain attack comparison on the six
-exact frozen WAVs from run 45155740922. One FFT2048/hop512 setting, 96 kHz;
-causal hop-end timestamps; no M3 replay, source policy or installed change.
-11 pure metadata contracts pass. Commit/push and one GitHub CPU dispatch next.
-No sweep or tuning. This does not overlap Claude's ordinary acoustic lane.
+Run **45176505260**, source **c42541b**, worker **d52d31d**, is final/success
+and collected once, digest verified. All 12 integrity checks and 11 contracts
+pass, but the fixed attack setting is **REJECTED: 0/6 fixtures**. It returns
+3/10 copy cues (0/6 first, 3/4 second), all three within the saved M3 deadlines.
+No tuning, rerun, policy trial or installed change. No local audio transfer.
+The standalone global cue does not resolve pitch-specific chord articulation.
+Next: distinct articulation design; Claude's ordinary acoustic lane is separate.
 The core/component/REAPER batch-cell comparisons below are complete.
 
 ## Active M3 checkpoint — production-shaped REAPER comparison PASSED, 2026-11-23
