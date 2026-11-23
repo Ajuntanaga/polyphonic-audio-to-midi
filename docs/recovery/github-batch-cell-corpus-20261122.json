@@ -4,13 +4,13 @@
   "repository": "Ajuntanaga/m3-offload",
   "workflow": "batch-cell-corpus.yml",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_sha": null,
-  "worker_sha": null,
+  "source_sha": "d9c217184bc26873e1deee931b6df10173de223c",
+  "worker_sha": "32ee2864a5b3b964e796f44b0fbb12db613ab8ad",
   "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
-  "state": "prepared",
+  "state": "in_progress",
   "final": false,
-  "dispatch_count": 0,
-  "dispatch_request_attempts": 0,
+  "dispatch_count": 1,
+  "dispatch_request_attempts": 1,
   "plan": "docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md",
   "reference": "docs/recovery/batch-cell-corpus-references-20261122.json",
   "preceding_screen": {
@@ -44,8 +44,34 @@
     "reference_contract": "passed",
     "native_execution": false
   },
-  "collection_state": "not dispatched",
+  "collection_state": "remote processing; no artifacts collected",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Commit scoped runner and workflow; dispatch one fixed full-corpus validation"
+  "next": "Follow only this run; collect small report once after completion; keep bulk remote",
+  "dispatch_attempt_at": "2026-11-23T04:27:57.546751+00:00",
+  "dispatch_output": "build/recovery/batch-cell-corpus-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/batch-cell-corpus-20261122/dispatch.stderr",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T04:28:04.191249+00:00",
+  "run_id": 45112016975,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45112016975",
+  "conclusion": "",
+  "run_attempt": 1,
+  "output_directory": "build/github-results/batch-cell-corpus-45112016975",
+  "report_artifact": "m3-batch-cell-corpus-report-45112016975-1",
+  "evidence_artifact": "m3-batch-cell-corpus-evidence-45112016975-1",
+  "last_observed_at": "2026-11-23T04:28:23.455593+00:00",
+  "last_observation": "build/github-results/batch-cell-corpus-45112016975/run.json",
+  "source_checks": [
+    {
+      "conclusion": "",
+      "databaseId": 45111962341,
+      "headSha": "d9c217184bc26873e1deee931b6df10173de223c",
+      "name": "Portable offline replay",
+      "status": "in_progress",
+      "updatedAt": "2026-11-23T04:27:36Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45111962341"
+    }
+  ],
+  "stage": "native build; corpus validation pending"
 }

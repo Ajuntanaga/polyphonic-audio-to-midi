@@ -1,14 +1,16 @@
-## Active M3 checkpoint — batched cell full-corpus validation prepared, 2026-11-23
+## Active M3 checkpoint — batched cell full-corpus validation running, 2026-11-23
 
 Read `docs/recovery/github-batch-cell-corpus-20261122.json` and
 `docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md` first.
-One fixed GitHub CPU validation: 14 datasets, three saved modes, blocks
-512/32/1024 (126 replays). Require all saved snapshots, 42 complete MIDI
-captures and 84 buffer checks to retain identity, plus all 42 uninstrumented
-allocation/deadline gates. No native changes, replay retries or policy tuning.
-All 28 mocked runner tests and worker shell/YAML checks pass locally. Record
-source/worker SHAs and the single dispatch here; collect small reports once,
-keep bulk remote. Installed output and acoustic re-pluck acceptance unchanged.
+One GitHub CPU run **45112016975**, source **d9c2171**, worker **32ee286**.
+Native implementation remains **5c2d999**. Fourteen datasets, three saved
+modes, blocks 512/32/1024 (126 replays). Require all saved snapshots, 42 full
+MIDI captures and 84 buffer identities, plus all 42 uninstrumented allocation
+and deadline gates. No native changes, replay retries or policy tuning.
+GitHub verified the input bundle and passed all 28 runner contracts; native
+build/tests and corpus validation follow. Collect the small report once under
+`build/github-results/batch-cell-corpus-45112016975`; leave bulk remote.
+Installed output and acoustic re-pluck acceptance remain unchanged.
 Claude explicitly stopped heavy work at its usage limit and scheduled its own
 resume at 21:32 PST; respect that stop and keep the peer lanes distinct.
 
