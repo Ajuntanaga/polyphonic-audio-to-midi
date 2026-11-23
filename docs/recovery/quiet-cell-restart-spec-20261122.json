@@ -1,0 +1,49 @@
+{
+  "schema": "m3_quiet_cell_restart_spec_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "producer_source_commit": "80d3767d9114f93155c7f348c60c55fac987d33a",
+  "policy_change": false,
+  "automatic_retry": false,
+  "bootstraps": 2000,
+  "seed": 20261122,
+  "artifact": {
+    "id": 14777294469,
+    "name": "m3-quiet-cell-reduction-tables-45083623255-1",
+    "bytes": 47502091,
+    "sha256": "f9ce49a12f0e66e02d2a790b7933c2e641b02af2161c041be2bd905ac6e86a35",
+    "run_id": 45083623255,
+    "worker_commit": "aea24a64713a2a3c1ba95079bff94973b25082e4"
+  },
+  "mask": {
+    "path": "docs/recovery/CODEX-M3-RAPID-MUTE-20261122.json",
+    "sha256": "c2008b8956223340d29aa0961f16cc0eba0e73dd648ac9c1894952a6f2c38369"
+  },
+  "census": {
+    "path": "docs/recovery/CLAUDE-M3-RESTART-EVIDENCE-CENSUS-20261122.json",
+    "sha256": "7f04df44c18a5549773c46dc26c7a08144a2297a8ddd581bf10c2ad450a75168"
+  },
+  "datasets": {
+    "ordinary": {
+      "rows": 246651,
+      "horizon": 10681922,
+      "original_spans": 245,
+      "status_counts": {"ok": 181406, "missing_anchor": 55835, "unavailable_current": 9410},
+      "member": {
+        "path": "ordinary-quiet-cell-intervals.tsv.gz",
+        "bytes": 46839854,
+        "sha256": "642cedf3a521d181f848447251f6f7d2730be4c3dacffecdc94cb7371523553b"
+      }
+    },
+    "extended-middle": {
+      "rows": 2572,
+      "horizon": 2233574,
+      "original_spans": 9,
+      "status_counts": {"ok": 2107, "missing_anchor": 96, "negative_power": 369},
+      "member": {
+        "path": "extended-middle-quiet-cell-intervals.tsv.gz",
+        "bytes": 661873,
+        "sha256": "ce3b28d9b96c859e28baa97190a61e1f021f18b3aadbd600569623938bff348c"
+      }
+    }
+  }
+}
