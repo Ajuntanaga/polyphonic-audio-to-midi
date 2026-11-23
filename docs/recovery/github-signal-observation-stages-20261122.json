@@ -1,0 +1,99 @@
+{
+  "schema": "m3_signal_observation_checkpoint_v1",
+  "created_at": "2026-11-23T03:32:42.550923+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "signal-observation-stages.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
+  "worker_sha": "818b51ef13623087034e87a719eec49e30ee7632",
+  "state": "in_progress",
+  "stage": "Build instrumented portable native tests and replay",
+  "final": false,
+  "dispatch_count": 1,
+  "dispatch_request_attempts": 1,
+  "plan": "docs/recovery/CODEX-M3-SIGNAL-OBSERVATION-PLAN-20261122.md",
+  "timing_reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "operation": "One compile-only signal-observation stage breakdown; three fixed block-32 replays and four fixed callbacks",
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "condition": "current-on",
+      "end_samples": [
+        1172736
+      ]
+    },
+    {
+      "dataset": "ordinary",
+      "condition": "completion-midi-retention-on",
+      "end_samples": [
+        7664256,
+        7671744
+      ]
+    },
+    {
+      "dataset": "physical-long",
+      "condition": "completion-midi-retention-on",
+      "end_samples": [
+        3512640
+      ]
+    }
+  ],
+  "local_tests": {
+    "mocked_runner_tests": 25,
+    "result": "passed",
+    "worker_yaml": "parsed",
+    "worker_shell_sections_parsed": 6,
+    "scoped_diff_check": "passed",
+    "native_execution": false
+  },
+  "required": {
+    "reference_snapshots": "bit-identical",
+    "processing_allocations": 0,
+    "processing_frees": 0,
+    "stage_schema": "13 complete stages",
+    "fixed_controls": 4
+  },
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "native_gate_pass": false,
+  "interpretation": "Instrumented cost attribution only; clock overhead and code layout prevent speedup or deadline acceptance claims.",
+  "collection_state": "pending; collect small report once, keep snapshots remote",
+  "peer_lane": "Claude active on independent saved stable-note analysis",
+  "next": "Read this existing job; no duplicate dispatch or broader replay.",
+  "dispatch_attempt_at": "2026-11-23T03:32:42.550950+00:00",
+  "dispatch_output": "build/recovery/signal-observation-stages-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/signal-observation-stages-20261122/dispatch.stderr",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T03:32:52.925253+00:00",
+  "run_id": 45106622018,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45106622018",
+  "run_attempt": 1,
+  "output_directory": "build/github-results/signal-observation-stages-45106622018",
+  "report_artifact": "m3-signal-observation-report-45106622018-1",
+  "evidence_artifact": "m3-signal-observation-evidence-45106622018-1",
+  "conclusion": "",
+  "last_observed_at": "2026-11-23T03:33:47.127487+00:00",
+  "last_observation": "build/github-results/signal-observation-stages-45106622018/run.json",
+  "source_checks": [
+    {
+      "conclusion": "",
+      "databaseId": 45106553048,
+      "headSha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
+      "name": "Portable offline replay",
+      "status": "in_progress",
+      "updatedAt": "2026-11-23T03:32:14Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45106553048"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 45106553050,
+      "headSha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
+      "name": "CI",
+      "status": "in_progress",
+      "updatedAt": "2026-11-23T03:32:14Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45106553050"
+    }
+  ],
+  "artifacts_available": 0
+}
