@@ -1,0 +1,59 @@
+{
+  "schema": "m3_ordinary_attack_envelope_spec_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "sample_rate": 96000,
+  "samples": 10689600,
+  "channels": 1,
+  "input_gain": 1.0,
+  "corpus": {
+    "release": "corpus-20261108",
+    "asset": "recovery-inputs.tar.gz",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "wave_member": "corpus/ordinary.wav",
+    "wave_sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+    "labels_member": "corpus/ordinary.tsv",
+    "labels_sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f",
+    "label_triples_sha256": "56e4b326bd62110578ab3084029e0787f2039ad32557db9a5eda270a26248773",
+    "label_triples_encoding": "JSON array of [start_sample,end_sample,midi_note], original order, separators comma and colon, no whitespace or newline"
+  },
+  "ledger": {
+    "run_id": 44079653692,
+    "artifact_id": 14326876824,
+    "artifact_name": "m3-evidence-44079653692-1",
+    "sha256": "04970b0b0dd87d24328e769a269423895ddd2b2156ca27bb903d6f537e9b5663",
+    "events_member": "tagged-on/midi-event.tsv.gz",
+    "events_sha256": "bc326a64e081259bfd845758a9294c2be43eb75f89b7ac5e241d67a8e0bb5b4c",
+    "callbacks_member": "stable_note-callbacks.tsv.gz",
+    "callbacks_sha256": "650446adbc06505afbb48c5242967bbb0e4b84583dbbf2415c1ab1bece8dcc15"
+  },
+  "expected": {
+    "source_events": 11851,
+    "callbacks": 8623,
+    "suppressed_pairs": 1614,
+    "labels": 499,
+    "attack_events": 320,
+    "suppressed_attack_events": 58,
+    "retained_attack_events": 262,
+    "labels_with_attack_events": 169,
+    "labels_with_suppressed_attack_events": 33
+  },
+  "method": {
+    "attack_zone_pre_ms": 25,
+    "attack_zone_post_ms": 100,
+    "excerpt_pre_ms": 2000,
+    "excerpt_post_ms": 1000,
+    "band_low_ratio": 0.96,
+    "band_high_ratio": 1.04,
+    "butterworth_order": 4,
+    "envelope_smoothing_ms": 5,
+    "rise_ms": 20,
+    "rise_grid_ms": 5,
+    "rise_edge_margin_ms": 10,
+    "local_rise_start_radius_ms": 40,
+    "ratio_denominator_floor": 1e-12,
+    "annotation_overlap_harmonics": [1, 2, 3, 4, 5, 6],
+    "a4": 440
+  },
+  "decision": "descriptive observation only; no automatic acoustic-repluck acceptance",
+  "acoustic_repluck_preservation": "not measured"
+}
