@@ -3063,11 +3063,12 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_contradicted_retention,
                          bool diagnostic_common_assignment_confidence,
                          bool diagnostic_upper_fretted_relief,
-                         JointReleaseSupport* diagnostic_joint_release_support) {
+                         JointReleaseSupport* diagnostic_joint_release_support,
+                         bool diagnostic_exact_cell_sharing) {
   output = {};
   error = ReplayError::invalid_config;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_joint_release_support != nullptr || diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
+  if (diagnostic_exact_cell_sharing || diagnostic_joint_release_support != nullptr || diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
       diagnostic_forced_pending_string_reservation || diagnostic_pending_midi_retention ||
@@ -3379,6 +3380,14 @@ bool run_detector_replay(const WaveData& wave,
     return false;
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  detector.set_exact_cell_sharing_for_diagnostics(diagnostic_exact_cell_sharing);
+  if (diagnostic_thread_cpu || diagnostic_exact_cell_sharing) {
+    std::fprintf(stderr,
+        "m3_replay: exact_cell_sharing enabled=%u unique=%u duplicates=%u\n",
+        diagnostic_exact_cell_sharing ? 1U : 0U,
+        static_cast<unsigned>(detector.exact_cell_unique_count()),
+        static_cast<unsigned>(detector.exact_cell_duplicate_count()));
+  }
   detector.set_hann_beat_shadow_buffer(hann_shadow_storage.get());
   if (frequency_shadow_storage != nullptr) {
     detector.set_frequency_refinement_observer(

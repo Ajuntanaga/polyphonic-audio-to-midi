@@ -790,6 +790,15 @@ class PolyphonicPitchDetector final {
     diagnostic_supported_sustain_renewal_ = enabled;
     unsupported_sustain_ticks_ = {};
   }
+  void set_exact_cell_sharing_for_diagnostics(bool enabled) noexcept {
+    diagnostic_exact_cell_sharing_ = enabled;
+  }
+  [[nodiscard]] std::uint16_t exact_cell_unique_count() const noexcept {
+    return diagnostic_unique_cell_count_;
+  }
+  [[nodiscard]] std::uint16_t exact_cell_duplicate_count() const noexcept {
+    return diagnostic_duplicate_cell_count_;
+  }
   struct JointRapidReleaseStats final {
     std::uint64_t eligible{}, warmup{}, model_veto{}, released{}, refused{}, reactivated{};
   };
@@ -1759,6 +1768,16 @@ class PolyphonicPitchDetector final {
   std::array<Cell, kCellCount> cells_{};
   std::array<std::uint16_t, kCellCount> enabled_cell_indices_{};
   std::uint16_t enabled_cell_count_{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  struct ExactCellDuplicate final {
+    std::uint16_t destination{}, source{};
+  };
+  std::array<std::uint16_t, kCellCount> diagnostic_unique_cell_indices_{};
+  std::array<ExactCellDuplicate, kCellCount> diagnostic_duplicate_cells_{};
+  std::uint16_t diagnostic_unique_cell_count_{};
+  std::uint16_t diagnostic_duplicate_cell_count_{};
+  bool diagnostic_exact_cell_sharing_{};
+#endif
   // Boundary-only analysis cells make the configured lowest/highest notes
   // tunable without adding selectable candidates to the pitch set.
   std::array<Cell, kHarmonicCount> lower_cents_guard_cells_{};

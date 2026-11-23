@@ -19,6 +19,84 @@ namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void exact_cell_sharing_matches_scalar_loop(
+      PolyphonicPitchDetector& detector) noexcept {
+    auto expected = detector.cells_;
+    M3_EXPECT_EQ(static_cast<std::size_t>(detector.exact_cell_unique_count()) +
+                     detector.exact_cell_duplicate_count(),
+                 static_cast<std::size_t>(detector.enabled_cell_count_));
+    const auto equal_bits = [](double actual, double reference) noexcept {
+      M3_EXPECT_EQ(std::memcmp(&actual, &reference, sizeof(double)), 0);
+    };
+    constexpr std::array<double, 8U> input{
+        0.25, -0.5, 0.125, 0.0, -0.0625, 0.375, 0.0, 0.03125};
+    const auto allocations = m3::test::allocation_count();
+    for (std::size_t sample = 0U; sample < 512U; ++sample) {
+      // Toggle during an existing state history, not only at reset.
+      detector.set_exact_cell_sharing_for_diagnostics((sample / 128U) % 2U != 0U);
+      const double value = input[sample % input.size()];
+      const double mixed_sample = (1.0 - detector.correlation_decay) * value;
+      const double selection_mixed =
+          (1.0 - detector.diagnostic_selection_decay_) * value;
+      for (auto& cell : expected) {
+        if (!cell.enabled) continue;
+        const double next_cosine =
+            cell.cosine * cell.cosine_step - cell.sine * cell.sine_step;
+        const double next_sine =
+            cell.sine * cell.cosine_step + cell.cosine * cell.sine_step;
+        cell.cosine = next_cosine;
+        cell.sine = next_sine;
+        cell.fast_real = detector.correlation_decay * cell.fast_real +
+                         mixed_sample * next_cosine;
+        cell.fast_imaginary = detector.correlation_decay * cell.fast_imaginary -
+                              mixed_sample * next_sine;
+        if (detector.diagnostic_selection_window_only_) {
+          cell.diagnostic_selection_real = detector.diagnostic_selection_decay_ *
+              cell.diagnostic_selection_real + selection_mixed * next_cosine;
+          cell.diagnostic_selection_imaginary = detector.diagnostic_selection_decay_ *
+              cell.diagnostic_selection_imaginary - selection_mixed * next_sine;
+        }
+      }
+      detector.update_cells(value);
+      for (std::size_t index = 0U; index < expected.size(); ++index) {
+        const auto& actual = detector.cells_[index];
+        const auto& reference = expected[index];
+        equal_bits(actual.cosine, reference.cosine);
+        equal_bits(actual.sine, reference.sine);
+        equal_bits(actual.fast_real, reference.fast_real);
+        equal_bits(actual.fast_imaginary, reference.fast_imaginary);
+        equal_bits(actual.diagnostic_selection_real, reference.diagnostic_selection_real);
+        equal_bits(actual.diagnostic_selection_imaginary,
+                   reference.diagnostic_selection_imaginary);
+      }
+    }
+    M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+  }
+
+  static void exact_cell_sharing_reset_probe() {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    constexpr std::array<double, 5U> rates{44100.0, 48000.0, 96000.0, 4000.0, 100.0};
+    for (const auto rate : rates) {
+      for (const bool narrow : {false, true}) {
+        config.lowest_note = narrow ? 76U : 32U;
+        config.highest_note = 84U;
+        M3_EXPECT_TRUE(detector.configure(rate, config));
+        M3_EXPECT_FALSE(detector.diagnostic_exact_cell_sharing_);
+        if (!narrow && rate >= 44100.0)
+          M3_EXPECT_TRUE(detector.exact_cell_duplicate_count() > 0U);
+        exact_cell_sharing_matches_scalar_loop(detector);
+        const auto duplicates = detector.exact_cell_duplicate_count();
+        detector.reset();
+        M3_EXPECT_TRUE(detector.diagnostic_exact_cell_sharing_);
+        M3_EXPECT_EQ(detector.exact_cell_duplicate_count(), duplicates);
+        M3_EXPECT_TRUE(detector.set_correlation_window_for_diagnostics(0.08, true, false));
+        exact_cell_sharing_matches_scalar_loop(detector);
+      }
+    }
+  }
+
   static void joint_rapid_release_probe() {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
@@ -6948,6 +7026,10 @@ M3_TEST(native_detector_guard_updates_survive_reset_and_reconfiguration) {
 
 M3_TEST(native_joint_rapid_release_is_guarded_and_transactional) {
   m3::PolyphonicPitchDetectorTestAccess::joint_rapid_release_probe();
+}
+
+M3_TEST(native_exact_cell_sharing_preserves_every_sample_bitwise) {
+  m3::PolyphonicPitchDetectorTestAccess::exact_cell_sharing_reset_probe();
 }
 
 M3_TEST(native_detector_quiet_diagnostics_identify_the_first_causal_gate) {

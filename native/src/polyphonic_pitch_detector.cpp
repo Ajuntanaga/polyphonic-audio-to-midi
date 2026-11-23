@@ -3,6 +3,7 @@
 #include <algorithm>
 #include <cmath>
 #include <complex>
+#include <cstring>
 #include <limits>
 
 #include "m3/factory_calibration.hpp"
@@ -1486,6 +1487,13 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   cells_ = {};
   enabled_cell_indices_ = {};
   enabled_cell_count_ = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_unique_cell_indices_ = {};
+  diagnostic_duplicate_cells_ = {};
+  diagnostic_unique_cell_count_ = 0U;
+  diagnostic_duplicate_cell_count_ = 0U;
+  diagnostic_exact_cell_sharing_ = false;
+#endif
   lower_cents_guard_cells_ = {};
   upper_cents_guard_cells_ = {};
   lower_cents_guard_indices_ = {};
@@ -1578,6 +1586,29 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
       }
     }
   }
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  // Equal step bits and identical initial states imply identical recurrence.
+  // Group only the actual configured values, never approximate frequencies.
+  for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
+    const auto destination = enabled_cell_indices_[index];
+    const Cell& cell = cells_[destination];
+    bool duplicate = false;
+    for (std::size_t unique = 0U; unique < diagnostic_unique_cell_count_; ++unique) {
+      const auto source = diagnostic_unique_cell_indices_[unique];
+      const Cell& reference = cells_[source];
+      if (std::memcmp(&cell.cosine_step, &reference.cosine_step, sizeof(double)) == 0 &&
+          std::memcmp(&cell.sine_step, &reference.sine_step, sizeof(double)) == 0) {
+        diagnostic_duplicate_cells_[diagnostic_duplicate_cell_count_++] =
+            {destination, source};
+        duplicate = true;
+        break;
+      }
+    }
+    if (!duplicate) {
+      diagnostic_unique_cell_indices_[diagnostic_unique_cell_count_++] = destination;
+    }
+  }
+#endif
   const auto configure_guard = [this, &config](
                                    std::array<Cell, kHarmonicCount>& cells,
                                    std::array<std::uint8_t, kHarmonicCount>& indices,
@@ -3130,8 +3161,31 @@ void PolyphonicPitchDetector::update_cells(double sample) noexcept {
     }
 #endif
   };
-  for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
-    update(cells_[enabled_cell_indices_[index]]);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_exact_cell_sharing_) {
+    for (std::size_t index = 0U; index < diagnostic_unique_cell_count_; ++index) {
+      update(cells_[diagnostic_unique_cell_indices_[index]]);
+    }
+    // Preserve original slots for all readers, including per-sample readers.
+    for (std::size_t index = 0U; index < diagnostic_duplicate_cell_count_; ++index) {
+      const auto pair = diagnostic_duplicate_cells_[index];
+      Cell& destination = cells_[pair.destination];
+      const Cell& source = cells_[pair.source];
+      destination.cosine = source.cosine;
+      destination.sine = source.sine;
+      destination.fast_real = source.fast_real;
+      destination.fast_imaginary = source.fast_imaginary;
+      if (selection_enabled) {
+        destination.diagnostic_selection_real = source.diagnostic_selection_real;
+        destination.diagnostic_selection_imaginary = source.diagnostic_selection_imaginary;
+      }
+    }
+  } else
+#endif
+  {
+    for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
+      update(cells_[enabled_cell_indices_[index]]);
+    }
   }
   for (std::size_t index = 0U; index < lower_cents_guard_count_; ++index) {
     update(lower_cents_guard_cells_[lower_cents_guard_indices_[index]]);

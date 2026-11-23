@@ -223,6 +223,7 @@ void usage(const char* program) {
       "[--diagnostic-native-partial-cues] "
       "[--diagnostic-core-timing FILE] "
       "[--diagnostic-thread-cpu] "
+      "[--diagnostic-exact-cell-sharing] "
       "[--diagnostic-stage-end-sample N (repeat up to 16, ascending block ends)] "
       "[--diagnostic-skip-empty-fine-reset] "
       "[--diagnostic-provisional-open-retention-guard] "
@@ -334,6 +335,7 @@ int main(int argc, char** argv) {
   bool diagnostic_native_partial_cues = false;
   const char* diagnostic_core_timing_path = nullptr;
   bool diagnostic_thread_cpu = false;
+  bool diagnostic_exact_cell_sharing = false;
   std::vector<std::uint64_t> diagnostic_stage_end_samples;
   bool diagnostic_skip_empty_fine_reset = false;
   bool diagnostic_provisional_open_retention_guard = false;
@@ -702,6 +704,8 @@ int main(int argc, char** argv) {
       diagnostic_native_partial_cues = true;
     } else if (std::strcmp(argv[index], "--diagnostic-core-timing") == 0 && has_value) {
       diagnostic_core_timing_path = argv[++index];
+    } else if (std::strcmp(argv[index], "--diagnostic-exact-cell-sharing") == 0) {
+      diagnostic_exact_cell_sharing = true;
     } else if (std::strcmp(argv[index], "--diagnostic-thread-cpu") == 0) {
       diagnostic_thread_cpu = true;
     } else if (std::strcmp(argv[index], "--diagnostic-stage-end-sample") == 0 && has_value) {
@@ -1389,7 +1393,8 @@ int main(int argc, char** argv) {
           diagnostic_contradicted_retention,
           diagnostic_common_assignment_confidence,
           diagnostic_upper_fretted_relief,
-          diagnostic_joint_release_path != nullptr ? &diagnostic_joint_release_support : nullptr)) {
+          diagnostic_joint_release_path != nullptr ? &diagnostic_joint_release_support : nullptr,
+          diagnostic_exact_cell_sharing)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
