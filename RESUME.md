@@ -1,3 +1,16 @@
+## Active M3 checkpoint — spectral-sparsity attack test dispatched, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-SPECTRAL-SPARSITY-PLAN-20261123.md` and
+`docs/recovery/github-spectral-sparsity-attack-20261123.json` first.
+One CPU worker run **45184195705**, source **abd2060**, worker
+**0a2a097**: calibration on note56, fixed transfer to note60.
+Existing six copied-note fixtures; one fitted threshold, all other parameters
+frozen. No calibration operating point means stop before transfer audio.
+29 pure contracts passed locally; waveform processing only on GHA.
+Collect the small report once; feature tables stay remote. No retuning,
+second dispatch, native/plugin execution, installation or score change.
+Claude's ordinary acoustic lane remains separate and independently authorized.
+
 ## Active M3 checkpoint — adjacent-onset guard rejected, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-STABLE-ONSET-FRESHNESS-RESULT-20261123.md` and
