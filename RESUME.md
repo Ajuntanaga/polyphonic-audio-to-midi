@@ -1,3 +1,18 @@
+## Active M3 checkpoint — fixed positive-spectral attack baseline rejected, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-POSITIVE-SPECTRAL-RESULT-20261123.md` and
+`docs/recovery/github-positive-spectral-attack-20261123.json` first.
+Run **45186281719**, source **eda9d93**, worker **240fd0b**, is final/success,
+collected once with digest verified. Scientific result **REJECTED: 0/6**.
+All 10 copied attacks get timely first cues, but 20 total cues include 10 extras.
+All 28 integrity checks and 22 contracts pass. The fixed setting is closed:
+no tuning, rerun, expansion or integration. Late cues are extra relative to
+fixture markers; acoustic cause is unmeasured in these physical-unison excerpts.
+Resolve that single-attack assumption before another acoustic interpretation.
+Features remain remote; no local audio, installed/default or scoreboard change.
+Claude's ordinary58 acoustic lane remains independent. Earlier batch-cell
+core/component/REAPER performance and identity passes remain separate.
+
 ## Active M3 checkpoint — spectral-sparsity attack transfer rejected, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-SPECTRAL-SPARSITY-RESULT-20261123.md` and
