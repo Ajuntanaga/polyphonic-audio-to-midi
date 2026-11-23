@@ -1,14 +1,14 @@
 {
   "schema": "m3_batch_cell_lab_host_checkpoint_v1",
-  "state": "prepared",
+  "state": "in_progress",
   "final": false,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_branch": "work/tuner-stability-20261027",
   "workflow": "batch-cell-lab-host.yml",
-  "source_commit": null,
-  "worker_commit": null,
-  "run_id": null,
+  "source_commit": "8631bacf2ca9c8ef1fc6d11d1f93634d9bcccd86",
+  "worker_commit": "e12c1718a9b3d3570f0abf477f510bfdf3993223",
+  "run_id": 45164257964,
   "specification": "docs/recovery/batch-cell-lab-host-20261123.json",
   "specification_sha256": "acbfbad179bfe602070da94b5112315a2cd27e07ec7ddfacb32c657c378bd823",
   "plan": "docs/recovery/CODEX-M3-BATCH-CELL-LAB-PLAN-20261123.md",
@@ -22,8 +22,17 @@
     "native_audio_executed_locally": false,
     "static_native_review": "One independent pass; no blocking defect. Native compilation, package validation and host playback remain GitHub checks."
   },
-  "next": "Commit scoped source and worker, then one dispatch. No retry or duplicate job.",
+  "next": "Observe this existing run only, collect its small report once on completion; no retry or installed change.",
   "installed_output_changed": false,
   "scoreboard_changed": false,
-  "prepared_at": "2026-11-23T11:17:24.353253+00:00"
+  "prepared_at": "2026-11-23T11:17:24.353253+00:00",
+  "published_at": "2026-11-23T11:19:55.784634+00:00",
+  "launch_receipts": "build/recovery/batch-cell-lab-host-launch-20261123",
+  "dispatch_started_at": "2026-11-23T11:20:04.462807+00:00",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45164257964",
+  "run_attempt": 1,
+  "observed_at": "2026-11-23T11:20:16.150405+00:00",
+  "output_directory": "build/github-results/batch-cell-lab-host-45164257964",
+  "report_artifact": "m3-batch-cell-host-report-45164257964-1",
+  "evidence_artifact": "m3-batch-cell-host-evidence-45164257964-1"
 }

@@ -1,13 +1,13 @@
-## Active M3 checkpoint — separate batch-cell lab host check prepared, 2026-11-23
+## Active M3 checkpoint — separate batch-cell lab host check running, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-BATCH-CELL-LAB-PLAN-20261123.md` and
 `docs/recovery/github-batch-cell-lab-host-20261123.json` first.
-Core/component identity and deadline gates below passed. Codex is packaging a
-separate uninstalled production-shaped batch-cell VST3 and one paired scalar
-versus batch REAPER host job. Native/allocation tests and SDK validators precede
-recorded playback on GitHub. No local audio/build or installed change. Claude's
-acoustic/articulation lane remains independent. Check the recorded run before
-any dispatch; do not duplicate the job or retry a failed observation automatically.
+One run **45164257964** is dispatched and running at source **8631bac**,
+worker **e12c171**. The separate uninstalled production-shaped batch-cell VST3
+is paired with scalar production in real REAPER. Native/allocation tests and
+SDK validators precede recorded playback on GitHub. No local audio/build or
+installed change. Claude's acoustic/articulation lane remains independent.
+Collect the small report once on completion. Do not duplicate or retry the job.
 
 ## Active M3 checkpoint — onset observation complete; no safe memory rule established, 2026-11-23
 
