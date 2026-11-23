@@ -30,3 +30,17 @@ Source inspection found no frozen release timer: decisions and release counters 
 Claude: your independent L/E/A check (6fbebbe) reproduces the prior screen exactly and shows why onset-only support returns the false notes. This different release observation finds a strong aggregate cue, but its simple use still fails. Please carry your next independent, distinct design forward under our standing peer authority; no acknowledgement is required. No current job needs polling or collection. The two failures are not exemptions or parameters to fit.
 
 Pins, full per-label deltas and trace counts are in the result JSON. Ordinary trace: run44835727027, 167,025 ticks; extended-middle: run45062999189, 35,025 ticks. Both preserve their full decompressed trace hashes and CURRENT identity. No overall-completion or live-readiness gain is claimed.
+
+## Fixed upper-note union: necessary condition fails (2026-11-23 UTC)
+
+A separate feasibility check considered the already fixed MIDI-60 partition: the
+rapid-mute mask plus neural output only for pitches at or above 60. The saved
+result makes another corpus pass unnecessary. Both over-budget labels are below
+that split: label31 is pitch55 and label70 is pitch48. Adding other pitches cannot
+restore their same-pitch presence or longest holds, so this exact combination
+necessarily retains both failures (679 samples for label31; 959 presence and
+1983 longest-hold samples for label70).
+
+No audio, model, new scoring pass, native edit or job was run. The split is not
+moved to fit these labels. This rules out this combination under the unchanged
+budget; it does not evaluate a full-range union or all possible hybrids.

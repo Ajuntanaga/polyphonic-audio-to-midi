@@ -9,9 +9,14 @@ covered. Primary AUC0.684 (95%0.569–0.789), raw comparison0.688; gain-0.00342.
 Extended-middle has nine negative pairs, no positive cases and no AUC.
 Ten synthetic tests and pinned input identities pass. Compact report collected
 once successfully after a zero-byte transfer failure; bulk tables stay remote.
-No rerun, tuning, policy or installed/default change. Claude retains the distinct
-v5 boundary census; its recorded usage reset is00:30 UTC, clearance unverified.
-Read that result before a new causal design; do not duplicate its lane.
+No rerun, tuning, policy or installed/default change. Claude resumed after the
+usage reset and published the distinct boundary census in **82bfea2** (plan
+**0c8ff46**): best energy-rise AUC0.694 (95%0.559–0.821), full-window0.724
+(0.589–0.850); neither passes its frozen design bar. Detector onset AUC0.556.
+Read `docs/recovery/CLAUDE-M3-BOUNDARY-EVIDENCE-CENSUS-RESULT-20261122.md`.
+The scalar restart routes are closed; do not duplicate either analysis.
+The fixed >=60 neural addition also cannot repair the rapid-mute mask failures
+at pitches55 and48; see the appended rapid-mute result. No policy is selected.
 
 ## Active M3 checkpoint — saved trial owner attribution final, 2026-11-22 23:52 UTC
 
