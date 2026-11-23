@@ -21,5 +21,11 @@ Timing, paired MIDI, allocation and usefulness checks stay unchanged.
 
 Validation: all 16 focused mocked runner tests pass. The worker YAML and its
 6 shell sections parse, and the scoped diff check passes. No native replay,
-audio, model or corpus execution ran locally. The repair is being published without a dispatch. The old run is not rerun or rejudged;
+audio, model or corpus execution ran locally. Published source `f9e9063385561e1b0b4b4a161aa13ba790e17c6b` and worker
+`db8b34cbd1213735d00710345d5e682e57d7c32b`; no workflow was dispatched. The old run is not rerun or rejudged;
 its missing paired-MIDI result remains unmeasured.
+
+Routine portable source check `45096861342` was in progress at the first read.
+Its completion does not reopen the rejected CPU screen. Publication and exact
+source-run observations are recorded under
+`build/recovery/exact-cell-reference-fix-20261122/`.

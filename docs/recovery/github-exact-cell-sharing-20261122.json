@@ -299,5 +299,39 @@
     "digest": "sha256:f4ea170cbf0553220ccd051c143bdc39331898a73acd7ff068e6a3ccbc9576e1",
     "expires_at": "2026-11-30T01:31:18Z",
     "collected": false
+  },
+  "harness_repair": {
+    "state": "published",
+    "published_at": "2026-11-23T01:51:45.126619+00:00",
+    "source_commit": "f9e9063385561e1b0b4b4a161aa13ba790e17c6b",
+    "source_pushed": true,
+    "worker_commit": "db8b34cbd1213735d00710345d5e682e57d7c32b",
+    "worker_pushed": true,
+    "tests": {
+      "focused_mock_tests": 16,
+      "result": "passed",
+      "worker_yaml": "parsed",
+      "worker_shell_sections_parsed": 6,
+      "scoped_diff_check": "passed"
+    },
+    "reference_manifest": "docs/recovery/exact-cell-sharing-companion-references-20261122.json",
+    "note": "docs/recovery/CODEX-M3-EXACT-CELL-REFERENCE-FIX-20261122.md",
+    "dispatch_count": 0,
+    "old_scientific_verdict": "REJECTED",
+    "paired_raw_midi": "still unmeasured",
+    "source_runs": [
+      {
+        "conclusion": "",
+        "createdAt": "2026-11-23T01:50:58Z",
+        "databaseId": 45096861342,
+        "headSha": "f9e9063385561e1b0b4b4a161aa13ba790e17c6b",
+        "name": "Portable offline replay",
+        "status": "in_progress",
+        "updatedAt": "2026-11-23T01:51:02Z",
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45096861342"
+      }
+    ],
+    "source_runs_observed_at": "2026-11-23T01:51:45.126619+00:00",
+    "source_runs_returncode": 0
   }
 }
