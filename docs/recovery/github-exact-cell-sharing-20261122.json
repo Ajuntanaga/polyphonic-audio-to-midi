@@ -1,0 +1,303 @@
+{
+  "schema": "m3_exact_cell_sharing_checkpoint_v1",
+  "created_at": "2026-11-23T01:22:54.066193+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "exact-cell-sharing.yml",
+  "source_sha": "a7a153914b2a085e896afc5c4080e60f9cb7c055",
+  "worker_sha": "93bedd25f276b6e1b03ac0c495a7d6edca88d12f",
+  "state": "completed",
+  "final": true,
+  "dispatch_count": 1,
+  "plan": "docs/recovery/CODEX-M3-EXACT-CELL-SHARING-PLAN-20261122.md",
+  "reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "operation": "One default-off diagnostic exact resonator sharing CPU screen; six timed 32-sample replays followed by six untimed 512-sample raw-MIDI companions",
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "condition": "current-on"
+    },
+    {
+      "dataset": "ordinary",
+      "condition": "completion-midi-retention-on"
+    },
+    {
+      "dataset": "physical-long",
+      "condition": "completion-midi-retention-on"
+    }
+  ],
+  "local_tests": "14 mocked portable runner tests passed; independent static native review found no material issue; no local native execution",
+  "required": {
+    "cpu_total_reduction_percent_each_pair": 2,
+    "cpu_p99_growth_ns": 0,
+    "processing_allocations": 0,
+    "reference_snapshots": "bit-identical",
+    "paired_raw_midi": "bit-identical"
+  },
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "collection_state": "small report collected once; digest verified; bulk remote",
+  "peer_lane": "Claude owns separate callback/restart analysis",
+  "next": "Close this frozen CPU screen. No repeat, promotion or bulk collection. Paired MIDI remains unmeasured. Next development needs a distinct supported mechanism; Claude retains the separate callback/restart analysis.",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T01:22:56.770432+00:00",
+  "dispatch_output": "build/recovery/exact-cell-sharing-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/exact-cell-sharing-20261122/dispatch.stderr",
+  "run_id": 45094249566,
+  "run_attempt": 1,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45094249566",
+  "last_observed_at": "2026-11-23T01:37:44.293318+00:00",
+  "conclusion": "failure",
+  "stage": "CPU usefulness rejected; first untimed companion stopped on block-specific reference bug",
+  "output_directory": "build/github-results/exact-cell-sharing-45094249566",
+  "report_artifact": "m3-exact-cell-sharing-report-45094249566-1",
+  "evidence_artifact": "m3-exact-cell-sharing-evidence-45094249566-1",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "databaseId": 45094191176,
+      "headSha": "a7a153914b2a085e896afc5c4080e60f9cb7c055",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-23T01:23:34Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45094191176"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 45094191294,
+      "headSha": "a7a153914b2a085e896afc5c4080e60f9cb7c055",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-11-23T01:26:04Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45094191294"
+    }
+  ],
+  "worker_stage": [
+    {
+      "name": "screen",
+      "status": "completed",
+      "conclusion": "failure",
+      "failed_steps": [
+        "Run the fixed three-pair CPU and MIDI screen"
+      ]
+    }
+  ],
+  "last_observation": "build/github-results/exact-cell-sharing-45094249566/run.json",
+  "completed_at": "2026-11-23T01:31:22Z",
+  "result_note": "docs/recovery/CODEX-M3-EXACT-CELL-SHARING-RESULT-20261122.md",
+  "report_path": "build/github-results/exact-cell-sharing-45094249566/report/exact-cell-sharing/report/report.json",
+  "report_sha256": "b44184411d3c8c0b61e3613804e62ec32ab9be291fd9726efdae82515dc15644",
+  "collection_receipt": "build/github-results/exact-cell-sharing-45094249566/collection.json",
+  "report_artifact_id": 14782863374,
+  "report_archive_sha256": "a47a4deff164ad270917b013a6ec8f280d1229b10af0fa6ff78512a286d3ef28",
+  "collected_at": "2026-11-23T01:33:07.071439+00:00",
+  "usefulness_verdict": "REJECTED",
+  "useful_pairs": 2,
+  "declared_pairs": 3,
+  "results": [
+    {
+      "dataset": "ordinary",
+      "mode": "current-on",
+      "cpu_total_reduction_percent": 4.016903987569357,
+      "cpu_p99_delta_ns": -1263,
+      "cpu_useful": true,
+      "off": {
+        "cpu": {
+          "total_ns": 11427384409,
+          "p99_ns": 79839,
+          "maximum_ns": 240742,
+          "deadline_overruns": 0
+        },
+        "wall": {
+          "total_ns": 11342757812,
+          "p99_ns": 79562,
+          "maximum_ns": 253855,
+          "deadline_overruns": 0
+        },
+        "allocations": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "snapshot_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "reference_bit_identical": true,
+        "cell_counts": {
+          "unique": 154,
+          "duplicates": 91
+        }
+      },
+      "on": {
+        "cpu": {
+          "total_ns": 10968357349,
+          "p99_ns": 78576,
+          "maximum_ns": 195863,
+          "deadline_overruns": 0
+        },
+        "wall": {
+          "total_ns": 10881816196,
+          "p99_ns": 78310,
+          "maximum_ns": 204350,
+          "deadline_overruns": 0
+        },
+        "allocations": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "snapshot_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "reference_bit_identical": true,
+        "cell_counts": {
+          "unique": 154,
+          "duplicates": 91
+        }
+      }
+    },
+    {
+      "dataset": "ordinary",
+      "mode": "completion-midi-retention-on",
+      "cpu_total_reduction_percent": 4.3061183711181625,
+      "cpu_p99_delta_ns": -605,
+      "cpu_useful": true,
+      "off": {
+        "cpu": {
+          "total_ns": 11458381969,
+          "p99_ns": 79464,
+          "maximum_ns": 809466,
+          "deadline_overruns": 1
+        },
+        "wall": {
+          "total_ns": 11373792788,
+          "p99_ns": 79203,
+          "maximum_ns": 808929,
+          "deadline_overruns": 1
+        },
+        "allocations": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "snapshot_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "reference_bit_identical": true,
+        "cell_counts": {
+          "unique": 154,
+          "duplicates": 91
+        }
+      },
+      "on": {
+        "cpu": {
+          "total_ns": 10964970478,
+          "p99_ns": 78859,
+          "maximum_ns": 171221,
+          "deadline_overruns": 0
+        },
+        "wall": {
+          "total_ns": 10880044360,
+          "p99_ns": 78589,
+          "maximum_ns": 170398,
+          "deadline_overruns": 0
+        },
+        "allocations": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "snapshot_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "reference_bit_identical": true,
+        "cell_counts": {
+          "unique": 154,
+          "duplicates": 91
+        }
+      }
+    },
+    {
+      "dataset": "physical-long",
+      "mode": "completion-midi-retention-on",
+      "cpu_total_reduction_percent": -5.45577900423322,
+      "cpu_p99_delta_ns": -7344,
+      "cpu_useful": false,
+      "off": {
+        "cpu": {
+          "total_ns": 5612896944,
+          "p99_ns": 88453,
+          "maximum_ns": 164507,
+          "deadline_overruns": 0
+        },
+        "wall": {
+          "total_ns": 5568376850,
+          "p99_ns": 88149,
+          "maximum_ns": 168422,
+          "deadline_overruns": 0
+        },
+        "allocations": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "snapshot_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+        "reference_bit_identical": true,
+        "cell_counts": {
+          "unique": 154,
+          "duplicates": 91
+        }
+      },
+      "on": {
+        "cpu": {
+          "total_ns": 5919124197,
+          "p99_ns": 81109,
+          "maximum_ns": 159005,
+          "deadline_overruns": 0
+        },
+        "wall": {
+          "total_ns": 5875105930,
+          "p99_ns": 80886,
+          "maximum_ns": 158616,
+          "deadline_overruns": 0
+        },
+        "allocations": {
+          "cpp_allocations": 0,
+          "cpp_frees": 0,
+          "c_allocations": 0,
+          "c_frees": 0
+        },
+        "snapshot_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+        "reference_bit_identical": true,
+        "cell_counts": {
+          "unique": 154,
+          "duplicates": 91
+        }
+      }
+    }
+  ],
+  "native_tests": {
+    "motion": "passed",
+    "detector": "passed",
+    "portable_mock_tests": 14
+  },
+  "paired_raw_midi_identity": "not measured; companion pair did not finish",
+  "six_timed_reference_snapshots_identical": true,
+  "processing_allocations_zero": true,
+  "full_native_acceptance": false,
+  "harness_failure": {
+    "error": "ValueError: Untimed companion snapshot differs from saved reference",
+    "cause": "512-sample companion compared with a block-32 TSV SHA from timing reference",
+    "actual_block_512_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+    "wrong_expected_block_32_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+    "historical_block_512_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+    "historical_checkpoint": "docs/recovery/github-quiet-cell-observation-20261122.json",
+    "snapshot_matches_correct_block_pin": true,
+    "recovery_dispatch": false
+  },
+  "bulk": {
+    "artifact_id": 14782474980,
+    "name": "m3-exact-cell-sharing-evidence-45094249566-1",
+    "bytes": 8432549,
+    "digest": "sha256:f4ea170cbf0553220ccd051c143bdc39331898a73acd7ff068e6a3ccbc9576e1",
+    "expires_at": "2026-11-30T01:31:18Z",
+    "collected": false
+  }
+}
