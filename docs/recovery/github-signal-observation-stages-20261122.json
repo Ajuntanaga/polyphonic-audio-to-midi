@@ -6,9 +6,9 @@
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_sha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
   "worker_sha": "818b51ef13623087034e87a719eec49e30ee7632",
-  "state": "in_progress",
-  "stage": "Build instrumented portable native tests and replay",
-  "final": false,
+  "state": "completed",
+  "stage": "three fixed stage replays and four controls collected",
+  "final": true,
   "dispatch_count": 1,
   "dispatch_request_attempts": 1,
   "plan": "docs/recovery/CODEX-M3-SIGNAL-OBSERVATION-PLAN-20261122.md",
@@ -58,9 +58,9 @@
   "promotion_accepted": false,
   "native_gate_pass": false,
   "interpretation": "Instrumented cost attribution only; clock overhead and code layout prevent speedup or deadline acceptance claims.",
-  "collection_state": "pending; collect small report once, keep snapshots remote",
-  "peer_lane": "Claude active on independent saved stable-note analysis",
-  "next": "Read this existing job; no duplicate dispatch or broader replay.",
+  "collection_state": "small report collected once; digest verified; bulk evidence remote",
+  "peer_lane": "Claude completed independent stable-note analysis; separate re-pluck question remains open",
+  "next": "Retain this final diagnostic; choose a distinct mechanism before any further authorized CPU screen. Do not repeat closed experiments.",
   "dispatch_attempt_at": "2026-11-23T03:32:42.550950+00:00",
   "dispatch_output": "build/recovery/signal-observation-stages-20261122/dispatch.stdout",
   "dispatch_error": "build/recovery/signal-observation-stages-20261122/dispatch.stderr",
@@ -72,28 +72,63 @@
   "output_directory": "build/github-results/signal-observation-stages-45106622018",
   "report_artifact": "m3-signal-observation-report-45106622018-1",
   "evidence_artifact": "m3-signal-observation-evidence-45106622018-1",
-  "conclusion": "",
-  "last_observed_at": "2026-11-23T03:33:47.127487+00:00",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-23T03:40:07Z",
   "last_observation": "build/github-results/signal-observation-stages-45106622018/run.json",
   "source_checks": [
     {
-      "conclusion": "",
+      "conclusion": "success",
       "databaseId": 45106553048,
       "headSha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
       "name": "Portable offline replay",
-      "status": "in_progress",
-      "updatedAt": "2026-11-23T03:32:14Z",
+      "status": "completed",
+      "updatedAt": "2026-11-23T03:33:54Z",
       "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45106553048"
     },
     {
-      "conclusion": "",
+      "conclusion": "success",
       "databaseId": 45106553050,
       "headSha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
       "name": "CI",
-      "status": "in_progress",
-      "updatedAt": "2026-11-23T03:32:14Z",
+      "status": "completed",
+      "updatedAt": "2026-11-23T03:36:12Z",
       "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45106553050"
     }
   ],
-  "artifacts_available": 0
+  "artifacts_available": 2,
+  "source_checks_final": true,
+  "source_checks_pass": true,
+  "native_tests": "2 native targets and 25 focused contracts passed",
+  "recorded_at": "2026-11-23T03:45:16.663232+00:00",
+  "collection_receipt": "build/github-results/signal-observation-stages-45106622018/collection.json",
+  "report": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/report.json",
+  "report_sha256": "9ddc86b04ceda2522c8876432d94a4d7f359ce605182576d079dd2d5c49d6018",
+  "result_note": "docs/recovery/CODEX-M3-SIGNAL-OBSERVATION-RESULT-20261122.md",
+  "result_summary": "docs/recovery/CODEX-M3-SIGNAL-OBSERVATION-RESULT-20261122.json",
+  "collection_pass": true,
+  "reference_snapshots_bit_identical": 3,
+  "fixed_controls_collected": 4,
+  "observed_processing_allocations": 0,
+  "observed_processing_frees": 0,
+  "signal_cells_observation_share_percent": [
+    48.099231180678835,
+    49.233581142085654
+  ],
+  "allocation_gate_explanation": "All observed allocation and free counters are zero. The production gate intentionally remains false because timing_gates requires an uninstrumented run; this run carries stage_cpu/thread_cpu probes.",
+  "artifacts": [
+    {
+      "id": 14787564434,
+      "name": "m3-signal-observation-report-45106622018-1",
+      "size_in_bytes": 37813,
+      "digest": "sha256:659a6581d833d1daf8c3364f232fdb412a6d825f97f628363952b56e65096f66",
+      "expires_at": "2026-12-07T03:39:34Z"
+    },
+    {
+      "id": 14787534480,
+      "name": "m3-signal-observation-evidence-45106622018-1",
+      "size_in_bytes": 3353450,
+      "digest": "sha256:0303b1d9a5a1da211e5f73b97e77cc7d49ecbf1419b002c0521da0aaaa364d43",
+      "expires_at": "2026-11-30T03:39:35Z"
+    }
+  ]
 }

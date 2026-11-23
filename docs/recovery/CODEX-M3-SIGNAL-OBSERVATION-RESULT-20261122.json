@@ -1,0 +1,810 @@
+{
+  "schema": "m3_signal_observation_result_v1",
+  "recorded_at": "2026-11-23T03:45:16.663232+00:00",
+  "run_id": 45106622018,
+  "source_sha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
+  "worker_sha": "818b51ef13623087034e87a719eec49e30ee7632",
+  "state": "completed",
+  "final": true,
+  "diagnostic_only": true,
+  "collection_pass": true,
+  "native_gate_pass": false,
+  "promotion_accepted": false,
+  "installed_output_changed": false,
+  "report": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/report.json",
+  "report_sha256": "9ddc86b04ceda2522c8876432d94a4d7f359ce605182576d079dd2d5c49d6018",
+  "collection_receipt": "build/github-results/signal-observation-stages-45106622018/collection.json",
+  "report_archive": {
+    "artifact_id": 14787564434,
+    "name": "m3-signal-observation-report-45106622018-1",
+    "archive": "build/github-results/signal-observation-stages-45106622018/report.zip",
+    "archive_sha256": "659a6581d833d1daf8c3364f232fdb412a6d825f97f628363952b56e65096f66",
+    "server_digest": "sha256:659a6581d833d1daf8c3364f232fdb412a6d825f97f628363952b56e65096f66",
+    "digest_verified": true,
+    "bytes": 37813,
+    "collected_at": "2026-11-23T03:40:40.198547+00:00",
+    "members": [
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/configure.log",
+        "bytes": 674,
+        "sha256": "6c9c8a08862fa2b5fcfacce999c851c47e0871fc5a9a0dd1ea69bb460b41a37d"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/build.log",
+        "bytes": 5900,
+        "sha256": "b45fdbec37026211f54040768b89f268cc3a57af1b11bc8b947753e1a08a2878"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/contracts.log",
+        "bytes": 1029,
+        "sha256": "82c4f28d4b26ddb6bc4792fe6abe9e5feaf2c8f89854ed3b0bce5b2dd1fd3d42"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/native-tests.log",
+        "bytes": 490,
+        "sha256": "55c06ea1c80b3ebe0d318ad36e316cc3dd790d719308927294c2bd595873491f"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/runner.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/runtime-manifest.json",
+        "bytes": 4871,
+        "sha256": "16c85b14d4f112726ef1d62a8aa59302494fd51efce1c3281e8df43034f285b9"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/ordinary-completion-midi-retention-on-32-timing.json",
+        "bytes": 28678,
+        "sha256": "b7619c9cb778c955c6a6abb304125c4617987398ac1c8c8380fb4e517b8a1c16"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/ordinary-completion-midi-retention-on-32.stderr",
+        "bytes": 221,
+        "sha256": "976cd76679be60ee35389965bc42342c833beac9f7b434c34276aa253cfe4f79"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/ordinary-current-on-32-timing.json",
+        "bytes": 27951,
+        "sha256": "2e5d13c3f263d38de8ffcd82b93ca1d45d9956894329929e42b9a5ea2239c436"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/ordinary-current-on-32.stderr",
+        "bytes": 221,
+        "sha256": "976cd76679be60ee35389965bc42342c833beac9f7b434c34276aa253cfe4f79"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/physical-long-completion-midi-retention-on-32-timing.json",
+        "bytes": 27919,
+        "sha256": "dfa0948489fa4729b5630b95c64ee6dbc24cef1356ffb05575813e34fa547db1"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/physical-long-completion-midi-retention-on-32.stderr",
+        "bytes": 223,
+        "sha256": "eb998f94312feef93b9643bdfcfae528cc5496b92341978b9af803a39753529e"
+      },
+      {
+        "path": "build/github-results/signal-observation-stages-45106622018/report/signal-observation-stages/report.json",
+        "bytes": 201097,
+        "sha256": "9ddc86b04ceda2522c8876432d94a4d7f359ce605182576d079dd2d5c49d6018"
+      }
+    ]
+  },
+  "remote_evidence": [
+    {
+      "id": 14787534480,
+      "node_id": "MDg6QXJ0aWZhY3QxNDc4NzUzNDQ4MA==",
+      "name": "m3-signal-observation-evidence-45106622018-1",
+      "size_in_bytes": 3353450,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14787534480",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14787534480/zip",
+      "expired": false,
+      "digest": "sha256:0303b1d9a5a1da211e5f73b97e77cc7d49ecbf1419b002c0521da0aaaa364d43",
+      "created_at": "2026-11-23T03:39:37Z",
+      "updated_at": "2026-11-23T03:39:37Z",
+      "expires_at": "2026-11-30T03:39:35Z",
+      "workflow_run": {
+        "id": 45106622018,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "818b51ef13623087034e87a719eec49e30ee7632"
+      }
+    }
+  ],
+  "native_tests_passed": 2,
+  "focused_contract_tests_passed": 25,
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "databaseId": 45106553048,
+      "headSha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-23T03:33:54Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45106553048"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 45106553050,
+      "headSha": "7a5dc0519b7d8429290dd7cd9cba9ac1ad1720e7",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-11-23T03:36:12Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45106553050"
+    }
+  ],
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "mode": "current-on",
+      "output": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "snapshot_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+      "reference_bit_identical": true,
+      "timed_scored_identity": true,
+      "stage_controls_verified": true,
+      "allocation_guard": true,
+      "observed_allocation_counters": {
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "production_gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": false,
+        "timing_pass": false
+      },
+      "stage_totals": {
+        "cue": {
+          "ns": 0,
+          "calls": 0,
+          "maximum_block_ns": 0,
+          "maximum_end_sample": 0
+        },
+        "signal_observe": {
+          "ns": 6545014045,
+          "calls": 26189520,
+          "maximum_block_ns": 65272,
+          "maximum_end_sample": 6907136
+        },
+        "signal_reset": {
+          "ns": 2921222190,
+          "calls": 10689600,
+          "maximum_block_ns": 46741,
+          "maximum_end_sample": 6437600
+        },
+        "selection": {
+          "ns": 3149041573,
+          "calls": 167025,
+          "maximum_block_ns": 71592,
+          "maximum_end_sample": 8430528
+        },
+        "partial_frequency": {
+          "ns": 376596257,
+          "calls": 167025,
+          "maximum_block_ns": 22375,
+          "maximum_end_sample": 5154112
+        },
+        "fine_frequency": {
+          "ns": 325838630,
+          "calls": 167025,
+          "maximum_block_ns": 82795,
+          "maximum_end_sample": 58560
+        },
+        "string_assignment": {
+          "ns": 1473125411,
+          "calls": 167025,
+          "maximum_block_ns": 73164,
+          "maximum_end_sample": 2168384
+        },
+        "voice_lifecycle": {
+          "ns": 2259681263,
+          "calls": 167025,
+          "maximum_block_ns": 63666,
+          "maximum_end_sample": 641920
+        },
+        "calibration_snapshot": {
+          "ns": 472952923,
+          "calls": 167025,
+          "maximum_block_ns": 19981,
+          "maximum_end_sample": 8252224
+        },
+        "signal_spectral_trackers": {
+          "ns": 1209227211,
+          "calls": 2672400,
+          "maximum_block_ns": 26599,
+          "maximum_end_sample": 326240
+        },
+        "signal_group_trackers": {
+          "ns": 1213337794,
+          "calls": 2137920,
+          "maximum_block_ns": 21500,
+          "maximum_end_sample": 1583744
+        },
+        "signal_cells": {
+          "ns": 8600134447,
+          "calls": 10689600,
+          "maximum_block_ns": 67475,
+          "maximum_end_sample": 2169888
+        },
+        "signal_narrow": {
+          "ns": 0,
+          "calls": 0,
+          "maximum_block_ns": 0,
+          "maximum_end_sample": 0
+        }
+      },
+      "signal_observation_subtotal_ns": 17567713497,
+      "all_attributed_stage_ns": 28546171744,
+      "signal_observation_percent": {
+        "signal_observe": 37.255924318880076,
+        "signal_spectral_trackers": 6.883236177585075,
+        "signal_group_trackers": 6.906634686450226,
+        "signal_cells": 48.95420481708462,
+        "signal_narrow": 0.0
+      },
+      "fixed_controls": {
+        "control_cpu_blocks": [
+          {
+            "end_sample": 1172736,
+            "cpu_ns": 147105,
+            "wall_ns": 146840,
+            "unattributed_cpu_ns": 41643,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 19506,
+                "calls": 79
+              },
+              "signal_reset": {
+                "ns": 8618,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 18996,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 2224,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 273,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 10149,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 7779,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 3676,
+                "calls": 1
+              },
+              "signal_spectral_trackers": {
+                "ns": 4223,
+                "calls": 8
+              },
+              "signal_group_trackers": {
+                "ns": 4583,
+                "calls": 7
+              },
+              "signal_cells": {
+                "ns": 25435,
+                "calls": 32
+              },
+              "signal_narrow": {
+                "ns": 0,
+                "calls": 0
+              }
+            }
+          }
+        ]
+      },
+      "diagnostic_wall": {
+        "total_ns": 42086853395,
+        "p99_ns": 188310,
+        "maximum_ns": 361675,
+        "deadline_overruns": 2
+      },
+      "diagnostic_thread_cpu": {
+        "valid": true,
+        "total_ns": 42176448937,
+        "p99_ns": 188550,
+        "maximum_ns": 362158,
+        "deadline_overruns": 2,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "zero_duration_blocks": 0,
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "scope": "valid means clock reads succeeded; quantum is GCD of measured durations. CPU bracket includes wall clock read overhead. CPU block and wall-minus-CPU statistics are unusable when block_resolution_pass is false; diagnostic only",
+        "slow_block_state_scope": "Read after timing; counts span all MIDI candidates. Selection work and fine-update scheduling describe the latest decision, which may precede this block. snapshot_voice_count is available only when decision_snapshots is nonzero. Reset ticks are latest recorded events, not proof that a reset occurred in this block"
+      }
+    },
+    {
+      "dataset": "ordinary",
+      "mode": "completion-midi-retention-on",
+      "output": {
+        "labeled": 528632,
+        "matched": 145400,
+        "false_wrong_note_voices": 164263,
+        "false_wrong_string_voices": 92638,
+        "false_gap_voices": 62856,
+        "false_positive_voices": 319757,
+        "fingerprint": "002540bbc3759cd6"
+      },
+      "snapshot_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+      "reference_bit_identical": true,
+      "timed_scored_identity": true,
+      "stage_controls_verified": true,
+      "allocation_guard": true,
+      "observed_allocation_counters": {
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "production_gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": false,
+        "timing_pass": false
+      },
+      "stage_totals": {
+        "cue": {
+          "ns": 0,
+          "calls": 0,
+          "maximum_block_ns": 0,
+          "maximum_end_sample": 0
+        },
+        "signal_observe": {
+          "ns": 6553815446,
+          "calls": 26189520,
+          "maximum_block_ns": 57129,
+          "maximum_end_sample": 2212736
+        },
+        "signal_reset": {
+          "ns": 2918837558,
+          "calls": 10689600,
+          "maximum_block_ns": 58717,
+          "maximum_end_sample": 206176
+        },
+        "selection": {
+          "ns": 3183020217,
+          "calls": 167025,
+          "maximum_block_ns": 77886,
+          "maximum_end_sample": 9096064
+        },
+        "partial_frequency": {
+          "ns": 378149035,
+          "calls": 167025,
+          "maximum_block_ns": 20364,
+          "maximum_end_sample": 7052480
+        },
+        "fine_frequency": {
+          "ns": 320429732,
+          "calls": 167025,
+          "maximum_block_ns": 74956,
+          "maximum_end_sample": 58560
+        },
+        "string_assignment": {
+          "ns": 1472445725,
+          "calls": 167025,
+          "maximum_block_ns": 49840,
+          "maximum_end_sample": 8034816
+        },
+        "voice_lifecycle": {
+          "ns": 2235884027,
+          "calls": 167025,
+          "maximum_block_ns": 67457,
+          "maximum_end_sample": 5210368
+        },
+        "calibration_snapshot": {
+          "ns": 473074243,
+          "calls": 167025,
+          "maximum_block_ns": 24435,
+          "maximum_end_sample": 9480576
+        },
+        "signal_spectral_trackers": {
+          "ns": 1211687387,
+          "calls": 2672400,
+          "maximum_block_ns": 26697,
+          "maximum_end_sample": 7304480
+        },
+        "signal_group_trackers": {
+          "ns": 1216233413,
+          "calls": 2137920,
+          "maximum_block_ns": 46351,
+          "maximum_end_sample": 8982976
+        },
+        "signal_cells": {
+          "ns": 8323857583,
+          "calls": 10689600,
+          "maximum_block_ns": 66942,
+          "maximum_end_sample": 5727072
+        },
+        "signal_narrow": {
+          "ns": 0,
+          "calls": 0,
+          "maximum_block_ns": 0,
+          "maximum_end_sample": 0
+        }
+      },
+      "signal_observation_subtotal_ns": 17305593829,
+      "all_attributed_stage_ns": 28287434366,
+      "signal_observation_percent": {
+        "signal_observe": 37.871080939258995,
+        "signal_spectral_trackers": 7.0017093835260615,
+        "signal_group_trackers": 7.02797849653611,
+        "signal_cells": 48.099231180678835,
+        "signal_narrow": 0.0
+      },
+      "fixed_controls": {
+        "control_cpu_blocks": [
+          {
+            "end_sample": 7664256,
+            "cpu_ns": 122914,
+            "wall_ns": 122642,
+            "unattributed_cpu_ns": 41578,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 19586,
+                "calls": 79
+              },
+              "signal_reset": {
+                "ns": 8914,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 1106,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 2281,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 274,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 4379,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 7131,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 4133,
+                "calls": 1
+              },
+              "signal_spectral_trackers": {
+                "ns": 4277,
+                "calls": 8
+              },
+              "signal_group_trackers": {
+                "ns": 4594,
+                "calls": 7
+              },
+              "signal_cells": {
+                "ns": 24661,
+                "calls": 32
+              },
+              "signal_narrow": {
+                "ns": 0,
+                "calls": 0
+              }
+            }
+          },
+          {
+            "end_sample": 7671744,
+            "cpu_ns": 165541,
+            "wall_ns": 165266,
+            "unattributed_cpu_ns": 41348,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 19412,
+                "calls": 78
+              },
+              "signal_reset": {
+                "ns": 8629,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 24625,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 2225,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 276,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 14775,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 18932,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 4145,
+                "calls": 1
+              },
+              "signal_spectral_trackers": {
+                "ns": 2785,
+                "calls": 8
+              },
+              "signal_group_trackers": {
+                "ns": 3873,
+                "calls": 6
+              },
+              "signal_cells": {
+                "ns": 24516,
+                "calls": 32
+              },
+              "signal_narrow": {
+                "ns": 0,
+                "calls": 0
+              }
+            }
+          }
+        ]
+      },
+      "diagnostic_wall": {
+        "total_ns": 41878590010,
+        "p99_ns": 188150,
+        "maximum_ns": 341906,
+        "deadline_overruns": 2
+      },
+      "diagnostic_thread_cpu": {
+        "valid": true,
+        "total_ns": 41968322952,
+        "p99_ns": 188365,
+        "maximum_ns": 342270,
+        "deadline_overruns": 2,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "zero_duration_blocks": 0,
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "scope": "valid means clock reads succeeded; quantum is GCD of measured durations. CPU bracket includes wall clock read overhead. CPU block and wall-minus-CPU statistics are unusable when block_resolution_pass is false; diagnostic only",
+        "slow_block_state_scope": "Read after timing; counts span all MIDI candidates. Selection work and fine-update scheduling describe the latest decision, which may precede this block. snapshot_voice_count is available only when decision_snapshots is nonzero. Reset ticks are latest recorded events, not proof that a reset occurred in this block"
+      }
+    },
+    {
+      "dataset": "physical-long",
+      "mode": "completion-midi-retention-on",
+      "output": {
+        "labeled": 68441,
+        "matched": 41452,
+        "false_wrong_note_voices": 67769,
+        "false_wrong_string_voices": 2709,
+        "false_gap_voices": 5403,
+        "false_positive_voices": 75881,
+        "fingerprint": "238b4fedc0263a94"
+      },
+      "snapshot_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+      "reference_bit_identical": true,
+      "timed_scored_identity": true,
+      "stage_controls_verified": true,
+      "allocation_guard": true,
+      "observed_allocation_counters": {
+        "cpp_allocations": 0,
+        "cpp_frees": 0,
+        "c_allocations": 0,
+        "c_frees": 0
+      },
+      "production_gates": {
+        "timed_scored_identity": true,
+        "zero_processing_allocations": false,
+        "timing_pass": false
+      },
+      "stage_totals": {
+        "cue": {
+          "ns": 0,
+          "calls": 0,
+          "maximum_block_ns": 0,
+          "maximum_end_sample": 0
+        },
+        "signal_observe": {
+          "ns": 3476187360,
+          "calls": 13834777,
+          "maximum_block_ns": 104017,
+          "maximum_end_sample": 417472
+        },
+        "signal_reset": {
+          "ns": 1589476789,
+          "calls": 5646848,
+          "maximum_block_ns": 68861,
+          "maximum_end_sample": 3545056
+        },
+        "selection": {
+          "ns": 1400492080,
+          "calls": 88232,
+          "maximum_block_ns": 75779,
+          "maximum_end_sample": 480448
+        },
+        "partial_frequency": {
+          "ns": 189608295,
+          "calls": 88232,
+          "maximum_block_ns": 20691,
+          "maximum_end_sample": 3970368
+        },
+        "fine_frequency": {
+          "ns": 232277107,
+          "calls": 88232,
+          "maximum_block_ns": 129347,
+          "maximum_end_sample": 1747200
+        },
+        "string_assignment": {
+          "ns": 674121415,
+          "calls": 88232,
+          "maximum_block_ns": 76987,
+          "maximum_end_sample": 418944
+        },
+        "voice_lifecycle": {
+          "ns": 1189066759,
+          "calls": 88232,
+          "maximum_block_ns": 83399,
+          "maximum_end_sample": 417600
+        },
+        "calibration_snapshot": {
+          "ns": 170709285,
+          "calls": 88232,
+          "maximum_block_ns": 22041,
+          "maximum_end_sample": 806720
+        },
+        "signal_spectral_trackers": {
+          "ns": 531487403,
+          "calls": 1411712,
+          "maximum_block_ns": 40663,
+          "maximum_end_sample": 418752
+        },
+        "signal_group_trackers": {
+          "ns": 512150558,
+          "calls": 1129369,
+          "maximum_block_ns": 39153,
+          "maximum_end_sample": 418976
+        },
+        "signal_cells": {
+          "ns": 4383354030,
+          "calls": 5646848,
+          "maximum_block_ns": 86541,
+          "maximum_end_sample": 419072
+        },
+        "signal_narrow": {
+          "ns": 0,
+          "calls": 0,
+          "maximum_block_ns": 0,
+          "maximum_end_sample": 0
+        }
+      },
+      "signal_observation_subtotal_ns": 8903179351,
+      "all_attributed_stage_ns": 14348931081,
+      "signal_observation_percent": {
+        "signal_observe": 39.04433711772364,
+        "signal_spectral_trackers": 5.969636037269132,
+        "signal_group_trackers": 5.75244570292157,
+        "signal_cells": 49.233581142085654,
+        "signal_narrow": 0.0
+      },
+      "fixed_controls": {
+        "control_cpu_blocks": [
+          {
+            "end_sample": 3512640,
+            "cpu_ns": 170872,
+            "wall_ns": 170607,
+            "unattributed_cpu_ns": 41722,
+            "stages": {
+              "cue": {
+                "ns": 0,
+                "calls": 0
+              },
+              "signal_observe": {
+                "ns": 19635,
+                "calls": 79
+              },
+              "signal_reset": {
+                "ns": 8621,
+                "calls": 32
+              },
+              "selection": {
+                "ns": 16256,
+                "calls": 1
+              },
+              "partial_frequency": {
+                "ns": 2223,
+                "calls": 1
+              },
+              "fine_frequency": {
+                "ns": 30477,
+                "calls": 1
+              },
+              "string_assignment": {
+                "ns": 7654,
+                "calls": 1
+              },
+              "voice_lifecycle": {
+                "ns": 13251,
+                "calls": 1
+              },
+              "calibration_snapshot": {
+                "ns": 1377,
+                "calls": 1
+              },
+              "signal_spectral_trackers": {
+                "ns": 2724,
+                "calls": 8
+              },
+              "signal_group_trackers": {
+                "ns": 2396,
+                "calls": 7
+              },
+              "signal_cells": {
+                "ns": 24536,
+                "calls": 32
+              },
+              "signal_narrow": {
+                "ns": 0,
+                "calls": 0
+              }
+            }
+          }
+        ]
+      },
+      "diagnostic_wall": {
+        "total_ns": 21531695531,
+        "p99_ns": 193813,
+        "maximum_ns": 382410,
+        "deadline_overruns": 5
+      },
+      "diagnostic_thread_cpu": {
+        "valid": true,
+        "total_ns": 21578707867,
+        "p99_ns": 194043,
+        "maximum_ns": 383414,
+        "deadline_overruns": 6,
+        "block_resolution_pass": true,
+        "observed_duration_quantum_ns": 1,
+        "resolution_limit_ns": 3333,
+        "zero_duration_blocks": 0,
+        "clock": "CLOCK_THREAD_CPUTIME_ID",
+        "scope": "valid means clock reads succeeded; quantum is GCD of measured durations. CPU bracket includes wall clock read overhead. CPU block and wall-minus-CPU statistics are unusable when block_resolution_pass is false; diagnostic only",
+        "slow_block_state_scope": "Read after timing; counts span all MIDI candidates. Selection work and fine-update scheduling describe the latest decision, which may precede this block. snapshot_voice_count is available only when decision_snapshots is nonzero. Reset ticks are latest recorded events, not proof that a reset occurred in this block"
+      }
+    }
+  ],
+  "interpretation": "Thread CPU brackets include clock overhead. Wall-minus-CPU is diagnostic evidence, not proof of scheduler cause. Nonrecurrence does not clear the saved uninstrumented failures. Stage clocks add overhead; these results cannot establish native timing acceptance. Signal substage clocks are sequential. signal_observe is residual work; its sum with the four signal substages covers the former observation stage. Per-call clock overhead and code layout can dominate short intervals; these are instrumented costs, not uninstrumented speedups.",
+  "allocation_gate_explanation": "All observed allocation and free counters are zero. The production gate intentionally remains false because timing_gates requires an uninstrumented run; this run carries stage_cpu/thread_cpu probes.",
+  "midi_lifecycle": "not remeasured; retain separate completed corpus evidence",
+  "live_readiness": "not measured"
+}
