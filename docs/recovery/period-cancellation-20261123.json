@@ -1,0 +1,77 @@
+{
+  "schema": "m3_period_cancellation_spec_v1",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "workflow": "period-cancellation.yml",
+  "sources": {
+    "path": "docs/recovery/direct-spectrum-sources-20261121.json",
+    "sha256": "15ef49f41e65a99e18966ade427993f47ca1f86a49b002d5bbdf209e451fa73c"
+  },
+  "input_releases": [
+    {
+      "release": "runtime-profile-multipitch-20261120",
+      "asset": "recovery-inputs.tar.gz",
+      "sha256": "f7b460937fc59a47f7dc28beb5f401cf7fedd47cb55d46bad50924108e83dd69"
+    },
+    {
+      "release": "mixture-component-20261120",
+      "asset": "component-inputs.tar.gz",
+      "sha256": "00d508162bb35ff21ed30a538bcfecb3c74991554b4f1546bd54607a67f8f4fd"
+    },
+    {
+      "release": "octave-parent-inputs-20261120",
+      "asset": "string-02-input.tar.gz",
+      "sha256": "335cdb985d87d2ebfd08e98c1dec516d93baec460070acda6b2bb822e438a427"
+    }
+  ],
+  "settings": {
+    "sample_rate": 96000,
+    "context_samples": 16384,
+    "period_window": 4096,
+    "readout_window": 8192,
+    "fft_size": 32768,
+    "note_low": 32,
+    "note_high": 84,
+    "yin_threshold": 0.1,
+    "harmonics": 6,
+    "partial_grid_cents": [
+      -35,
+      -23.333333333333332,
+      -11.666666666666666,
+      0,
+      11.666666666666666,
+      23.333333333333332,
+      35
+    ],
+    "power_floor": 1e-12,
+    "examples_per_role": 1024,
+    "seeds": {
+      "train": 20261121,
+      "calibration": 20261122,
+      "test": 20261123
+    },
+    "calibration_false_fraction": 0.01,
+    "primary_note_minimum": 60,
+    "primary_level_max_db": -12,
+    "minimum_primary_queries": 100,
+    "minimum_gain_pp": 5,
+    "minimum_median_sir_gain_db": 3,
+    "minimum_target_power_gain_db": -6,
+    "minimum_target_retention_fraction": 0.75,
+    "identity_tolerance": 1e-12
+  },
+  "arms": [
+    "raw",
+    "mixture_period",
+    "component_period_oracle"
+  ],
+  "decision_note": "docs/recovery/CODEX-M3-PERIOD-CANCELLATION-20261123.md",
+  "max_worker_minutes": 30,
+  "limits": [
+    "mechanism screen, not labeled-frame or MIDI acceptance",
+    "all intended labels retained",
+    "test role is reused design data, not external validation",
+    "no installed or default change",
+    "no tuning or repeated rejected screen"
+  ]
+}
