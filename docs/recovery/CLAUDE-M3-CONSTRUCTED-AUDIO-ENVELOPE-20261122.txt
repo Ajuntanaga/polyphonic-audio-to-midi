@@ -1,0 +1,11 @@
+96000 int16 (29491200,)
+label start 7142453 0.00194
+event0 7210303 0.01745
+event3 7211007 0.01616
++50ms 7215103 0.01099
++300ms 7239103 0.00828
+-50ms 7205503 0.02762
+-300ms 7181503 0.02525
+env max/min +-20ms of events 1.509
+same ratio over 10 ms windows across label: median 1.277 max 2.33
+largest 20 ms rise ratio in label 1.621 at ms after start 335.0
