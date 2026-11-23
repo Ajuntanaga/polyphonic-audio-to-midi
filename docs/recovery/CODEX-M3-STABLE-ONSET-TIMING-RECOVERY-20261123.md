@@ -27,3 +27,13 @@ A scientific pass permits the planned full-corpus comparison only; a
 scientific failure closes this exact rule without tuning. Claude's separate
 ordinary acoustic work is unaffected. Acoustic re-pluck preservation remains
 not measured.
+
+Recovery dispatched once: [45181144376](https://github.com/Ajuntanaga/m3-offload/actions/runs/45181144376), source
+`d0d5cc5efda659f55b1b60a794a6bc2a0d2873ae`, worker
+`8fa28bab7cf2c4063791cc5fb09a55db57b43bff`. Compact report target:
+`build/github-results/stable-onset-timing-recovery-45181144376/report/stable-onset-freshness/report.json`.
+Final: run **45181144376** completed and the small report was collected once.
+The scientific screen is **REJECTED_FIXED_SCREEN** (95/97): all four repeated
+responses recovered, but both single-copy stable outputs gain retriggers.
+See `CODEX-M3-STABLE-ONSET-FRESHNESS-RESULT-20261123.md`. Exact rule closed;
+no full-corpus follow-up or retuning. Timing plumbing passed its checks.
