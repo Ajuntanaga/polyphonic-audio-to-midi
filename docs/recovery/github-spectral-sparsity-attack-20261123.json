@@ -5,8 +5,8 @@
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
   "source_sha": "abd20609b16df718da9650d7fe638c8b8d9c6e85",
   "worker_sha": "0a2a0973638aebe3aa7eac15ad8bfe843888ede9",
-  "state": "dispatched",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "dispatch_count": 1,
   "dispatch_requested_at": "2026-11-23T13:27:58.292622+00:00",
   "plan": "docs/recovery/CODEX-M3-SPECTRAL-SPARSITY-PLAN-20261123.md",
@@ -20,12 +20,63 @@
   "acoustic_repluck_preservation": "not measured",
   "scope": "NINOS2; calibrate delta only on note56, fixed note60 transfer; six pinned copied-note controls; no plugin/native run",
   "dispatch_output_directory": "build/github-results/spectral-sparsity-dispatch-20261123",
-  "next": "Read only this run, collect the small report once, apply the frozen calibration/transfer rule; no retuning.",
+  "next": "Closed fixed representation/setting. No tuning, rerun or corpus expansion. Choose a distinct justified articulation design; Claude ordinary acoustic analysis remains independent.",
   "dispatch_returncode": 0,
   "dispatch_response_at": "2026-11-23T13:28:01.028799+00:00",
   "run_id": 45184195705,
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45184195705",
   "output_directory": "build/github-results/spectral-sparsity-45184195705",
   "report_artifact": "m3-spectral-sparsity-report-45184195705-1",
-  "evidence_artifact": "m3-spectral-sparsity-features-45184195705-1"
+  "evidence_artifact": "m3-spectral-sparsity-features-45184195705-1",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-23T13:28:30.770391+00:00",
+  "collected": true,
+  "collected_at": "2026-11-23T13:28:54.662207+00:00",
+  "collection_receipt": "build/github-results/spectral-sparsity-45184195705/collection.json",
+  "report": "build/github-results/spectral-sparsity-45184195705/report/spectral-sparsity-attack/report.json",
+  "report_sha256": "a834a5861e434cd60b6526dc5f03f16a4e353faaa44524d65b21a1bca848e9ed",
+  "report_artifact_id": 14823295687,
+  "archive_sha256": "812e89ed8ff81c2e201117cd6dd6c8a3c0689908d454c8ee87c7f3da3bf189ea",
+  "report_archive_bytes": 4938,
+  "server_digest_verified": true,
+  "bulk_evidence_collected": false,
+  "scientific_verdict": "REJECTED_TRANSFER",
+  "decision": "REJECTED_TRANSFER: frozen calibration fails cross-pitch fixtures; no retuning",
+  "completed_at": "2026-11-23T13:28:25.577604+00:00",
+  "calibration": {
+    "selected_threshold": 0.08404658566816414,
+    "calibration_pass": true,
+    "threshold_regimes_evaluated": 87,
+    "feasible_regimes": 10,
+    "fixture_pass_histogram": [
+      77,
+      0,
+      0,
+      10
+    ],
+    "best_fixtures_passed": 3,
+    "fixture_total": 3,
+    "selection_rule": "smallest threshold passing every calibration fixture; no fallback"
+  },
+  "fixture_results": {
+    "physical-highmid": {
+      "fixtures_passed": 3,
+      "fixtures_total": 3,
+      "inserted_copies": 5,
+      "timely_first_cues": 5,
+      "cues": 5,
+      "extra_cues": 0
+    },
+    "physical-high": {
+      "fixtures_passed": 0,
+      "fixtures_total": 3,
+      "inserted_copies": 5,
+      "timely_first_cues": 5,
+      "cues": 10,
+      "extra_cues": 5
+    }
+  },
+  "integrity_checks_passed": 18,
+  "remote_contracts_passed": 29,
+  "result_note": "docs/recovery/CODEX-M3-SPECTRAL-SPARSITY-RESULT-20261123.md"
 }

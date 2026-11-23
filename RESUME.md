@@ -1,15 +1,15 @@
-## Active M3 checkpoint — spectral-sparsity attack test dispatched, 2026-11-23
+## Active M3 checkpoint — spectral-sparsity attack transfer rejected, 2026-11-23
 
-Read `docs/recovery/CODEX-M3-SPECTRAL-SPARSITY-PLAN-20261123.md` and
+Read `docs/recovery/CODEX-M3-SPECTRAL-SPARSITY-RESULT-20261123.md` and
 `docs/recovery/github-spectral-sparsity-attack-20261123.json` first.
-One CPU worker run **45184195705**, source **abd2060**, worker
-**0a2a097**: calibration on note56, fixed transfer to note60.
-Existing six copied-note fixtures; one fitted threshold, all other parameters
-frozen. No calibration operating point means stop before transfer audio.
-29 pure contracts passed locally; waveform processing only on GHA.
-Collect the small report once; feature tables stay remote. No retuning,
-second dispatch, native/plugin execution, installation or score change.
-Claude's ordinary acoustic lane remains separate and independently authorized.
+Run **45184195705**, source **abd2060**, worker **0a2a097**, is final/success,
+collected once with digest verified; scientific result **REJECTED_TRANSFER**.
+Note56 calibration passes 3/3 fixtures (5 timely cues, zero extras); unchanged
+note60 transfer fails 3/3 (all five first cues timely, but five extra cues).
+All 18 integrity checks and 29 contracts pass. Fixed setting closed: no tuning,
+rerun or corpus expansion. Feature tables remain remote; no local audio,
+plugin/native execution, installation or scoreboard change. Acoustic re-pluck
+preservation remains not measured. Claude's ordinary acoustic lane is separate.
 
 ## Active M3 checkpoint — adjacent-onset guard rejected, 2026-11-23
 
