@@ -1,3 +1,20 @@
+## Active M3 checkpoint — onset observation complete; no safe memory rule established, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-REPLUCK-ONSET-RESULT-20261123.md` and
+`docs/recovery/github-repluck-onset-20261123.json` first.
+Run **45160382637**, source **353b3e0**, worker **06789ae**, is final/success,
+small report collected once/digest verified. **42/42** identity/integrity gates
+and 20 synthetic contracts pass. The delayed overlap response had positive
+onset 0.667 ms before its suppressed handoff; the guard checks only the current
+instant. But all 11 suppressed fixture responses show the same earlier-positive
+pattern, including single-copy lane flicker: memory alone is not selective.
+No policy trial, new timing measurement, promotion or installed score change.
+Stable-note repeated-attack preservation stays open. No repoll/rerun/redownload;
+a distinct causal articulation design is required before another policy trial.
+Audio and complete traces remain remote. Core/component batch-cell gates below
+are complete and separate from this articulation limitation.
+
+
 ## Active M3 checkpoint — repeated-attack control has one delayed response, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-CONTROLLED-REPLUCK-RESULT-20261123.md` and
