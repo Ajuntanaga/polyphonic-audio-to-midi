@@ -13600,6 +13600,9 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
     ++spectral_lane_decimation_count_;
     ++group_continuity_decimation_count_;
     if (spectral_lane_decimation_count_ == spectral_lane_decimation_) {
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+      stage.switch_to(offline::stage_timing::Stage::signal_spectral_trackers);
+#endif
       const double decimated =
           spectral_lane_decimation_sum_ /
           static_cast<double>(spectral_lane_decimation_count_);
@@ -13610,8 +13613,14 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       }
       spectral_lane_decimation_sum_ = 0.0;
       spectral_lane_decimation_count_ = 0U;
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+      stage.switch_to(offline::stage_timing::Stage::signal_observe);
+#endif
     }
     if (group_continuity_decimation_count_ == group_continuity_decimation_) {
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+      stage.switch_to(offline::stage_timing::Stage::signal_group_trackers);
+#endif
       const double decimated =
           group_continuity_decimation_sum_ /
           static_cast<double>(group_continuity_decimation_count_);
@@ -13623,6 +13632,9 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
       }
       group_continuity_decimation_sum_ = 0.0;
       group_continuity_decimation_count_ = 0U;
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+      stage.switch_to(offline::stage_timing::Stage::signal_observe);
+#endif
     }
   }
   const double power = dc_blocked * dc_blocked;
@@ -13635,8 +13647,17 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
   fast_energy_ = input_energy_decay * fast_energy_ + energy_mix * power;
   const double slow_energy_mix = 1.0 - slow_energy_decay;
   slow_energy_ = slow_energy_decay * slow_energy_ + slow_energy_mix * power;
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::signal_cells);
+#endif
   update_cells(dc_blocked);
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+  stage.switch_to(offline::stage_timing::Stage::signal_observe);
+#endif
   if (profile_mode_ == ProfileMode::m3 && max_fret_ <= 2U) {
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+    stage.switch_to(offline::stage_timing::Stage::signal_narrow);
+#endif
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     // Track writes even with the flag off: runtime mode/flag changes do not
     // reset these arrays, so a later quiet sample must still clear live state.

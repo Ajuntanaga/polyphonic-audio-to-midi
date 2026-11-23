@@ -1,5 +1,9 @@
 #pragma once
 
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING) && !defined(M3_OFFLINE_STAGE_TIMING)
+#error "Signal observation probes require stage CPU timing"
+#endif
+
 // Compile-only offline probes: absent from production and acceptance builds.
 #if defined(M3_OFFLINE_STAGE_TIMING)
 #if !defined(__linux__) || !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
@@ -13,12 +17,20 @@
 namespace m3::offline::stage_timing {
 enum class Stage : std::size_t {
   cue, signal_observe, signal_reset, selection, partial_frequency,
-  fine_frequency, string_assignment, voice_lifecycle, calibration_snapshot, count
+  fine_frequency, string_assignment, voice_lifecycle, calibration_snapshot,
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+  signal_spectral_trackers, signal_group_trackers, signal_cells, signal_narrow,
+#endif
+  count
 };
 constexpr std::size_t kCount = static_cast<std::size_t>(Stage::count);
 constexpr std::array<const char*, kCount> kNames{
     "cue", "signal_observe", "signal_reset", "selection", "partial_frequency",
-    "fine_frequency", "string_assignment", "voice_lifecycle", "calibration_snapshot"};
+    "fine_frequency", "string_assignment", "voice_lifecycle", "calibration_snapshot",
+#if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
+    "signal_spectral_trackers", "signal_group_trackers", "signal_cells", "signal_narrow",
+#endif
+};
 struct Block final {
   std::array<std::uint64_t, kCount> ns{}, calls{};
   bool valid{true};

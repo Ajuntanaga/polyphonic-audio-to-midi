@@ -18,16 +18,18 @@ from tools.portable_recovery import digest
 
 STAGES = ('cue', 'signal_observe', 'signal_reset', 'selection', 'partial_frequency',
           'fine_frequency', 'string_assignment', 'voice_lifecycle', 'calibration_snapshot')
+SIGNAL_OBSERVATION_STAGES = STAGES + (
+    'signal_spectral_trackers', 'signal_group_trackers', 'signal_cells', 'signal_narrow')
 TIMING_CONTROLS = ('octave_0dB', 'octave_-12dB')
 
 
-def validate_stage_timing(timing, mode):
+def validate_stage_timing(timing, mode, *, expected_stages=STAGES):
     """Reject incomplete, overlapping or allocating stage instrumentation."""
     stages, cpu = timing.get('stage_cpu', {}), timing['thread_cpu']
     totals, slow = stages.get('totals', {}), stages.get('slowest_cpu_blocks', [])
 
     def valid_rows(rows):
-        return (set(rows) == set(STAGES)
+        return (set(rows) == set(expected_stages)
                 and all(type(row.get(key)) is int and row[key] >= 0
                         for row in rows.values() for key in ('ns', 'calls')))
 
@@ -50,15 +52,15 @@ def validate_stage_timing(timing, mode):
             raise ValueError('Overlapping or incomplete stage intervals: ' + mode)
 
 
-def validate_stage_controls(timing, expected, mode):
+def validate_stage_controls(timing, expected, mode, *, expected_stages=STAGES):
     """Require every fixed audio position, even when outside the slowest set."""
-    validate_stage_timing(timing, mode)
+    validate_stage_timing(timing, mode, expected_stages=expected_stages)
     controls = timing['stage_cpu'].get('control_cpu_blocks', [])
     if [row.get('end_sample') for row in controls] != list(expected):
         raise ValueError('Missing or reordered stage controls: ' + mode)
     for block in controls:
         rows = block.get('stages', {})
-        if (set(rows) != set(STAGES)
+        if (set(rows) != set(expected_stages)
                 or any(type(row.get(key)) is not int or row[key] < 0
                        for row in rows.values() for key in ('ns', 'calls'))
                 or any(type(block.get(key)) is not int or block[key] <= 0

@@ -10,12 +10,13 @@ from tools.frozen_cue_corpus_gate import read_replay
 from tools.portable_assignment_trace import digest
 from tools.portable_completion_midi_retention_timing import (
     CONDITIONS, DATASETS, MEASUREMENT_SCOPE, REFERENCE_SCHEMA, SETTINGS, STAGE_CONTROLS, run)
-from tools.portable_controlled_replay import STAGES
+from tools.portable_controlled_replay import SIGNAL_OBSERVATION_STAGES, STAGES
 from tests import test_portable_calibrated_midi_retention_timing as legacy_timing_tests
 
 
 class CompletionTimingTests(unittest.TestCase):
-    def exercise(self, *, mutate_reference=None, mutate_run=None, stage_diagnosis=False):
+    def exercise(self, *, mutate_reference=None, mutate_run=None, stage_diagnosis=False,
+                 signal_observation_diagnosis=False):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest, reference, output = (root / name for name in
@@ -54,15 +55,22 @@ class CompletionTimingTests(unittest.TestCase):
                                 for _ in range(32)],
                         slowest_blocks=[dict(wall_ns=200000, cpu_ns=190000, end_sample=32)]))
                 if stage_diagnosis:
+                    names = SIGNAL_OBSERVATION_STAGES if signal_observation_diagnosis else STAGES
+                    stage_cpu_ns = 20000 * len(names) + 10000
+                    observed['maximum_ns'] = stage_cpu_ns + 10000
                     def stage_block(sample):
-                        return dict(end_sample=sample, cpu_ns=190000, wall_ns=200000,
+                        return dict(end_sample=sample, cpu_ns=stage_cpu_ns,
+                            wall_ns=stage_cpu_ns + 10000,
                             unattributed_cpu_ns=10000,
-                            stages={name: dict(ns=20000, calls=1) for name in STAGES})
+                            stages={name: dict(ns=20000, calls=1) for name in names})
                     controls = [int(command[i + 1]) for i, arg in enumerate(command)
                                 if arg == '--diagnostic-stage-end-sample']
-                    observed['thread_cpu'].update(maximum_ns=190000, total_ns=1900000)
+                    observed['thread_cpu'].update(maximum_ns=stage_cpu_ns,
+                        total_ns=stage_cpu_ns * 10,
+                        slowest_blocks=[dict(cpu_ns=stage_cpu_ns,
+                            wall_ns=stage_cpu_ns + 10000, end_sample=32)])
                     observed['stage_cpu'] = dict(valid=True, blocks=timing['blocks'],
-                        totals={name: dict(ns=20000, calls=1) for name in STAGES},
+                        totals={name: dict(ns=20000, calls=1) for name in names},
                         slowest_cpu_blocks=[stage_block(32)],
                         control_cpu_blocks=[stage_block(sample) for sample in controls])
                 kwargs['stdout'].write(legacy_timing_tests.RetentionTimingTests.TSV)
@@ -77,7 +85,8 @@ class CompletionTimingTests(unittest.TestCase):
                        side_effect=execute):
                 try:
                     passed = run(binary, root, manifest, reference, output,
-                                 stage_diagnosis=stage_diagnosis)
+                                 stage_diagnosis=stage_diagnosis,
+                                 signal_observation_diagnosis=signal_observation_diagnosis)
                 except (ValueError, subprocess.TimeoutExpired) as caught:
                     error = caught
             report = json.loads((output / 'report.json').read_text())
@@ -192,6 +201,58 @@ class CompletionTimingTests(unittest.TestCase):
                 self.assertIsInstance(error, ValueError)
                 self.assertEqual(len(commands), 1)
                 self.assertFalse(report['collection_pass'])
+
+    def test_signal_breakdown_keeps_fixed_cases_and_cannot_accept_timing(self):
+        passed, report, error, commands, verified = self.exercise(
+            stage_diagnosis=True, signal_observation_diagnosis=True)
+        self.assertIsNone(error)
+        self.assertTrue(passed)
+        self.assertEqual(len(commands), 3)
+        self.assertEqual([call.args[2] for call in verified], ['ordinary', 'physical-long'])
+        self.assertEqual(report['schema'], 'm3_signal_observation_stages_v1')
+        self.assertEqual(report['expected_stages'], list(SIGNAL_OBSERVATION_STAGES))
+        for command, ((ds, mode), controls) in zip(commands, STAGE_CONTROLS.items()):
+            self.assertEqual([int(command[i + 1]) for i, arg in enumerate(command)
+                if arg == '--diagnostic-stage-end-sample'], list(controls))
+            row = report['datasets'][ds][mode]
+            self.assertTrue(row['recorded_reference_bit_identical'])
+            self.assertTrue(row['stage_controls_verified'])
+            self.assertEqual(set(row['timing']['stage_cpu']['totals']),
+                             set(SIGNAL_OBSERVATION_STAGES))
+        self.assertFalse(report['native_gate_pass'])
+        self.assertFalse(report['promotion_accepted'])
+        self.assertFalse(report['installed_output_changed'])
+
+    def test_signal_breakdown_requires_its_compiled_schema_at_every_level(self):
+        for level in ('totals', 'slowest_cpu_blocks', 'control_cpu_blocks'):
+            def missing_substage(i, timing, out):
+                rows = timing['stage_cpu'][level]
+                if level != 'totals':
+                    rows = rows[0]['stages']
+                rows.pop('signal_cells')
+            with self.subTest(level=level):
+                _, report, error, commands, _ = self.exercise(stage_diagnosis=True,
+                    signal_observation_diagnosis=True, mutate_run=missing_substage)
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(len(commands), 1)
+                self.assertFalse(report['collection_pass'])
+
+    def test_legacy_stage_mode_does_not_silently_accept_signal_build(self):
+        def unexpected_substage(i, timing, out):
+            timing['stage_cpu']['totals']['signal_cells'] = dict(ns=0, calls=0)
+        _, report, error, commands, _ = self.exercise(stage_diagnosis=True,
+            mutate_run=unexpected_substage)
+        self.assertIsInstance(error, ValueError)
+        self.assertEqual(len(commands), 1)
+        self.assertFalse(report['collection_pass'])
+
+    def test_signal_mode_requires_stage_mode_before_creating_output(self):
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            with self.assertRaisesRegex(ValueError, 'requires stage diagnosis'):
+                run(root / 'binary', root, root / 'manifest', root / 'reference',
+                    root / 'output', signal_observation_diagnosis=True)
+            self.assertFalse((root / 'output').exists())
 
 
 if __name__ == '__main__':

@@ -2,6 +2,7 @@
 
 Nine fixed OFF/current/trial replays reuse the existing thread CPU diagnostic.
 Stage mode retains four recorded overrun positions in three fixed replays.
+Signal-observation mode subdivides the largest stage in those same replays.
 Instrumented timing is diagnostic only and cannot replace the rejected corpus.
 """
 import argparse
@@ -14,7 +15,8 @@ from tools.frozen_cue_corpus_gate import read_replay
 from tools.portable_allocation_trace import reference_identity
 from tools.portable_assignment_trace import digest, verify_inputs
 from tools.portable_calibrated_midi_retention_corpus import POLICIES
-from tools.portable_controlled_replay import validate_stage_controls
+from tools.portable_controlled_replay import (
+    SIGNAL_OBSERVATION_STAGES, STAGES, validate_stage_controls)
 from tools.portable_corpus_replay import (
     MEASUREMENT_SCOPE, SETTINGS, command_for, now, timing_gates, validate_timing_diagnosis)
 
@@ -55,9 +57,11 @@ def validate_reference(reference, manifest):
 
 
 def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
-        stage_diagnosis=False):
+        stage_diagnosis=False, signal_observation_diagnosis=False):
     if timeout <= 0:
         raise ValueError('timeout must be positive')
+    if signal_observation_diagnosis and not stage_diagnosis:
+        raise ValueError('Signal observation diagnosis requires stage diagnosis')
     output.mkdir(parents=True, exist_ok=False)
     binary, corpus = binary.resolve(), corpus.resolve()
     selected = (tuple(STAGE_CONTROLS) if stage_diagnosis else
@@ -81,6 +85,16 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
             end_samples=list(STAGE_CONTROLS[ds, mode])) for ds, mode in selected],
             interpretation=report['interpretation'] +
                 ' Stage clocks add overhead; these results cannot establish native timing acceptance.')
+    expected_stages = SIGNAL_OBSERVATION_STAGES if signal_observation_diagnosis else STAGES
+    if signal_observation_diagnosis:
+        report.update(schema='m3_signal_observation_stages_v1',
+            expected_stages=list(expected_stages),
+            signal_observation_diagnosis=True,
+            interpretation=report['interpretation'] +
+                ' Signal substage clocks are sequential. signal_observe is residual work;'
+                ' its sum with the four signal substages covers the former observation stage.'
+                ' Per-call clock overhead and code layout can dominate short intervals;'
+                ' these are instrumented costs, not uninstrumented speedups.')
 
     def save():
         report['updated_at'] = now()
@@ -139,7 +153,8 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900,
                     raise ValueError('Scored output, block count or measurement scope changed: ' + stem)
                 validate_timing_diagnosis(timing, stem)
                 if stage_diagnosis:
-                    validate_stage_controls(timing, STAGE_CONTROLS[dataset, mode], stem)
+                    validate_stage_controls(timing, STAGE_CONTROLS[dataset, mode], stem,
+                                            expected_stages=expected_stages)
                     row['stage_controls_verified'] = True
                 for block in timing['thread_cpu']['slowest_blocks']:
                     if (type(block.get('end_sample')) is not int
@@ -168,9 +183,11 @@ def main():
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
     parser.add_argument('--stage-diagnosis', action='store_true')
+    parser.add_argument('--signal-observation-diagnosis', action='store_true')
     args = parser.parse_args()
     run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds, stage_diagnosis=args.stage_diagnosis)
+        timeout=args.replay_timeout_seconds, stage_diagnosis=args.stage_diagnosis,
+        signal_observation_diagnosis=args.signal_observation_diagnosis)
 
 
 if __name__ == '__main__':
