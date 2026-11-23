@@ -1,0 +1,362 @@
+{
+  "schema": "m3_fretnet_comparison_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "fretnet-comparison.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "181a2f69d1cfacbf00bacb98b7e49e5ab4ffd97e",
+  "worker_sha": "5c4e63660db528b46ce9b5876787a70b55c8f7b2",
+  "source_ref": "work/tuner-stability-20261027",
+  "spec_path": "docs/recovery/fretnet-comparison-20261123.json",
+  "spec_sha256": "4e092ed584e31ba6acd69d9c89409afd8e479c8efda262c2f5aa21257e2b5826",
+  "plan_path": "docs/recovery/CODEX-M3-FRETNET-FEASIBILITY-20261123.md",
+  "state": "failed",
+  "final": true,
+  "prepared_at": "2026-11-23T15:35:41.001439+00:00",
+  "dispatch_count": 1,
+  "collection_state": "collected_once_digest_verified",
+  "authorization": "Standing user authorization for bounded M3 CPU GitHub jobs, scoped commits and pushes; peers act independently.",
+  "scope": "One fixed reference-checked FretNet comparison on ordinary and extended-middle; no fit, sweep, production policy or installation.",
+  "local_checks": {
+    "pure_tests_passed": 66,
+    "yaml_parsed": true,
+    "diff_check_passed": true,
+    "audio_or_model_run_locally": false
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "promotion_accepted": false,
+  "next": "One separately recorded harness-only import recovery; original pins, protocol and all reference gates remain unchanged. Do not poll or redownload this completed attempt.",
+  "dispatched_at": "2026-11-23T15:35:41.001671+00:00",
+  "dispatch_directory": "build/recovery/fretnet-comparison-20261123",
+  "dispatch_returncode": 0,
+  "dispatch_capture": "build/recovery/fretnet-comparison-20261123/dispatch.stdout",
+  "run_id": 45206977346,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45206977346",
+  "last_observed": {
+    "conclusion": "failure",
+    "createdAt": "2026-11-23T15:35:43Z",
+    "databaseId": 45206977346,
+    "headSha": "5c4e63660db528b46ce9b5876787a70b55c8f7b2",
+    "jobs": [
+      {
+        "completedAt": "2026-11-23T15:36:49Z",
+        "conclusion": "failure",
+        "databaseId": 137805230108,
+        "name": "compare",
+        "startedAt": "2026-11-23T15:35:48Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-23T15:35:52Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-23T15:35:49Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:35:52Z",
+            "conclusion": "success",
+            "name": "Check bounded dispatch inputs",
+            "number": 2,
+            "startedAt": "2026-11-23T15:35:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:35:58Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-23T15:35:52Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:35:59Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-23T15:35:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:31Z",
+            "conclusion": "success",
+            "name": "Install pinned CPU dependencies",
+            "number": 5,
+            "startedAt": "2026-11-23T15:35:59Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:32Z",
+            "conclusion": "success",
+            "name": "Check synthetic scoring and runner contracts",
+            "number": 6,
+            "startedAt": "2026-11-23T15:36:31Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:39Z",
+            "conclusion": "success",
+            "name": "Download existing pinned inputs",
+            "number": 7,
+            "startedAt": "2026-11-23T15:36:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:43Z",
+            "conclusion": "failure",
+            "name": "Compare once after reference identity checks",
+            "number": 8,
+            "startedAt": "2026-11-23T15:36:39Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:45Z",
+            "conclusion": "success",
+            "name": "Retain small report and logs",
+            "number": 9,
+            "startedAt": "2026-11-23T15:36:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:45Z",
+            "conclusion": "success",
+            "name": "Keep model outputs remote",
+            "number": 10,
+            "startedAt": "2026-11-23T15:36:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:45Z",
+            "conclusion": "skipped",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 19,
+            "startedAt": "2026-11-23T15:36:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:46Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 20,
+            "startedAt": "2026-11-23T15:36:45Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:46Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 21,
+            "startedAt": "2026-11-23T15:36:46Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45206977346/job/137805230108"
+      }
+    ],
+    "status": "completed",
+    "updatedAt": "2026-11-23T15:36:49Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45206977346"
+  },
+  "last_observed_at": "2026-11-23T15:39:09.232194+00:00",
+  "local_output_directory": "build/github-results/fretnet-comparison-45206977346",
+  "small_artifact_name": "m3-fretnet-report-45206977346-1",
+  "bulk_artifact_name": "m3-fretnet-evidence-45206977346-1",
+  "scientific_verdict": "NOT_MEASURED_HARNESS_IMPORT_FAILURE",
+  "collection": {
+    "schema": "m3_github_collection_v1",
+    "run_id": 45206977346,
+    "collected_at": "2026-11-23T15:38:08.323947+00:00",
+    "artifact": {
+      "id": 14834905869,
+      "node_id": "MDg6QXJ0aWZhY3QxNDgzNDkwNTg2OQ==",
+      "name": "m3-fretnet-report-45206977346-1",
+      "size_in_bytes": 8701,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14834905869",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14834905869/zip",
+      "expired": false,
+      "digest": "sha256:534a15808690bba41eea3ca82afd98b2aa655763e54d12d743254fbab35bc4e2",
+      "created_at": "2026-11-23T15:36:45Z",
+      "updated_at": "2026-11-23T15:36:45Z",
+      "expires_at": "2026-12-07T15:36:44Z",
+      "workflow_run": {
+        "id": 45206977346,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "5c4e63660db528b46ce9b5876787a70b55c8f7b2"
+      }
+    },
+    "archive_path": "build/github-results/fretnet-comparison-45206977346/report.zip",
+    "archive_sha256": "534a15808690bba41eea3ca82afd98b2aa655763e54d12d743254fbab35bc4e2",
+    "digest_verified": true,
+    "files": [
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/comparison.log",
+        "bytes": 1349,
+        "sha256": "23a23c043a36db60f673b4e8e81da48517852fb04d3d217d09b899f2ec1df6db"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/fretnet-result/report/report.json",
+        "bytes": 7476,
+        "sha256": "eac207a1562d07ac1c7996cb0d41f04c96dfa67bf1ce8f1c8b28500d3d2c80b6"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/fretnet-result/report/environment.txt",
+        "bytes": 730,
+        "sha256": "bbffa36eeb29518bf36a77ec4d11d46e0dd19aa0d4302f89651d0d3ef753bbcd"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/dependencies.log",
+        "bytes": 11295,
+        "sha256": "2f1cb0646739bf7534933e7784f1a64cc6720956991b5cf8cef9242314de1201"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/environment.txt",
+        "bytes": 730,
+        "sha256": "bbffa36eeb29518bf36a77ec4d11d46e0dd19aa0d4302f89651d0d3ef753bbcd"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/input-hash.log",
+        "bytes": 61,
+        "sha256": "0885e6377ab40e73cd10f2ffab981706b8bea7abe9e7b570a5fe0c60db78d752"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/input-download.log",
+        "bytes": 0,
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/source-sha.txt",
+        "bytes": 41,
+        "sha256": "90f1785f9b52a7353c5d1f769add8913d8087242d24f2853a031a8cf61be342e"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/tests.log",
+        "bytes": 165,
+        "sha256": "2f14046f9120f1b586c07d578a303a1d13f02ca79ea487f269ea53f31d5dc7a0"
+      },
+      {
+        "path": "build/github-results/fretnet-comparison-45206977346/report/comparison-logs/torch.log",
+        "bytes": 2435,
+        "sha256": "239d962a53f1140d6bc04c033dd6651634dcbcca750ff832ab8819061f63af0e"
+      }
+    ],
+    "bulk_collected": false
+  },
+  "report": {
+    "path": "build/github-results/fretnet-comparison-45206977346/report/fretnet-result/report/report.json",
+    "bytes": 7476,
+    "sha256": "eac207a1562d07ac1c7996cb0d41f04c96dfa67bf1ce8f1c8b28500d3d2c80b6"
+  },
+  "source_verification": {
+    "conclusion": "success",
+    "databaseId": 45206913716,
+    "headSha": "181a2f69d1cfacbf00bacb98b7e49e5ab4ffd97e",
+    "jobs": [
+      {
+        "completedAt": "2026-11-23T15:37:01Z",
+        "conclusion": "success",
+        "databaseId": 137805008512,
+        "name": "offline",
+        "startedAt": "2026-11-23T15:35:28Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-23T15:35:30Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-23T15:35:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:35:32Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 2,
+            "startedAt": "2026-11-23T15:35:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:35:32Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 3,
+            "startedAt": "2026-11-23T15:35:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:04Z",
+            "conclusion": "success",
+            "name": "Configure and build diagnostic replay",
+            "number": 4,
+            "startedAt": "2026-11-23T15:35:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:32Z",
+            "conclusion": "success",
+            "name": "Native tests",
+            "number": 5,
+            "startedAt": "2026-11-23T15:36:04Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:54Z",
+            "conclusion": "success",
+            "name": "Replay comparison contracts",
+            "number": 6,
+            "startedAt": "2026-11-23T15:36:32Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:56Z",
+            "conclusion": "success",
+            "name": "Synthetic buffer parity smoke check",
+            "number": 7,
+            "startedAt": "2026-11-23T15:36:54Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:58Z",
+            "conclusion": "success",
+            "name": "Keep bounded diagnostic artifacts",
+            "number": 8,
+            "startedAt": "2026-11-23T15:36:56Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:58Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 15,
+            "startedAt": "2026-11-23T15:36:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:58Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 16,
+            "startedAt": "2026-11-23T15:36:58Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:36:58Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 17,
+            "startedAt": "2026-11-23T15:36:58Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45206913716/job/137805008512"
+      }
+    ],
+    "status": "completed",
+    "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45206913716"
+  },
+  "error": "AttributeError: No librosa.core attribute constantq",
+  "corpus_datasets_processed": 0
+}

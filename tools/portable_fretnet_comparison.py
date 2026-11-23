@@ -2,6 +2,7 @@
 import argparse
 from datetime import datetime, timezone
 import hashlib
+from importlib import import_module
 import json
 import os
 from pathlib import Path
@@ -94,13 +95,16 @@ class Backend:
         np, librosa = self.np, self.librosa
         if audio.ndim != 1 or audio.dtype != np.float32 or not np.isfinite(audio).all():
             raise ValueError('Expected normalized finite mono float32 audio')
+        # librosa's lazy public core namespace does not export this submodule.
+        early_downsample_count = getattr(import_module('librosa.core.constantq'),
+                                         '__early_downsample_count')
         channels, counts = [], []
         for harmonic in (.5, 1, 2, 3, 4, 5):
             fmin = librosa.note_to_hz('E2') * harmonic
             fmax = max(librosa.cqt_frequencies(n_bins=144, fmin=fmin, bins_per_octave=36))
             constant_q = 1 / (2 ** (1 / 36) - 1)
             cutoff = fmax * (1 + .5 * librosa.filters.window_bandwidth('hann') / constant_q)
-            early = getattr(librosa.core.constantq, '__early_downsample_count')(
+            early = early_downsample_count(
                 nyquist=22050 / 2, filter_cutoff=cutoff, hop_length=512, n_octaves=4)
             factors = 2 ** np.arange(early, early + 4)
             count = int(np.min(np.ceil(len(audio) / factors) // (512 // factors) + 1))

@@ -170,19 +170,21 @@ class RunnerTests(unittest.TestCase):
                 with self.assertRaisesRegex(ValueError, 'differs'):
                     runner.download_pinned(asset, Path(directory), 'fixture/model', 'a'*40)
 
-    def test_hcqt_expected_frame_private_helper_is_not_name_mangled(self):
+    def test_hcqt_imports_private_submodule_outside_lazy_public_namespace(self):
         calls = []
         def early(**kwargs):
             calls.append(kwargs)
             return 0
-        fake = SimpleNamespace(core=SimpleNamespace(constantq=SimpleNamespace(
-            **{'__early_downsample_count':early})), note_to_hz=lambda value:82.4,
+        fake = SimpleNamespace(note_to_hz=lambda value:82.4,
             cqt_frequencies=lambda **kwargs:[1000], filters=SimpleNamespace(window_bandwidth=lambda w:1.5),
             vqt=lambda audio, **kwargs:np.ones((144, 3), dtype=np.float32),
             amplitude_to_db=lambda value, **kwargs:np.zeros_like(value))
         backend = object.__new__(runner.Backend)
         backend.np, backend.librosa = np, fake
-        values, times = backend.hcqt(np.zeros(1024, dtype=np.float32))
+        module = SimpleNamespace(**{'__early_downsample_count':early})
+        with patch.object(runner, 'import_module', return_value=module) as imported:
+            values, times = backend.hcqt(np.zeros(1024, dtype=np.float32))
+        imported.assert_called_once_with('librosa.core.constantq')
         self.assertEqual(values.shape, (6, 144, 3))
         self.assertEqual(len(calls), 6)
         np.testing.assert_allclose(times, np.arange(3)*512/22050)
