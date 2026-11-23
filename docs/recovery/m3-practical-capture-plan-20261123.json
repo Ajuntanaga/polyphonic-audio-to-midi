@@ -1,0 +1,31 @@
+{
+  "schema": "m3_practical_capture_plan_v1",
+  "created_date": "2026-11-23",
+  "state": "awaiting_new_performance",
+  "guide": "docs/recovery/CODEX-M3-PRACTICAL-CAPTURE-20261123.md",
+  "purpose": "Add real compact four-note chords and identified re-plucks alongside the retained stress corpus; do not replace it.",
+  "assumed_a4_hz": 440,
+  "tuning_must_be_confirmed": true,
+  "string_number_to_open_midi": {"8": 32, "7": 36, "6": 40, "5": 44, "4": 48, "3": 52, "2": 56, "1": 60},
+  "lane_mask_rule": "1 << (8 - physical_string_number)",
+  "separate_performances": 3,
+  "split_unit": "whole independently played performance",
+  "roles": ["development", "calibration", "held_out_test"],
+  "sample_labels": null,
+  "measured_results": null,
+  "run_id": null,
+  "cases": [
+    {"id": "low_e_major", "strings": [8, 7, 6, 5], "frets": [8, 8, 7, 8], "midi_notes": [40, 44, 47, 52], "string_masks": [1, 2, 4, 8], "expected_string_count": 4, "expected_distinct_pitch_count": 4},
+    {"id": "middle_c_major", "strings": [5, 4, 3, 2], "frets": [4, 4, 3, 4], "midi_notes": [48, 52, 55, 60], "string_masks": [8, 16, 32, 64], "expected_string_count": 4, "expected_distinct_pitch_count": 4},
+    {"id": "high_c_major", "strings": [4, 3, 2, 1], "frets": [12, 12, 11, 12], "midi_notes": [60, 64, 67, 72], "string_masks": [16, 32, 64, 128], "expected_string_count": 4, "expected_distinct_pitch_count": 4},
+    {"id": "three_string_e2_unison", "strings": [8, 7, 6], "frets": [8, 4, 0], "midi_notes": [40, 40, 40], "string_masks": [1, 2, 4], "combined_unison_mask": 7, "expected_string_count": 3, "expected_distinct_pitch_count": 1}
+  ],
+  "events_per_case": ["identify strings separately", "initial chord attack", "sustain", "two explicit re-plucks without prior mute", "ring", "deliberate mute and gap"],
+  "processing_provider": "GitHub Actions",
+  "input_route": "existing authorized private m3-offload route",
+  "local_audio_processing": false,
+  "public_repository_contains_recordings": false,
+  "installed_change": false,
+  "scoreboard_changed": false,
+  "gate_changes": false
+}
