@@ -1,0 +1,52 @@
+{
+  "schema": "m3_repluck_onset_spec_v1",
+  "reference_run_id": 45155740922,
+  "reference_source_sha": "2ded4d9f7bcbb60d22c3fcff465f9c7b357c0edb",
+  "reference_report": {
+    "artifact_id": 14807523635,
+    "artifact_name": "m3-controlled-repluck-report-45155740922-1",
+    "archive_sha256": "e25f1423410ebfaff7eed59cdc8b9761e5972399fc0ea91d2e1056bd70067ff3",
+    "report_sha256": "e2764707e56a7dd63394a5131ac4ae9fa0518923c455404669c4915393a46076"
+  },
+  "reference_evidence": {
+    "artifact_id": 14808656500,
+    "artifact_name": "m3-controlled-repluck-evidence-45155740922-1",
+    "archive_sha256": "4a89a38f2293bd0934af149b51470f93fd052278fb0db5f991ce69a0e316a518"
+  },
+  "native_trees": {
+    "native": "fa7514f463d81946c5524d68371680e7c2995754",
+    "cloud/native": "1fc47baa585103943b43f41be5936abb90e6ad2b"
+  },
+  "native_reference_source": "89f66c166c86c489ef4256df669555220f1267fd",
+  "input_release": "corpus-20261108",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c",
+  "calibration_sha256": "b7025b4fd3ea55901ea9f189966b4f62b6fe905ad16b9f8d0df88a0a1a76e997",
+  "sample_rate": 96000,
+  "samples": 432000,
+  "block": 512,
+  "datasets": {
+    "physical-highmid": {
+      "note": 56,
+      "fixtures": {
+        "single": "a6361204a2b47d549fdff6dcbfbe9e3c9bcc95f738f81083af1601f075071b44",
+        "overlap": "6f644b7f187dfb26f8f39a5c1c6bbe7628972c8671dfb294b6c0d0920f417e15",
+        "separated": "00933f0862d01fec390834027b5e9d4d018f9c6f8f7650f940b6bad079744ddb"
+      }
+    },
+    "physical-high": {
+      "note": 60,
+      "fixtures": {
+        "single": "55156405c8bcc24f6eb482cea0309e74ea4a9c01f237419cc01daa5ec1274486",
+        "overlap": "6774d22e7ee0efdb0e053a8e550d35631f42b6367ce378ca5ea5560996766b50",
+        "separated": "b6d0b95c3f9e3e22e9994c9d13bc34d011e47c2d8ee7c5ab0fbde421c2ea5394"
+      }
+    }
+  },
+  "reporting": {
+    "before_ms": 100,
+    "after_ms": 25,
+    "neighborhood_each_side_decisions": 16
+  },
+  "reading_rule": "Only after complete reference identities: positive onset since the last insertion, continuous active and selected through a suppressed handoff, and observed zero onset at that handoff supports an instantaneous onset-memory limitation on this constructed control. Missing or unobserved values are unavailable. No policy or acoustic acceptance."
+}
