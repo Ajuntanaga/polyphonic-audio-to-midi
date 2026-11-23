@@ -2423,7 +2423,8 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_upper_fretted_relief = false,
                          JointReleaseSupport* diagnostic_joint_release_support = nullptr,
                          bool diagnostic_exact_cell_sharing = false,
-                         bool diagnostic_packed_cell_update = false);
+                         bool diagnostic_packed_cell_update = false,
+                         bool diagnostic_elide_narrow_clears = false);
 
 // Derives one physical-string map from discrete, stable, labeled fret holds.
 // Every fret must have at least two rows for the requested single-bit lane.

@@ -3065,13 +3065,14 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_upper_fretted_relief,
                          JointReleaseSupport* diagnostic_joint_release_support,
                          bool diagnostic_exact_cell_sharing,
-                         bool diagnostic_packed_cell_update) {
+                         bool diagnostic_packed_cell_update,
+                         bool diagnostic_elide_narrow_clears) {
   output = {};
   error = ReplayError::invalid_config;
   if (diagnostic_packed_cell_update && diagnostic_exact_cell_sharing)
     return false;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
-  if (diagnostic_packed_cell_update) return false;
+  if (diagnostic_packed_cell_update || diagnostic_elide_narrow_clears) return false;
   if (diagnostic_exact_cell_sharing || diagnostic_joint_release_support != nullptr || diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
@@ -3385,6 +3386,7 @@ bool run_detector_replay(const WaveData& wave,
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   detector.set_exact_cell_sharing_for_diagnostics(diagnostic_exact_cell_sharing);
+  detector.set_elide_narrow_clears_for_diagnostics(diagnostic_elide_narrow_clears);
   if (!detector.set_packed_cell_update_for_diagnostics(diagnostic_packed_cell_update))
     return false;
   if (diagnostic_thread_cpu || diagnostic_packed_cell_update) {
@@ -9627,6 +9629,18 @@ bool run_detector_replay(const WaveData& wave,
 #endif
   output = result;
   error = ReplayError::none;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_thread_cpu || diagnostic_elide_narrow_clears) {
+    const auto stats = detector.narrow_clear_stats();
+    std::fprintf(stderr,
+        "m3_replay: narrow_clears enabled=%u quiet=%llu updates=%llu performed=%llu skipped=%llu\n",
+        diagnostic_elide_narrow_clears ? 1U : 0U,
+        static_cast<unsigned long long>(stats.quiet_samples),
+        static_cast<unsigned long long>(stats.updates),
+        static_cast<unsigned long long>(stats.performed),
+        static_cast<unsigned long long>(stats.skipped));
+  }
+#endif
   return true;
 }
 

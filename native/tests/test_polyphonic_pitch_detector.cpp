@@ -6,6 +6,7 @@
 #include <cstdint>
 #include <cstring>
 #include <limits>
+#include <memory>
 
 #include "m3/generated_note_ledger.hpp"
 #include "m3/polyphonic_pitch_detector.hpp"
@@ -19,6 +20,105 @@ namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void narrow_clear_probe() {
+    auto reference = std::make_unique<PolyphonicPitchDetector>();
+    auto candidate = std::make_unique<PolyphonicPitchDetector>();
+    PersistentConfig config;
+    const auto equal_state = [&]() {
+      M3_EXPECT_EQ(std::memcmp(reference->narrow_fundamental_real_.data(),
+          candidate->narrow_fundamental_real_.data(),
+          sizeof(reference->narrow_fundamental_real_)), 0);
+      M3_EXPECT_EQ(std::memcmp(reference->narrow_fundamental_imaginary_.data(),
+          candidate->narrow_fundamental_imaginary_.data(),
+          sizeof(reference->narrow_fundamental_imaginary_)), 0);
+      M3_EXPECT_EQ(reference->narrow_signal_samples_, candidate->narrow_signal_samples_);
+    };
+    const auto step = [&](double sample) {
+      const auto allocations = m3::test::allocation_count();
+      (void)reference->process_sample(sample);
+      (void)candidate->process_sample(sample);
+      M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+      equal_state();
+    };
+    for (const double rate : {44100.0, 48000.0, 96000.0}) {
+      for (const auto exit_profile : {ProfileMode::m3, ProfileMode::general}) {
+        config.profile_mode = ProfileMode::m3;
+        config.max_fret = 24U;
+        M3_EXPECT_TRUE(reference->configure(rate, config));
+        M3_EXPECT_TRUE(candidate->configure(rate, config));
+        M3_EXPECT_FALSE(candidate->diagnostic_elide_narrow_clears_);
+        candidate->set_elide_narrow_clears_for_diagnostics(true);
+        step(0.0);
+        M3_EXPECT_EQ(reference->narrow_clear_stats().performed, 1U);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().skipped, 1U);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().performed, 0U);
+
+        // Produce real narrow state, including writes while the optimization
+        // is disabled. Switching the runtime profile/fret range does not reset it.
+        config.max_fret = 2U;
+        reference->set_runtime_config(config);
+        candidate->set_runtime_config(config);
+        for (std::size_t i = 0U; i < 128U; ++i) {
+          candidate->set_elide_narrow_clears_for_diagnostics(i < 64U);
+          step(i % 2U == 0U ? 0.25 : -0.25);
+        }
+        M3_EXPECT_TRUE(candidate->diagnostic_narrow_state_dirty_);
+        M3_EXPECT_TRUE(std::any_of(candidate->narrow_fundamental_real_.begin(),
+            candidate->narrow_fundamental_real_.end(), [](double x) { return x != 0.0; }));
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().updates, 128U);
+        config.profile_mode = exit_profile;
+        config.max_fret = 24U;
+        reference->set_runtime_config(config);
+        candidate->set_runtime_config(config);
+        candidate->set_elide_narrow_clears_for_diagnostics(true);
+        const auto before = candidate->narrow_clear_stats();
+        // Isolate the signal-loss transition without waiting for an arbitrary
+        // decay duration. The live narrow state itself is deliberately retained.
+        for (auto* detector : {reference.get(), candidate.get()}) {
+          detector->previous_input_ = 0.0;
+          detector->previous_dc_output_ = 0.0;
+          detector->fast_energy_ = 0.0;
+          detector->slow_energy_ = 0.0;
+        }
+        step(0.0);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().performed, before.performed + 1U);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().skipped, before.skipped);
+        M3_EXPECT_FALSE(candidate->diagnostic_narrow_state_dirty_);
+        M3_EXPECT_TRUE(std::all_of(candidate->narrow_fundamental_real_.begin(),
+            candidate->narrow_fundamental_real_.end(), [](double x) { return x == 0.0; }));
+        step(0.0);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().skipped, before.skipped + 1U);
+
+        // Low-fret processing writes before the quiet gate even for zero input;
+        // its clear must still happen. Flag-off also retains unconditional clear.
+        config.profile_mode = ProfileMode::m3;
+        config.max_fret = 2U;
+        reference->set_runtime_config(config);
+        candidate->set_runtime_config(config);
+        step(0.0);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().performed, before.performed + 2U);
+        config.max_fret = 24U;
+        reference->set_runtime_config(config);
+        candidate->set_runtime_config(config);
+        candidate->set_elide_narrow_clears_for_diagnostics(false);
+        step(0.0);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().performed, before.performed + 3U);
+        candidate->set_elide_narrow_clears_for_diagnostics(true);
+        reference->reset();
+        candidate->reset();
+        equal_state();
+        M3_EXPECT_TRUE(candidate->diagnostic_elide_narrow_clears_);
+        M3_EXPECT_FALSE(candidate->diagnostic_narrow_state_dirty_);
+        const auto reset = candidate->narrow_clear_stats();
+        M3_EXPECT_EQ(reset.quiet_samples + reset.updates + reset.performed + reset.skipped, 0U);
+        step(0.0);
+        M3_EXPECT_EQ(candidate->narrow_clear_stats().skipped, 1U);
+        M3_EXPECT_TRUE(candidate->configure(rate, config));
+        M3_EXPECT_FALSE(candidate->diagnostic_elide_narrow_clears_);
+      }
+    }
+  }
+
   static void packed_cell_update_probe() {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
@@ -7118,6 +7218,10 @@ M3_TEST(native_exact_cell_sharing_preserves_every_sample_bitwise) {
 
 M3_TEST(native_packed_cells_preserve_every_sample_and_guard_bitwise) {
   m3::PolyphonicPitchDetectorTestAccess::packed_cell_update_probe();
+}
+
+M3_TEST(native_narrow_clear_preserves_state_across_modes_flags_and_reset) {
+  m3::PolyphonicPitchDetectorTestAccess::narrow_clear_probe();
 }
 
 M3_TEST(native_detector_quiet_diagnostics_identify_the_first_causal_gate) {

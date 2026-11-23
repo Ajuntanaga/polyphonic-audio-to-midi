@@ -1498,6 +1498,7 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   diagnostic_duplicate_cell_count_ = 0U;
   diagnostic_exact_cell_sharing_ = false;
   diagnostic_packed_cell_update_ = false;
+  diagnostic_elide_narrow_clears_ = false;
 #endif
   lower_cents_guard_cells_ = {};
   upper_cents_guard_cells_ = {};
@@ -1674,6 +1675,8 @@ void PolyphonicPitchDetector::set_runtime_config(
 
 void PolyphonicPitchDetector::reset() noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  diagnostic_narrow_state_dirty_ = false;
+  diagnostic_narrow_clear_stats_ = {};
   diagnostic_odd_partial_cue_mask_ = {};
   diagnostic_midi_owners_ = {};
   diagnostic_midi_sequence_ = 0U;
@@ -13634,6 +13637,12 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
   slow_energy_ = slow_energy_decay * slow_energy_ + slow_energy_mix * power;
   update_cells(dc_blocked);
   if (profile_mode_ == ProfileMode::m3 && max_fret_ <= 2U) {
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    // Track writes even with the flag off: runtime mode/flag changes do not
+    // reset these arrays, so a later quiet sample must still clear live state.
+    diagnostic_narrow_state_dirty_ = true;
+    ++diagnostic_narrow_clear_stats_.updates;
+#endif
     const double narrow_mix = 1.0 - narrow_correlation_decay;
     for (std::size_t candidate = 0U;
          candidate < static_cast<std::size_t>(candidate_count_); ++candidate) {
@@ -13751,8 +13760,19 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
     signal_present_ = false;
     signal_samples_ = 0U;
     narrow_signal_samples_ = 0U;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    ++diagnostic_narrow_clear_stats_.quiet_samples;
+    if (!diagnostic_elide_narrow_clears_ || diagnostic_narrow_state_dirty_) {
+      ++diagnostic_narrow_clear_stats_.performed;
+#endif
     narrow_fundamental_real_ = {};
     narrow_fundamental_imaginary_ = {};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+    } else {
+      ++diagnostic_narrow_clear_stats_.skipped;
+    }
+    diagnostic_narrow_state_dirty_ = false;
+#endif
   } else if (signal_samples_ < std::numeric_limits<std::uint32_t>::max()) {
     signal_present_ = true;
     ++signal_samples_;
