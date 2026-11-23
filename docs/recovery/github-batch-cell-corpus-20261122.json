@@ -7,8 +7,8 @@
   "source_sha": "d9c217184bc26873e1deee931b6df10173de223c",
   "worker_sha": "32ee2864a5b3b964e796f44b0fbb12db613ab8ad",
   "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
-  "state": "in_progress",
-  "final": false,
+  "state": "failed",
+  "final": true,
   "dispatch_count": 1,
   "dispatch_request_attempts": 1,
   "plan": "docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md",
@@ -44,10 +44,10 @@
     "reference_contract": "passed",
     "native_execution": false
   },
-  "collection_state": "remote processing; no artifacts collected",
+  "collection_state": "small report collected once and archive digest verified; no bulk artifact",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Follow only this run; collect small report once after completion; keep bulk remote",
+  "next": "One workflow-layout correction; source, native code and scientific protocol unchanged",
   "dispatch_attempt_at": "2026-11-23T04:27:57.546751+00:00",
   "dispatch_output": "build/recovery/batch-cell-corpus-20261122/dispatch.stdout",
   "dispatch_error": "build/recovery/batch-cell-corpus-20261122/dispatch.stderr",
@@ -55,23 +55,75 @@
   "dispatch_returned_at": "2026-11-23T04:28:04.191249+00:00",
   "run_id": 45112016975,
   "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45112016975",
-  "conclusion": "",
+  "conclusion": "failure",
   "run_attempt": 1,
   "output_directory": "build/github-results/batch-cell-corpus-45112016975",
   "report_artifact": "m3-batch-cell-corpus-report-45112016975-1",
   "evidence_artifact": "m3-batch-cell-corpus-evidence-45112016975-1",
-  "last_observed_at": "2026-11-23T04:28:23.455593+00:00",
+  "last_observed_at": "2026-11-23T04:33:51.904902+00:00",
   "last_observation": "build/github-results/batch-cell-corpus-45112016975/run.json",
   "source_checks": [
     {
-      "conclusion": "",
+      "conclusion": "success",
       "databaseId": 45111962341,
       "headSha": "d9c217184bc26873e1deee931b6df10173de223c",
-      "name": "Portable offline replay",
-      "status": "in_progress",
-      "updatedAt": "2026-11-23T04:27:36Z",
+      "status": "completed",
       "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45111962341"
     }
   ],
-  "stage": "native build; corpus validation pending"
+  "stage": "verify inputs and frozen references",
+  "error": "FileNotFoundError: [Errno 2] No such file or directory: '/home/runner/work/_temp/m3-inputs/calibration.m3cb'",
+  "completed_at": "2026-11-23T04:29:38.488874+00:00",
+  "replays_attempted": 0,
+  "receipt": "build/github-results/batch-cell-corpus-45112016975/collection.json",
+  "small_artifact": {
+    "artifact_id": 14789823114,
+    "name": "m3-batch-cell-corpus-report-45112016975-1",
+    "archive": "build/github-results/batch-cell-corpus-45112016975/m3-batch-cell-corpus-report-45112016975-1.zip",
+    "archive_sha256": "f97dbadf963b66557118d3a819e17d3db9f6bc308d90ae9eebce600914375d7a",
+    "server_digest": "sha256:f97dbadf963b66557118d3a819e17d3db9f6bc308d90ae9eebce600914375d7a",
+    "digest_verified": true,
+    "bytes": 5509,
+    "collected_at": "2026-11-23T04:31:03.481947+00:00",
+    "members": [
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/batch-cell-corpus/report/report.json",
+        "bytes": 1835,
+        "sha256": "a41498fb64e1997f361db46e17ccc07275025b986e85fedde7abe5967b8f9f0d"
+      },
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/configure.log",
+        "bytes": 673,
+        "sha256": "3720bb649b150f4c90ecfb3cc01e20d2996349152d515b80a6eb05c9006c6c68"
+      },
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/build.log",
+        "bytes": 5900,
+        "sha256": "e99412c2cf9d88829fafe2edda328c2ef95ebfc08d48b97d5e0ccb48ad45e7af"
+      },
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/contracts.log",
+        "bytes": 127,
+        "sha256": "18080dfbee0e4c3d9c99f139ee6801a6ec8590306d8f51289308c15a680db12c"
+      },
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/native-tests.log",
+        "bytes": 488,
+        "sha256": "d899322ec3734037893141622267a1ca3dfb48fdf3bbf2839f8ad5ba1d98436c"
+      },
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/runner.log",
+        "bytes": 1182,
+        "sha256": "2892fdec6eb6fdd1ce7bb8df5d5a6681ad00e9756d54f2eb9535f217b518e70d"
+      },
+      {
+        "path": "build/github-results/batch-cell-corpus-45112016975/report/runtime-manifest.json",
+        "bytes": 4871,
+        "sha256": "53c972cc53c7f225eccd731101652621b3acb5f6df88c83cd11ef0359ff942ba"
+      }
+    ]
+  },
+  "native_tests": "2 of 2 passed",
+  "runner_tests": "28 passed",
+  "successor_checkpoint": "docs/recovery/github-batch-cell-corpus-layout-fix-20261122.json"
 }

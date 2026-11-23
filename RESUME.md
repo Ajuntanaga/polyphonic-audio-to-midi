@@ -1,15 +1,18 @@
-## Active M3 checkpoint — batched cell full-corpus validation running, 2026-11-23
+## Active M3 checkpoint — corrected full-corpus validation running, 2026-11-23
 
-Read `docs/recovery/github-batch-cell-corpus-20261122.json` and
-`docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md` first.
-One GitHub CPU run **45112016975**, source **d9c2171**, worker **32ee286**.
-Native implementation remains **5c2d999**. Fourteen datasets, three saved
-modes, blocks 512/32/1024 (126 replays). Require all saved snapshots, 42 full
-MIDI captures and 84 buffer identities, plus all 42 uninstrumented allocation
-and deadline gates. No native changes, replay retries or policy tuning.
-GitHub verified the input bundle and passed all 28 runner contracts; native
-build/tests and corpus validation follow. Collect the small report once under
-`build/github-results/batch-cell-corpus-45112016975`; leave bulk remote.
+Read `docs/recovery/github-batch-cell-corpus-layout-fix-20261122.json` and
+`docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-LAYOUT-FIX-20261122.md` first.
+One GitHub CPU run **45112657375**, source **d9c2171**, worker **f91add2**.
+Native implementation **5c2d999** is unchanged. Input verification, 28 runner
+contracts, native build and both native test targets passed. The fixed 126
+replay check began at 04:36:02 UTC; no corpus verdict is available yet.
+Fourteen datasets, three modes, blocks 512/32/1024; require 126 snapshot,
+42 complete MIDI and 84 buffer identities plus all 42 uninstrumented
+allocation/deadline gates. No replay retry or policy tuning.
+Collect the small report once under `build/github-results/batch-cell-corpus-45112657375`;
+leave bulk remote. Initial job **45112016975** failed before any replay because
+its corpus path omitted the nested directory. Its report is final/collected;
+do not repoll or redownload it. The corrected workflow passed the layout mock.
 Installed output and acoustic re-pluck acceptance remain unchanged.
 Claude explicitly stopped heavy work at its usage limit and scheduled its own
 resume at 21:32 PST; respect that stop and keep the peer lanes distinct.

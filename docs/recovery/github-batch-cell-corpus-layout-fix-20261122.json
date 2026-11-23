@@ -1,0 +1,91 @@
+{
+  "schema": "m3_batch_cell_corpus_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "batch-cell-corpus.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "d9c217184bc26873e1deee931b6df10173de223c",
+  "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
+  "plan": "docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md",
+  "reference": "docs/recovery/batch-cell-corpus-references-20261122.json",
+  "preceding_screen": {
+    "run_id": 45109184192,
+    "usefulness_screen_pass": true,
+    "report_sha256": "1e95b28dd72646ea2cbbbe3a429a5db5fd0995a16f7338915640ecde01a90212"
+  },
+  "scope": {
+    "datasets": 14,
+    "modes": 3,
+    "blocks": [
+      512,
+      32,
+      1024
+    ],
+    "replays": 126,
+    "snapshot_identities_required": 126,
+    "raw_midi_identities_required": 42,
+    "buffer_identities_required": 84,
+    "timed_runs": 42,
+    "p99_limit_ns": 166666,
+    "maximum_limit_ns": 333333,
+    "deadline_overruns_required": 0,
+    "processing_allocations_and_frees_required": 0
+  },
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "databaseId": 45111962341,
+      "headSha": "d9c217184bc26873e1deee931b6df10173de223c",
+      "status": "completed",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45111962341"
+    }
+  ],
+  "created_at": "2026-11-23T04:33:51.904902+00:00",
+  "worker_sha": "f91add2c6638ec55ba9032f24083ff1ed1223b2c",
+  "state": "in_progress",
+  "final": false,
+  "dispatch_count": 1,
+  "dispatch_request_attempts": 1,
+  "previous_run": 45112016975,
+  "previous_checkpoint": "docs/recovery/github-batch-cell-corpus-20261122.json",
+  "previous_result": "Harness path failure before any replay; native and runner tests passed",
+  "correction": "Use extracted m3-inputs/corpus and check declared input paths before building",
+  "local_tests": {
+    "yaml_parsed": true,
+    "shell_sections_parsed": 6,
+    "actual_replay_step_nested_layout_pass": true,
+    "input_names": 30,
+    "old_parent_path_rejected": true,
+    "native_or_audio_execution": false,
+    "corrected_stdout": "nested corpus path and 30 input names verified; no replay executed"
+  },
+  "collection_state": "pending; small report not yet available",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Monitor recorded run; collect small report once when final; keep bulk remote",
+  "dispatch_attempt_at": "2026-11-23T04:34:18.868373+00:00",
+  "dispatch_output": "build/recovery/batch-cell-corpus-layout-fix-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/batch-cell-corpus-layout-fix-20261122/dispatch.stderr",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T04:34:25.646242+00:00",
+  "run_id": 45112657375,
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45112657375",
+  "conclusion": null,
+  "last_observed_at": "2026-11-23T04:37:16.333323+00:00",
+  "run_created_at": "2026-11-23T04:34:25Z",
+  "output_directory": "build/github-results/batch-cell-corpus-45112657375",
+  "current_stage": "fixed 126 replay identity and deadline check",
+  "artifact_names": {
+    "report": "m3-batch-cell-corpus-report-45112657375-1",
+    "evidence": "m3-batch-cell-corpus-evidence-45112657375-1"
+  },
+  "completed_stages": [
+    "Set up job",
+    "Check destination and source selection",
+    "Run actions/checkout@v7",
+    "Run actions/setup-python@v7",
+    "Verify the frozen input bundle",
+    "Check fixed corpus runner contracts",
+    "Build portable native tests and replay",
+    "Run native state identity and lifecycle tests"
+  ]
+}
