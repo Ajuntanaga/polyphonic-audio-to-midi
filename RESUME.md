@@ -1,26 +1,25 @@
-## Active M3 checkpoint — corrected full-corpus validation running, 2026-11-23
+## Active M3 checkpoint — batched-cell VST3 comparison running, 2026-11-23
 
-Read `docs/recovery/github-batch-cell-corpus-layout-fix-20261122.json` and
-`docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-LAYOUT-FIX-20261122.md` first.
-One GitHub CPU run **45112657375**, source **d9c2171**, worker **f91add2**.
-Native implementation **5c2d999** is unchanged. Input verification, 28 runner
-contracts, native build and both native test targets passed. The fixed 126
-replay check began at 04:36:02 UTC; no corpus verdict is available yet.
-Fourteen datasets, three modes, blocks 512/32/1024; require 126 snapshot,
-42 complete MIDI and 84 buffer identities plus all 42 uninstrumented
-allocation/deadline gates. No replay retry or policy tuning.
-Collect the small report once under `build/github-results/batch-cell-corpus-45112657375`;
-leave bulk remote. Initial job **45112016975** failed before any replay because
-its corpus path omitted the nested directory. Its report is final/collected;
-do not repoll or redownload it. The corrected workflow passed the layout mock.
-Installed output and acoustic re-pluck acceptance remain unchanged.
-Claude explicitly stopped heavy work at its usage limit and scheduled its own
-resume at 21:32 PST; respect that stop and keep the peer lanes distinct.
+Read `docs/recovery/github-batch-cell-vst3-20261122.json` and
+`docs/recovery/CODEX-M3-BATCH-CELL-VST3-PLAN-20261122.md` first.
+One GitHub CPU run **45150026998**, source **89f66c1**, worker **0f32d26**,
+was dispatched once after every core-corpus gate passed. Both source workflows
+and all 27 local contracts passed. Require 224 saved component callback/outcome
+identities and all 56 process allocation/deadline checks across fourteen
+datasets, per-voice/stable-note modes and both sample formats. The component
+build passed and the frozen corpus comparison is running; no final result yet.
+Collect only the small report once under `build/github-results/batch-cell-vst3-45150026998`;
+leave bulk remote. No duplicate dispatch, policy change or installation.
 
-VST3 follow-up is prepared and pushed: source **89f66c1**, worker **0f32d26**.
-Read `docs/recovery/github-batch-cell-vst3-20261122.json`. Its 224 saved-output
-and 56 process-timing checks are conditional on the core job passing every
-gate. No VST3 follow-up has been dispatched. All 27 local mock contracts pass.
+Core run **45112657375** is final/PASSED and collected once, digest verified.
+Read `docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-RESULT-20261123.md` and
+`docs/recovery/github-batch-cell-corpus-layout-fix-20261122.json`.
+All 126 snapshots, 42 complete MIDI captures and 84 buffer checks retain
+identity; all 42 uninstrumented timing/allocation gates pass. Worst p99 is
+76,395 ns; worst callback 294,616 ns; zero overruns/allocations/frees.
+No repoll, rerun or redownload of completed core jobs. Installed scores and
+acoustic re-pluck acceptance remain unchanged. Claude has resumed after its
+quota reset; its independent acoustic/tracking lane remains open.
 
 ## Batched cell bounded screen — final, passed
 

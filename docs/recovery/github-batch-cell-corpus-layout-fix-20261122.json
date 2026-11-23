@@ -41,8 +41,8 @@
   ],
   "created_at": "2026-11-23T04:33:51.904902+00:00",
   "worker_sha": "f91add2c6638ec55ba9032f24083ff1ed1223b2c",
-  "state": "in_progress",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "dispatch_count": 1,
   "dispatch_request_attempts": 1,
   "previous_run": 45112016975,
@@ -58,10 +58,10 @@
     "native_or_audio_execution": false,
     "corrected_stdout": "nested corpus path and 30 input names verified; no replay executed"
   },
-  "collection_state": "pending; small report not yet available",
+  "collection_state": "small report collected once; server digest verified; bulk remains remote",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Monitor recorded run; collect small report once when final; keep bulk remote",
+  "next": "Follow existing VST3 run 45150026998; collect its small report once and preserve installed behavior and scores",
   "dispatch_attempt_at": "2026-11-23T04:34:18.868373+00:00",
   "dispatch_output": "build/recovery/batch-cell-corpus-layout-fix-20261122/dispatch.stdout",
   "dispatch_error": "build/recovery/batch-cell-corpus-layout-fix-20261122/dispatch.stderr",
@@ -69,11 +69,11 @@
   "dispatch_returned_at": "2026-11-23T04:34:25.646242+00:00",
   "run_id": 45112657375,
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45112657375",
-  "conclusion": "",
-  "last_observed_at": "2026-11-23T04:52:05.550131+00:00",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-23T09:44:05.873248+00:00",
   "run_created_at": "2026-11-23T04:34:25Z",
   "output_directory": "build/github-results/batch-cell-corpus-45112657375",
-  "current_stage": "Run the fixed 126 replay identity and deadline check",
+  "current_stage": "completed",
   "artifact_names": {
     "report": "m3-batch-cell-corpus-report-45112657375-1",
     "evidence": "m3-batch-cell-corpus-evidence-45112657375-1"
@@ -86,6 +86,54 @@
     "Verify the frozen input bundle",
     "Check fixed corpus runner contracts",
     "Build portable native tests and replay",
-    "Run native state identity and lifecycle tests"
+    "Run native state identity and lifecycle tests",
+    "Run the fixed 126 replay identity and deadline check",
+    "Keep small report and logs",
+    "Keep compressed snapshot and MIDI evidence remote",
+    "Post Run actions/setup-python@v7",
+    "Post Run actions/checkout@v7",
+    "Complete job"
+  ],
+  "report": "build/github-results/batch-cell-corpus-45112657375/report/batch-cell-corpus/report/report.json",
+  "report_sha256": "34829d873782244a4b48862b7f785e69f0dfa07c7f45bd749fea08048b2bf3a3",
+  "collection_receipt": "build/github-results/batch-cell-corpus-45112657375/collection.json",
+  "result": {
+    "decision": "offline corpus passed",
+    "full_corpus_pass": true,
+    "snapshot_identities": 126,
+    "midi_identities": 42,
+    "buffer_identities": 84,
+    "zero_allocation_runs": 42,
+    "timing_runs_passed": 42,
+    "timed_identity_runs": 42,
+    "measurement": {
+      "timed_runs": 42,
+      "worst_p99_ns": 76395,
+      "worst_p99_case": "extended-high/current-on-32",
+      "worst_maximum_ns": 294616,
+      "worst_maximum_case": "extended-high/completion-midi-retention-on-32",
+      "deadline_overruns": 0,
+      "cpp_allocations": 0,
+      "cpp_frees": 0,
+      "c_allocations": 0,
+      "c_frees": 0
+    }
+  },
+  "finished_at": "2026-11-23T05:32:02.324125+00:00",
+  "artifacts": [
+    {
+      "id": 14792487605,
+      "name": "m3-batch-cell-corpus-report-45112657375-1",
+      "size_in_bytes": 78497,
+      "digest": "sha256:f4e2c9414913fe875a079cb8b28fbfefc7c595eddededc3bc11aed13f67c46ed",
+      "expires_at": "2026-12-07T05:32:02Z"
+    },
+    {
+      "id": 14792248388,
+      "name": "m3-batch-cell-corpus-evidence-45112657375-1",
+      "size_in_bytes": 35366858,
+      "digest": "sha256:ca4268622eea753b23d6330e44a4a8a4d224c167c397eb0964d25ea557e2c81b",
+      "expires_at": "2026-11-30T05:32:04Z"
+    }
   ]
 }

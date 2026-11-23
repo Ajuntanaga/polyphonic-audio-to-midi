@@ -9,14 +9,17 @@
   "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
   "plan": "docs/recovery/CODEX-M3-BATCH-CELL-VST3-PLAN-20261122.md",
   "reference": "docs/recovery/batch-cell-vst3-corpus-references-20261122.json",
-  "state": "prepared; prerequisite core corpus running",
+  "state": "in_progress",
   "final": false,
-  "run_id": null,
-  "dispatch_count": 0,
+  "run_id": 45150026998,
+  "dispatch_count": 1,
   "prerequisite": {
     "run_id": 45112657375,
     "checkpoint": "docs/recovery/github-batch-cell-corpus-layout-fix-20261122.json",
-    "required": "complete identity, allocation and deadline acceptance"
+    "required": "complete identity, allocation and deadline acceptance",
+    "full_corpus_pass": true,
+    "report_sha256": "34829d873782244a4b48862b7f785e69f0dfa07c7f45bd749fea08048b2bf3a3",
+    "verified_at": "2026-11-23T09:45:49.486311+00:00"
   },
   "scope": {
     "datasets": 14,
@@ -48,8 +51,8 @@
     },
     {
       "databaseId": 45114310847,
-      "status": "in_progress",
-      "conclusion": "",
+      "status": "completed",
+      "conclusion": "success",
       "headSha": "89f66c166c86c489ef4256df669555220f1267fd",
       "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45114310847",
       "workflowName": "CI"
@@ -70,6 +73,35 @@
   "prepared_at": "2026-11-23T04:52:37.270039+00:00",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Wait for existing core job; dispatch this scenario once only if every required core gate passes",
-  "source_checks_observed_at": "2026-11-23T04:54:21.364058+00:00"
+  "next": "Monitor this existing run; collect small report once; leave bulk remote",
+  "source_checks_observed_at": "2026-11-23T04:55:21.865400+00:00",
+  "dispatch_request_attempts": 1,
+  "dispatch_attempt_at": "2026-11-23T09:46:17.309725+00:00",
+  "dispatch_output": "build/recovery/batch-cell-vst3-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/batch-cell-vst3-20261122/dispatch.stderr",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T09:46:20.296003+00:00",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45150026998",
+  "conclusion": "",
+  "last_observed_at": "2026-11-23T09:49:52Z",
+  "run_created_at": "2026-11-23T09:46:19Z",
+  "output_directory": "build/github-results/batch-cell-vst3-45150026998",
+  "collection_state": "pending; no artifact downloaded",
+  "artifact_names": {
+    "report": "m3-vst3-report-45150026998-1",
+    "evidence": "m3-vst3-evidence-45150026998-1"
+  },
+  "current_stage": "Check batched cells against every saved component outcome and deadline",
+  "completed_stages": [
+    "Set up job",
+    "Verify public destination and source selection",
+    "Run actions/checkout@v7",
+    "Run actions/setup-python@v7",
+    "Download and verify the retained recording bundle",
+    "Check recording and callback accounting contracts",
+    "Check full corpus comparison contracts",
+    "Install VSTGUI build dependencies",
+    "Build the instrumented VST3 processor on GitHub"
+  ],
+  "component_build_completed_at": "2026-11-23T09:48:15Z"
 }
