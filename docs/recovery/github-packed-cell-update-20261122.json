@@ -1,0 +1,53 @@
+{
+  "schema": "m3_packed_cell_update_checkpoint_v1",
+  "created_at": "2026-11-23T02:12:49.100707+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "packed-cell-update.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": null,
+  "worker_sha": null,
+  "state": "prepared",
+  "final": false,
+  "dispatch_count": 0,
+  "plan": "docs/recovery/CODEX-M3-PACKED-CELL-UPDATE-20261122.md",
+  "timing_reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "companion_reference": "docs/recovery/exact-cell-sharing-companion-references-20261122.json",
+  "operation": "One default-off SSE2 packed cell arithmetic CPU screen: six trace-free block-32 timed replays then six block-512 MIDI companions",
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "condition": "current-on"
+    },
+    {
+      "dataset": "ordinary",
+      "condition": "completion-midi-retention-on"
+    },
+    {
+      "dataset": "physical-long",
+      "condition": "completion-midi-retention-on"
+    }
+  ],
+  "local_tests": {
+    "mocked_runner_tests": 20,
+    "result": "passed",
+    "worker_yaml": "parsed",
+    "worker_shell_sections_parsed": 6,
+    "scoped_diff_check": "passed",
+    "native_execution": false
+  },
+  "review": "One read-only native review found no material blocker. Real compiler/codegen, native state identity and corpus results await GHA.",
+  "required": {
+    "cpu_total_reduction_percent_each_pair": 2,
+    "cpu_p99_growth_ns": 0,
+    "processing_allocations": 0,
+    "processing_frees": 0,
+    "reference_snapshots": "bit-identical",
+    "paired_raw_midi": "bit-identical"
+  },
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "collection_state": "not dispatched",
+  "peer_lane": "Claude independently checks saved stable-note ledger result",
+  "next": "Commit/push the scoped source and worker; dispatch exactly once; collect only the small report, preserve frozen gates, no tuning or repeat."
+}

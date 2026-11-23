@@ -75,7 +75,8 @@ def validate_companion_reference(reference, timing_reference):
 
 
 def run(binary, corpus, manifest_path, reference_path, companion_reference_path,
-        output, *, timeout=900):
+        output, *, timeout=900, diagnostic_flag=FLAG,
+        report_schema='m3_exact_cell_sharing_v1', parse_cell_counts=cell_counts):
     if timeout <= 0:
         raise ValueError('timeout must be positive')
     output.mkdir(parents=True, exist_ok=False)
@@ -83,9 +84,9 @@ def run(binary, corpus, manifest_path, reference_path, companion_reference_path,
     small.mkdir()
     bulk.mkdir()
     binary, corpus = binary.resolve(), corpus.resolve()
-    report = dict(schema='m3_exact_cell_sharing_v1', started_at=now(), state='running',
+    report = dict(schema=report_schema, started_at=now(), state='running',
         final=False, stage='verify inputs and references', settings=SETTINGS,
-        flag=FLAG, timing_block_samples=32, midi_companion_block_samples=512,
+        flag=diagnostic_flag, timing_block_samples=32, midi_companion_block_samples=512,
         declared_cases=[dict(dataset=ds, mode=mode) for ds, mode in CASES], cases=[],
         execution_order=[], diagnostic_only=True, collection_pass=False,
         usefulness_screen_pass=False, native_gate_pass=False, promotion_accepted=False,
@@ -142,7 +143,7 @@ def run(binary, corpus, manifest_path, reference_path, companion_reference_path,
                     if block == 32:
                         command.append('--diagnostic-thread-cpu')
                     if arm == 'on':
-                        command.append(FLAG)
+                        command.append(diagnostic_flag)
                     row = dict(command=command, observation_verified=False)
                     case[phase][arm] = row
                     report['stage'] = stem
@@ -162,7 +163,7 @@ def run(binary, corpus, manifest_path, reference_path, companion_reference_path,
                         row['timing'] = timing
                         save()
                         validate_observation(timing, replay, saved, tsv_hash)
-                        row['cell_counts'] = cell_counts(stderr, arm == 'on')
+                        row['cell_counts'] = parse_cell_counts(stderr, arm == 'on')
                     else:
                         if not reference_identity(saved, replay, tsv_hash):
                             raise ValueError('Untimed companion snapshot differs from saved reference')
@@ -198,14 +199,14 @@ def run(binary, corpus, manifest_path, reference_path, companion_reference_path,
         save()
 
 
-def main():
+def main(*, runner=run):
     parser = argparse.ArgumentParser(description=__doc__)
     for name in ('binary', 'corpus', 'manifest', 'reference-report',
                  'companion-reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
     args = parser.parse_args()
-    run(args.binary, args.corpus, args.manifest, args.reference_report,
+    runner(args.binary, args.corpus, args.manifest, args.reference_report,
         args.companion_reference_report, args.output, timeout=args.replay_timeout_seconds)
 
 

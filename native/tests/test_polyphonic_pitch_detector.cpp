@@ -19,6 +19,90 @@ namespace m3 {
 
 struct PolyphonicPitchDetectorTestAccess final {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  static void packed_cell_update_probe() {
+    PolyphonicPitchDetector detector;
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    if (!PolyphonicPitchDetector::packed_cell_update_supported()) {
+      M3_EXPECT_FALSE(detector.set_packed_cell_update_for_diagnostics(true));
+      M3_EXPECT_TRUE(detector.set_packed_cell_update_for_diagnostics(false));
+      return;
+    }
+    constexpr std::array<double, 5U> rates{44100.0, 48000.0, 96000.0, 4000.0, 100.0};
+    constexpr std::array<double, 10U> input{
+        0.25, -0.5, 0.0, -0.0, 0.125, -0.0625, 0.375,
+        std::numeric_limits<double>::denorm_min(),
+        -std::numeric_limits<double>::denorm_min(), 0.03125};
+    for (const auto rate : rates) {
+      for (const bool narrow : {false, true}) {
+        config.lowest_note = narrow ? 76U : 32U;
+        config.highest_note = 84U;
+        M3_EXPECT_TRUE(detector.configure(rate, config));
+        M3_EXPECT_FALSE(detector.diagnostic_packed_cell_update_);
+        detector.set_exact_cell_sharing_for_diagnostics(true);
+        M3_EXPECT_FALSE(detector.set_packed_cell_update_for_diagnostics(true));
+        detector.set_exact_cell_sharing_for_diagnostics(false);
+        for (const bool selection : {false, true}) {
+          detector.reset();
+          M3_EXPECT_TRUE(detector.set_correlation_window_for_diagnostics(0.08, selection, false));
+          auto expected = detector.cells_;
+          auto lower = detector.lower_cents_guard_cells_;
+          auto upper = detector.upper_cents_guard_cells_;
+          const auto allocations = m3::test::allocation_count();
+          for (std::size_t sample = 0U; sample < 512U; ++sample) {
+            // Both paths inherit an existing state; signed zero and tiny finite
+            // inputs are included, along with normal positive/negative audio.
+            M3_EXPECT_TRUE(detector.set_packed_cell_update_for_diagnostics(
+                (sample / 128U) % 2U != 0U));
+            const double value = input[sample % input.size()];
+            const double mixed = (1.0 - detector.correlation_decay) * value;
+            const double selection_mixed = (1.0 - detector.diagnostic_selection_decay_) * value;
+            const auto update_scalar = [&](auto& cells) {
+              for (auto& cell : cells) {
+                if (!cell.enabled) continue;
+                const double cosine = cell.cosine * cell.cosine_step - cell.sine * cell.sine_step;
+                const double sine = cell.sine * cell.cosine_step + cell.cosine * cell.sine_step;
+                cell.cosine = cosine;
+                cell.sine = sine;
+                cell.fast_real = detector.correlation_decay * cell.fast_real + mixed * cosine;
+                cell.fast_imaginary = detector.correlation_decay * cell.fast_imaginary - mixed * sine;
+                if (selection) {
+                  cell.diagnostic_selection_real = detector.diagnostic_selection_decay_ *
+                      cell.diagnostic_selection_real + selection_mixed * cosine;
+                  cell.diagnostic_selection_imaginary = detector.diagnostic_selection_decay_ *
+                      cell.diagnostic_selection_imaginary - selection_mixed * sine;
+                }
+              }
+            };
+            update_scalar(expected);
+            update_scalar(lower);
+            update_scalar(upper);
+            detector.update_cells(value);
+            const auto check = [](const auto& actual, const auto& reference) {
+              for (std::size_t index = 0U; index < actual.size(); ++index) {
+                for (auto member : {&PolyphonicPitchDetector::Cell::cosine,
+                     &PolyphonicPitchDetector::Cell::sine,
+                     &PolyphonicPitchDetector::Cell::fast_real,
+                     &PolyphonicPitchDetector::Cell::fast_imaginary,
+                     &PolyphonicPitchDetector::Cell::diagnostic_selection_real,
+                     &PolyphonicPitchDetector::Cell::diagnostic_selection_imaginary}) {
+                  M3_EXPECT_EQ(std::memcmp(&(actual[index].*member),
+                                          &(reference[index].*member), sizeof(double)), 0);
+                }
+              }
+            };
+            check(detector.cells_, expected);
+            check(detector.lower_cents_guard_cells_, lower);
+            check(detector.upper_cents_guard_cells_, upper);
+          }
+          M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+          detector.reset();
+          M3_EXPECT_TRUE(detector.diagnostic_packed_cell_update_);
+        }
+      }
+    }
+  }
+
   static void exact_cell_sharing_matches_scalar_loop(
       PolyphonicPitchDetector& detector) noexcept {
     auto expected = detector.cells_;
@@ -7030,6 +7114,10 @@ M3_TEST(native_joint_rapid_release_is_guarded_and_transactional) {
 
 M3_TEST(native_exact_cell_sharing_preserves_every_sample_bitwise) {
   m3::PolyphonicPitchDetectorTestAccess::exact_cell_sharing_reset_probe();
+}
+
+M3_TEST(native_packed_cells_preserve_every_sample_and_guard_bitwise) {
+  m3::PolyphonicPitchDetectorTestAccess::packed_cell_update_probe();
 }
 
 M3_TEST(native_detector_quiet_diagnostics_identify_the_first_causal_gate) {

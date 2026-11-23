@@ -3064,10 +3064,14 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_common_assignment_confidence,
                          bool diagnostic_upper_fretted_relief,
                          JointReleaseSupport* diagnostic_joint_release_support,
-                         bool diagnostic_exact_cell_sharing) {
+                         bool diagnostic_exact_cell_sharing,
+                         bool diagnostic_packed_cell_update) {
   output = {};
   error = ReplayError::invalid_config;
+  if (diagnostic_packed_cell_update && diagnostic_exact_cell_sharing)
+    return false;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  if (diagnostic_packed_cell_update) return false;
   if (diagnostic_exact_cell_sharing || diagnostic_joint_release_support != nullptr || diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
@@ -3381,6 +3385,15 @@ bool run_detector_replay(const WaveData& wave,
   }
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   detector.set_exact_cell_sharing_for_diagnostics(diagnostic_exact_cell_sharing);
+  if (!detector.set_packed_cell_update_for_diagnostics(diagnostic_packed_cell_update))
+    return false;
+  if (diagnostic_thread_cpu || diagnostic_packed_cell_update) {
+    std::fprintf(stderr,
+        "m3_replay: packed_cell_update enabled=%u supported=%u cells=%u guards=%u\n",
+        diagnostic_packed_cell_update ? 1U : 0U,
+        detector.packed_cell_update_supported() ? 1U : 0U,
+        static_cast<unsigned>(detector.packed_cell_count()), detector.packed_guard_count());
+  }
   if (diagnostic_thread_cpu || diagnostic_exact_cell_sharing) {
     std::fprintf(stderr,
         "m3_replay: exact_cell_sharing enabled=%u unique=%u duplicates=%u\n",

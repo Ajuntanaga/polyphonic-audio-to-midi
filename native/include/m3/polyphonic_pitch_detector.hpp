@@ -793,6 +793,25 @@ class PolyphonicPitchDetector final {
   void set_exact_cell_sharing_for_diagnostics(bool enabled) noexcept {
     diagnostic_exact_cell_sharing_ = enabled;
   }
+  [[nodiscard]] static constexpr bool packed_cell_update_supported() noexcept {
+#if defined(__SSE2__) || defined(_M_X64)
+    return true;
+#else
+    return false;
+#endif
+  }
+  [[nodiscard]] bool set_packed_cell_update_for_diagnostics(bool enabled) noexcept {
+    if (enabled && (!packed_cell_update_supported() || diagnostic_exact_cell_sharing_))
+      return false;
+    diagnostic_packed_cell_update_ = enabled;
+    return true;
+  }
+  [[nodiscard]] std::uint16_t packed_cell_count() const noexcept {
+    return enabled_cell_count_;
+  }
+  [[nodiscard]] unsigned packed_guard_count() const noexcept {
+    return static_cast<unsigned>(lower_cents_guard_count_) + upper_cents_guard_count_;
+  }
   [[nodiscard]] std::uint16_t exact_cell_unique_count() const noexcept {
     return diagnostic_unique_cell_count_;
   }
@@ -1777,6 +1796,7 @@ class PolyphonicPitchDetector final {
   std::uint16_t diagnostic_unique_cell_count_{};
   std::uint16_t diagnostic_duplicate_cell_count_{};
   bool diagnostic_exact_cell_sharing_{};
+  bool diagnostic_packed_cell_update_{};
 #endif
   // Boundary-only analysis cells make the configured lowest/highest notes
   // tunable without adding selectable candidates to the pitch set.

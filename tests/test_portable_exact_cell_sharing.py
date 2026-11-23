@@ -21,7 +21,7 @@ class ExactCellSharingTests(unittest.TestCase):
     COMPANION_TSV = RetentionTimingTests.TSV.replace('0\t0\t960\t52', '0\t0\t1024\t52')
 
     def exercise(self, *, mutate_reference=None, mutate_companion_reference=None,
-                 mutate_run=None):
+                 mutate_run=None, runner=run, flag=FLAG, summary=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
             binary, manifest, reference, companion_reference, output = (root / name for name in
@@ -66,7 +66,7 @@ class ExactCellSharingTests(unittest.TestCase):
             def execute(command, **kwargs):
                 index = len(commands)
                 commands.append(command)
-                enabled = FLAG in command
+                enabled = flag in command
                 timed = '--diagnostic-core-timing' in command
                 observed = dict(timing, maximum_ns=200000, deadline_overruns=0,
                     total_ns=5000000, timing_diagnostic_only=True,
@@ -78,7 +78,8 @@ class ExactCellSharingTests(unittest.TestCase):
                         slowest_blocks=[dict(wall_ns=200000, cpu_ns=190000, end_sample=32)]))
                 kwargs['stdout'].write(RetentionTimingTests.TSV if timed else self.COMPANION_TSV)
                 if timed or enabled:
-                    kwargs['stderr'].write('m3_replay: exact_cell_sharing '
+                    kwargs['stderr'].write(summary(enabled) if summary else
+                        'm3_replay: exact_cell_sharing '
                         f'enabled={int(enabled)} unique=154 duplicates=91\n')
                 midi = None
                 if not timed:
@@ -95,7 +96,7 @@ class ExactCellSharingTests(unittest.TestCase):
             with patch('tools.portable_exact_cell_sharing.verify_inputs') as verify, \
                  patch('tools.portable_exact_cell_sharing.subprocess.run', side_effect=execute):
                 try:
-                    passed = run(binary, root, manifest, reference, companion_reference, output)
+                    passed = runner(binary, root, manifest, reference, companion_reference, output)
                 except (ValueError, subprocess.TimeoutExpired) as caught:
                     error = caught
             report = json.loads((output / 'report/report.json').read_text())

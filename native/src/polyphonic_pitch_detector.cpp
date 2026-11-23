@@ -6,6 +6,10 @@
 #include <cstring>
 #include <limits>
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) && (defined(__SSE2__) || defined(_M_X64))
+#include <emmintrin.h>
+#endif
+
 #include "m3/factory_calibration.hpp"
 #include "m3/harmonic_evidence.hpp"
 #include "m3/offline_stage_timing.hpp"
@@ -1493,6 +1497,7 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   diagnostic_unique_cell_count_ = 0U;
   diagnostic_duplicate_cell_count_ = 0U;
   diagnostic_exact_cell_sharing_ = false;
+  diagnostic_packed_cell_update_ = false;
 #endif
   lower_cents_guard_cells_ = {};
   upper_cents_guard_cells_ = {};
@@ -3140,6 +3145,48 @@ void PolyphonicPitchDetector::update_cells(double sample) noexcept {
   const double selection_decay = diagnostic_selection_decay_;
   const double selection_sample =
       selection_enabled ? (1.0 - selection_decay) * sample : 0.0;
+#if defined(__SSE2__) || defined(_M_X64)
+  if (diagnostic_packed_cell_update_) {
+    // Pair the real/imaginary lanes inside one cell; keep the indexed cell
+    // order and each lane's multiply-then-add/subtract sequence unchanged.
+    const __m128d packed_decay = _mm_set1_pd(decay);
+    const __m128d packed_sample = _mm_set1_pd(mixed_sample);
+    const __m128d negate_low = _mm_set_pd(0.0, -0.0);
+    const __m128d negate_high = _mm_set_pd(-0.0, 0.0);
+    const __m128d packed_selection_decay = _mm_set1_pd(selection_decay);
+    const __m128d packed_selection_sample = _mm_set1_pd(selection_sample);
+    const auto update_packed = [=](Cell& cell) noexcept {
+      const __m128d phase = _mm_set_pd(cell.sine, cell.cosine);
+      const __m128d rotated = _mm_shuffle_pd(phase, phase, 1);
+      const __m128d next = _mm_add_pd(
+          _mm_mul_pd(phase, _mm_set1_pd(cell.cosine_step)),
+          _mm_xor_pd(_mm_mul_pd(rotated, _mm_set1_pd(cell.sine_step)), negate_low));
+      cell.cosine = _mm_cvtsd_f64(next);
+      cell.sine = _mm_cvtsd_f64(_mm_unpackhi_pd(next, next));
+      const __m128d fast = _mm_add_pd(
+          _mm_mul_pd(packed_decay, _mm_set_pd(cell.fast_imaginary, cell.fast_real)),
+          _mm_xor_pd(_mm_mul_pd(packed_sample, next), negate_high));
+      cell.fast_real = _mm_cvtsd_f64(fast);
+      cell.fast_imaginary = _mm_cvtsd_f64(_mm_unpackhi_pd(fast, fast));
+      if (selection_enabled) {
+        const __m128d selection = _mm_add_pd(
+            _mm_mul_pd(packed_selection_decay, _mm_set_pd(
+                cell.diagnostic_selection_imaginary, cell.diagnostic_selection_real)),
+            _mm_xor_pd(_mm_mul_pd(packed_selection_sample, next), negate_high));
+        cell.diagnostic_selection_real = _mm_cvtsd_f64(selection);
+        cell.diagnostic_selection_imaginary =
+            _mm_cvtsd_f64(_mm_unpackhi_pd(selection, selection));
+      }
+    };
+    for (std::size_t index = 0U; index < enabled_cell_count_; ++index)
+      update_packed(cells_[enabled_cell_indices_[index]]);
+    for (std::size_t index = 0U; index < lower_cents_guard_count_; ++index)
+      update_packed(lower_cents_guard_cells_[lower_cents_guard_indices_[index]]);
+    for (std::size_t index = 0U; index < upper_cents_guard_count_; ++index)
+      update_packed(upper_cents_guard_cells_[upper_cents_guard_indices_[index]]);
+    return;
+  }
+#endif
 #endif
   const auto update = [=](Cell& cell) noexcept {
     const double next_cosine =
