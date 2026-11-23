@@ -11,16 +11,21 @@ from tools.frozen_cue_corpus_gate import read_replay
 from tools.portable_assignment_trace import digest
 from tools.portable_completion_midi_retention_timing import (
     CONDITIONS, DATASETS, MEASUREMENT_SCOPE, REFERENCE_SCHEMA, SETTINGS)
-from tools.portable_exact_cell_sharing import CASES, FLAG, run
+from tools.portable_exact_cell_sharing import (
+    CASES, COMPANION_REFERENCE_SCHEMA, FLAG, run)
 from tests.test_portable_calibrated_midi_retention_timing import RetentionTimingTests
 
 
 class ExactCellSharingTests(unittest.TestCase):
-    def exercise(self, *, mutate_reference=None, mutate_run=None):
+    # The scored summary is unchanged but the two serialized snapshots differ.
+    COMPANION_TSV = RetentionTimingTests.TSV.replace('0\t0\t960\t52', '0\t0\t1024\t52')
+
+    def exercise(self, *, mutate_reference=None, mutate_companion_reference=None,
+                 mutate_run=None):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
-            binary, manifest, reference, output = (root / name for name in
-                ('binary', 'manifest.json', 'reference.json', 'output'))
+            binary, manifest, reference, companion_reference, output = (root / name for name in
+                ('binary', 'manifest.json', 'reference.json', 'companion-reference.json', 'output'))
             binary.write_text('mock, never executed')
             source = dict(input_release='retained', input_bundle_sha256='a' * 64,
                           original_input_manifest_sha256='b' * 64)
@@ -39,9 +44,23 @@ class ExactCellSharingTests(unittest.TestCase):
                 conditions={mode: list(flags) for mode, flags in CONDITIONS},
                 datasets={name: {mode: copy.deepcopy(baseline) for mode, _ in CONDITIONS}
                           for name in DATASETS})
+            companion_retained = root / 'retained-512.tsv'
+            companion_retained.write_text(self.COMPANION_TSV)
+            companion_baseline = dict(read_replay(companion_retained),
+                                      tsv_sha256=digest(companion_retained))
+            companion_refs = dict(schema=COMPANION_REFERENCE_SCHEMA,
+                source=copy.deepcopy(source), settings=SETTINGS, block_samples=512,
+                anchor_report_sha256='c' * 64, conditions=copy.deepcopy(refs['conditions']),
+                datasets={})
+            for dataset, mode in CASES:
+                companion_refs['datasets'].setdefault(dataset, {})[mode] = copy.deepcopy(
+                    companion_baseline)
             if mutate_reference:
                 mutate_reference(refs)
+            if mutate_companion_reference:
+                mutate_companion_reference(companion_refs)
             reference.write_text(json.dumps(refs))
+            companion_reference.write_text(json.dumps(companion_refs))
             commands = []
 
             def execute(command, **kwargs):
@@ -57,7 +76,7 @@ class ExactCellSharingTests(unittest.TestCase):
                         maximum_ns=190000, deadline_overruns=0,
                         phases=[dict(blocks=1, wall_deadline_overruns=0) for _ in range(32)],
                         slowest_blocks=[dict(wall_ns=200000, cpu_ns=190000, end_sample=32)]))
-                kwargs['stdout'].write(RetentionTimingTests.TSV)
+                kwargs['stdout'].write(RetentionTimingTests.TSV if timed else self.COMPANION_TSV)
                 if timed or enabled:
                     kwargs['stderr'].write('m3_replay: exact_cell_sharing '
                         f'enabled={int(enabled)} unique=154 duplicates=91\n')
@@ -76,7 +95,7 @@ class ExactCellSharingTests(unittest.TestCase):
             with patch('tools.portable_exact_cell_sharing.verify_inputs') as verify, \
                  patch('tools.portable_exact_cell_sharing.subprocess.run', side_effect=execute):
                 try:
-                    passed = run(binary, root, manifest, reference, output)
+                    passed = run(binary, root, manifest, reference, companion_reference, output)
                 except (ValueError, subprocess.TimeoutExpired) as caught:
                     error = caught
             report = json.loads((output / 'report/report.json').read_text())
@@ -102,6 +121,8 @@ class ExactCellSharingTests(unittest.TestCase):
                     for flag in dict(CONDITIONS)[mode]:
                         self.assertIn(flag, command)
         for case in report['cases']:
+            self.assertNotEqual(case['timing_runs']['off']['tsv_sha256'],
+                                case['midi_companions']['off']['tsv_sha256'])
             self.assertTrue(case['raw_midi_bit_identical'])
             self.assertEqual(case['cpu_total_reduction_percent'], 5)
             for phase in ('timing_runs', 'midi_companions'):
@@ -121,6 +142,35 @@ class ExactCellSharingTests(unittest.TestCase):
                 self.assertIsInstance(error, ValueError)
                 self.assertEqual(commands, [])
                 self.assertEqual(report['state'], 'failed')
+
+    def test_wrong_companion_reference_stops_before_any_execution(self):
+        for change in (
+                lambda r: r.update(block_samples=32),
+                lambda r: r.update(schema=REFERENCE_SCHEMA),
+                lambda r: r['source'].update(input_bundle_sha256='wrong'),
+                lambda r: r.update(anchor_report_sha256='d' * 64),
+                lambda r: r['conditions'].update({'current-on': []}),
+                lambda r: r['datasets'].pop('physical-long'),
+                lambda r: r['datasets']['ordinary'].pop('current-on'),
+                lambda r: r['datasets']['ordinary']['current-on'].pop('tsv_sha256')):
+            with self.subTest(change=change):
+                _, report, error, commands, verified = self.exercise(
+                    mutate_companion_reference=change)
+                self.assertIsInstance(error, ValueError)
+                self.assertEqual(commands, [])
+                self.assertEqual(verified, [])
+                self.assertEqual(report['state'], 'failed')
+
+    def test_block32_snapshot_cannot_satisfy_block512_reference(self):
+        def mutate(index, timing, streams, command, midi):
+            if index == 6:
+                streams['stdout'].seek(0)
+                streams['stdout'].truncate()
+                streams['stdout'].write(RetentionTimingTests.TSV)
+        _, report, error, commands, _ = self.exercise(mutate_run=mutate)
+        self.assertIn('Untimed companion snapshot', str(error))
+        self.assertEqual(len(commands), 7)
+        self.assertFalse(report['collection_pass'])
 
     def test_snapshot_change_fails_for_timed_and_untimed(self):
         for failure_at in (0, 6):

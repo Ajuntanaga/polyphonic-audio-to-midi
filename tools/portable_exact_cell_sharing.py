@@ -20,6 +20,7 @@ from tools.portable_sample_observation_comparison import (
     CASES, MINIMUM_CPU_REDUCTION_PERCENT, validate_observation)
 
 FLAG = '--diagnostic-exact-cell-sharing'
+COMPANION_REFERENCE_SCHEMA = 'm3_exact_cell_sharing_companion_references_v1'
 CELL_LINE = re.compile(
     r'^m3_replay: exact_cell_sharing enabled=([01]) unique=(\d+) duplicates=(\d+)$',
     re.MULTILINE)
@@ -48,7 +49,33 @@ def midi_capture(stderr, path):
     return dict(rows=rows, cap=cap, truncated=False, sha256=digest(path))
 
 
-def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
+def validate_companion_reference(reference, timing_reference):
+    expected = {}
+    for dataset, mode in CASES:
+        expected.setdefault(dataset, set()).add(mode)
+    if (reference['schema'] != COMPANION_REFERENCE_SCHEMA
+            or reference['block_samples'] != 512
+            or reference['settings'] != SETTINGS
+            or reference['conditions'] != {mode: list(flags) for mode, flags in CONDITIONS}
+            or set(reference['datasets']) != set(expected)):
+        raise ValueError('Wrong fixed block-512 companion reference selection')
+    if (reference['source'] != timing_reference['source']
+            or reference['anchor_report_sha256'] != timing_reference['anchor_report_sha256']):
+        raise ValueError('Timing and companion reference provenance differs')
+    for dataset, modes in expected.items():
+        runs = reference['datasets'][dataset]
+        if set(runs) != modes:
+            raise ValueError('Wrong saved companion modes: ' + dataset)
+        for mode in modes:
+            row = runs[mode]
+            if (not re.fullmatch(r'[0-9a-f]{64}', row.get('tsv_sha256', ''))
+                    or not isinstance(row.get('output'), dict)
+                    or not isinstance(row.get('exact_matches_by_string_count'), dict)):
+                raise ValueError('Incomplete companion snapshot reference: ' + dataset + '/' + mode)
+
+
+def run(binary, corpus, manifest_path, reference_path, companion_reference_path,
+        output, *, timeout=900):
     if timeout <= 0:
         raise ValueError('timeout must be positive')
     output.mkdir(parents=True, exist_ok=False)
@@ -80,7 +107,9 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
     try:
         manifest = json.loads(manifest_path.read_text())
         reference = json.loads(reference_path.read_text())
+        companion_reference = json.loads(companion_reference_path.read_text())
         validate_reference(reference, manifest)
+        validate_companion_reference(companion_reference, reference)
         datasets = tuple(dict.fromkeys(ds for ds, _ in CASES))
         for dataset in datasets:
             verify_inputs(corpus, manifest, dataset)
@@ -88,6 +117,7 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
             verified_inputs=2 + 2 * len(datasets),
             input_manifest_sha256=digest(manifest_path),
             reference_manifest_sha256=digest(reference_path),
+            companion_reference_manifest_sha256=digest(companion_reference_path),
             reference_source=reference['source'],
             reference_report_sha256=reference['anchor_report_sha256'])
         # All timing runs finish before any MIDI trace is written.
@@ -97,9 +127,10 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
                         timing_runs={}, midi_companions={})
             report['cases'].append(case)
         for phase, block in (('timing_runs', 32), ('midi_companions', 512)):
+            phase_reference = reference if block == 32 else companion_reference
             for case in report['cases']:
                 dataset, mode = case['dataset'], case['mode']
-                saved = reference['datasets'][dataset][mode]
+                saved = phase_reference['datasets'][dataset][mode]
                 for arm in case['arm_order']:
                     stem = f'{dataset}-{mode}-{arm}-{block}'
                     tsv, midi = (bulk / (stem + suffix) for suffix in ('.tsv', '-midi.tsv'))
@@ -169,12 +200,13 @@ def run(binary, corpus, manifest_path, reference_path, output, *, timeout=900):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    for name in ('binary', 'corpus', 'manifest', 'reference-report', 'output'):
+    for name in ('binary', 'corpus', 'manifest', 'reference-report',
+                 'companion-reference-report', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--replay-timeout-seconds', type=int, default=900)
     args = parser.parse_args()
-    run(args.binary, args.corpus, args.manifest, args.reference_report, args.output,
-        timeout=args.replay_timeout_seconds)
+    run(args.binary, args.corpus, args.manifest, args.reference_report,
+        args.companion_reference_report, args.output, timeout=args.replay_timeout_seconds)
 
 
 if __name__ == '__main__':

@@ -1,0 +1,99 @@
+{
+  "schema": "m3_exact_cell_sharing_companion_references_v1",
+  "block_samples": 512,
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "conditions": {
+    "reference-off": [],
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "completion-midi-retention-on": [
+      "--diagnostic-spectral-lane-collision",
+      "--diagnostic-completion-midi-retention"
+    ]
+  },
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43756240245",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "anchor_report_sha256": "78c405a8e8845171b49b8240ff6ec91efbc0e62ef18005ad4d920b12d6bea45d",
+  "anchor_report_path": "build/github-results/completion-midi-retention-corpus-43756240245/completion-midi-retention-corpus/report.json",
+  "datasets": {
+    "ordinary": {
+      "current-on": {
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        },
+        "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036"
+      },
+      "completion-midi-retention-on": {
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        },
+        "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036"
+      }
+    },
+    "physical-long": {
+      "completion-midi-retention-on": {
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "238b4fedc0263a94"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "tsv_sha256": "4297875fe20b2ac64cc5f1fe361c131a95ba236e44b1c72c47d2a16ac7af759e"
+      }
+    }
+  }
+}

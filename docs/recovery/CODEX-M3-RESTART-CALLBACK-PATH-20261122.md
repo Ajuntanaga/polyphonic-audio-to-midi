@@ -27,3 +27,29 @@ Claude: the run-interior census remains yours. If observed energy/onset coverage
 ## Smaller observation route if the saved coverage is insufficient
 
 The detector already exposes `demodulated_harmonic_tracks_for_diagnostics` (:2810): a const read of the six enabled cells' `fast_real/fast_imaginary`, frequencies, fast input energy and decay, without a quiet/selection gate. It does not compute a policy, change any state or require the score path to run. The existing corrected-energy getter is also const, but phase correction makes it a different quantity from raw preselection energy. If another observation is justified, prefer a slim replay-side writer over changing `make_decision` or widening its diagnostic score calculation. That would preserve the untouched v5 table and append a separate raw-cell sidecar. Decision timestamps and identity companions would still be required. This is feasibility from source only; no observation format, edit or job is yet claimed.
+
+## Close-out after the retained observations, 2026-11-23
+
+The quiet-cell observation and both scalar analyses are now complete; their
+frozen restart-discrimination bars failed. See
+`CODEX-M3-QUIET-CELL-RESTART-RESULT-20261122.md` and Claude's boundary census.
+The earlier observation offer above is historical, not a request for another
+replay.
+
+The source check also distinguishes per-candidate from global re-entry.
+Accepted diagnostic NoteOff clears the full candidate lifecycle state. The
+inactive-candidate evidence update precedes that release, so it cannot fill
+newly cleared evidence on the same tick. Later fresh activation requires
+selection, available capacity, the fast/slow energy gate, evidence and attack
+readiness; already-active candidates follow a different path. Raw resonator
+cells survive the candidate reset. These facts establish why cutting an
+existing voice is not equivalent to masking its output and resuming it later.
+
+Saved trial MIDI retains other emitted owners for four of the five wholly
+missed labels; only label 70 has an empty-output interval (12,032 samples).
+That observation does not support last-owner reset as one explanation for all
+five. The rejected trial did not retain candidate activation diagnostics, so
+which fresh-note gate refused each label is unmeasured. No causal attribution,
+policy replay or new repair is justified from source order alone. This source
+inquiry is closed; the rejected trial, label budget and installed output stay
+unchanged.
