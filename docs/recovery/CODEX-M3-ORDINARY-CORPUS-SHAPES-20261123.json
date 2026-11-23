@@ -1,0 +1,4103 @@
+{
+  "schema": "m3_ordinary_corpus_shape_metadata_v1",
+  "classification": "descriptive; no policy or acceptance decision",
+  "labels": {
+    "path": "build/physical-capture/note-combination-corpus-practical-chords/combinations.tsv",
+    "sha256": "58dd6bb85d839751f3aabf6d369deb906968e0e5b706185f8f6fa4c85ac24b1f"
+  },
+  "generator": {
+    "path": "tools/generate_note_combination_corpus.py",
+    "sha256": "22e77626dd02f514dbd6a91197347c1ff89776116ada9591ab3e73af0e81c1fe"
+  },
+  "definition": "Group labels with identical start/end; fret=note-(32+4*lane); span=max(fret)-min(fret) over non-open strings only.",
+  "window_count": 131,
+  "label_count": 499,
+  "windows_with_two_or_more_fretted_notes": 131,
+  "median_fretted_span": 14,
+  "max_fretted_span": 23,
+  "span_histogram": {
+    "1": 1,
+    "2": 3,
+    "3": 3,
+    "5": 6,
+    "6": 3,
+    "7": 4,
+    "8": 5,
+    "9": 2,
+    "10": 14,
+    "11": 3,
+    "12": 9,
+    "13": 7,
+    "14": 9,
+    "15": 12,
+    "16": 5,
+    "17": 10,
+    "18": 8,
+    "19": 7,
+    "20": 9,
+    "21": 3,
+    "22": 5,
+    "23": 3
+  },
+  "polyphony_histogram": {
+    "2": 17,
+    "3": 36,
+    "4": 33,
+    "5": 45
+  },
+  "descriptive_span_counts": {
+    "at_most_3": 7,
+    "at_most_5": 13
+  },
+  "limits": [
+    "No audio opened or processed",
+    "No span cutoff asserts physical impossibility",
+    "No labels excluded or changed",
+    "No installed score or gate changed",
+    "Does not measure actual played-chord success"
+  ],
+  "windows": [
+    {
+      "start_sample": 217,
+      "end_sample": 72000,
+      "notes": [
+        {
+          "label_index": 0,
+          "note": 78,
+          "lane": 7,
+          "fret": 18
+        },
+        {
+          "label_index": 1,
+          "note": 58,
+          "lane": 6,
+          "fret": 2
+        },
+        {
+          "label_index": 2,
+          "note": 67,
+          "lane": 5,
+          "fret": 15
+        },
+        {
+          "label_index": 3,
+          "note": 69,
+          "lane": 4,
+          "fret": 21
+        },
+        {
+          "label_index": 4,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 81839,
+      "end_sample": 114053,
+      "notes": [
+        {
+          "label_index": 5,
+          "note": 83,
+          "lane": 7,
+          "fret": 23
+        },
+        {
+          "label_index": 6,
+          "note": 78,
+          "lane": 6,
+          "fret": 22
+        },
+        {
+          "label_index": 7,
+          "note": 62,
+          "lane": 5,
+          "fret": 10
+        },
+        {
+          "label_index": 8,
+          "note": 57,
+          "lane": 3,
+          "fret": 13
+        },
+        {
+          "label_index": 9,
+          "note": 56,
+          "lane": 1,
+          "fret": 20
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 163306,
+      "end_sample": 235200,
+      "notes": [
+        {
+          "label_index": 10,
+          "note": 75,
+          "lane": 7,
+          "fret": 15
+        },
+        {
+          "label_index": 11,
+          "note": 47,
+          "lane": 1,
+          "fret": 11
+        },
+        {
+          "label_index": 12,
+          "note": 48,
+          "lane": 0,
+          "fret": 16
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 5
+    },
+    {
+      "start_sample": 245017,
+      "end_sample": 316800,
+      "notes": [
+        {
+          "label_index": 13,
+          "note": 71,
+          "lane": 6,
+          "fret": 15
+        },
+        {
+          "label_index": 14,
+          "note": 57,
+          "lane": 4,
+          "fret": 9
+        },
+        {
+          "label_index": 15,
+          "note": 56,
+          "lane": 2,
+          "fret": 16
+        },
+        {
+          "label_index": 16,
+          "note": 54,
+          "lane": 1,
+          "fret": 18
+        },
+        {
+          "label_index": 17,
+          "note": 37,
+          "lane": 0,
+          "fret": 5
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 326608,
+      "end_sample": 398400,
+      "notes": [
+        {
+          "label_index": 18,
+          "note": 76,
+          "lane": 6,
+          "fret": 20
+        },
+        {
+          "label_index": 19,
+          "note": 54,
+          "lane": 4,
+          "fret": 6
+        },
+        {
+          "label_index": 20,
+          "note": 68,
+          "lane": 3,
+          "fret": 24
+        },
+        {
+          "label_index": 21,
+          "note": 45,
+          "lane": 2,
+          "fret": 5
+        },
+        {
+          "label_index": 22,
+          "note": 32,
+          "lane": 0,
+          "fret": 0
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 408199,
+      "end_sample": 480000,
+      "notes": [
+        {
+          "label_index": 23,
+          "note": 76,
+          "lane": 6,
+          "fret": 20
+        },
+        {
+          "label_index": 24,
+          "note": 55,
+          "lane": 4,
+          "fret": 7
+        },
+        {
+          "label_index": 25,
+          "note": 63,
+          "lane": 2,
+          "fret": 23
+        },
+        {
+          "label_index": 26,
+          "note": 39,
+          "lane": 1,
+          "fret": 3
+        },
+        {
+          "label_index": 27,
+          "note": 53,
+          "lane": 0,
+          "fret": 21
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 489817,
+      "end_sample": 561600,
+      "notes": [
+        {
+          "label_index": 28,
+          "note": 77,
+          "lane": 6,
+          "fret": 21
+        },
+        {
+          "label_index": 29,
+          "note": 56,
+          "lane": 4,
+          "fret": 8
+        },
+        {
+          "label_index": 30,
+          "note": 50,
+          "lane": 2,
+          "fret": 10
+        },
+        {
+          "label_index": 31,
+          "note": 55,
+          "lane": 1,
+          "fret": 19
+        },
+        {
+          "label_index": 32,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 571408,
+      "end_sample": 633204,
+      "notes": [
+        {
+          "label_index": 33,
+          "note": 80,
+          "lane": 6,
+          "fret": 24
+        },
+        {
+          "label_index": 34,
+          "note": 57,
+          "lane": 4,
+          "fret": 9
+        },
+        {
+          "label_index": 35,
+          "note": 48,
+          "lane": 3,
+          "fret": 4
+        },
+        {
+          "label_index": 36,
+          "note": 49,
+          "lane": 2,
+          "fret": 9
+        },
+        {
+          "label_index": 37,
+          "note": 54,
+          "lane": 0,
+          "fret": 22
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 653030,
+      "end_sample": 724800,
+      "notes": [
+        {
+          "label_index": 38,
+          "note": 62,
+          "lane": 5,
+          "fret": 10
+        },
+        {
+          "label_index": 39,
+          "note": 65,
+          "lane": 4,
+          "fret": 17
+        },
+        {
+          "label_index": 40,
+          "note": 63,
+          "lane": 3,
+          "fret": 19
+        },
+        {
+          "label_index": 41,
+          "note": 48,
+          "lane": 2,
+          "fret": 8
+        },
+        {
+          "label_index": 42,
+          "note": 60,
+          "lane": 1,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 16
+    },
+    {
+      "start_sample": 734617,
+      "end_sample": 806400,
+      "notes": [
+        {
+          "label_index": 43,
+          "note": 63,
+          "lane": 5,
+          "fret": 11
+        },
+        {
+          "label_index": 44,
+          "note": 65,
+          "lane": 4,
+          "fret": 17
+        },
+        {
+          "label_index": 45,
+          "note": 64,
+          "lane": 2,
+          "fret": 24
+        },
+        {
+          "label_index": 46,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 47,
+          "note": 38,
+          "lane": 0,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 816239,
+      "end_sample": 888000,
+      "notes": [
+        {
+          "label_index": 48,
+          "note": 63,
+          "lane": 5,
+          "fret": 11
+        },
+        {
+          "label_index": 49,
+          "note": 66,
+          "lane": 4,
+          "fret": 18
+        },
+        {
+          "label_index": 50,
+          "note": 43,
+          "lane": 1,
+          "fret": 7
+        },
+        {
+          "label_index": 51,
+          "note": 37,
+          "lane": 0,
+          "fret": 5
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 897799,
+      "end_sample": 969600,
+      "notes": [
+        {
+          "label_index": 52,
+          "note": 63,
+          "lane": 5,
+          "fret": 11
+        },
+        {
+          "label_index": 53,
+          "note": 68,
+          "lane": 4,
+          "fret": 20
+        },
+        {
+          "label_index": 54,
+          "note": 52,
+          "lane": 1,
+          "fret": 16
+        },
+        {
+          "label_index": 55,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 979417,
+      "end_sample": 1051200,
+      "notes": [
+        {
+          "label_index": 56,
+          "note": 64,
+          "lane": 5,
+          "fret": 12
+        },
+        {
+          "label_index": 57,
+          "note": 65,
+          "lane": 4,
+          "fret": 17
+        },
+        {
+          "label_index": 58,
+          "note": 49,
+          "lane": 1,
+          "fret": 13
+        },
+        {
+          "label_index": 59,
+          "note": 54,
+          "lane": 0,
+          "fret": 22
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 1061039,
+      "end_sample": 1132800,
+      "notes": [
+        {
+          "label_index": 60,
+          "note": 64,
+          "lane": 5,
+          "fret": 12
+        },
+        {
+          "label_index": 61,
+          "note": 66,
+          "lane": 4,
+          "fret": 18
+        },
+        {
+          "label_index": 62,
+          "note": 48,
+          "lane": 1,
+          "fret": 12
+        },
+        {
+          "label_index": 63,
+          "note": 40,
+          "lane": 0,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 1142599,
+      "end_sample": 1214400,
+      "notes": [
+        {
+          "label_index": 64,
+          "note": 64,
+          "lane": 5,
+          "fret": 12
+        },
+        {
+          "label_index": 65,
+          "note": 67,
+          "lane": 4,
+          "fret": 19
+        },
+        {
+          "label_index": 66,
+          "note": 46,
+          "lane": 1,
+          "fret": 10
+        },
+        {
+          "label_index": 67,
+          "note": 37,
+          "lane": 0,
+          "fret": 5
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 1224217,
+      "end_sample": 1296000,
+      "notes": [
+        {
+          "label_index": 68,
+          "note": 64,
+          "lane": 5,
+          "fret": 12
+        },
+        {
+          "label_index": 69,
+          "note": 68,
+          "lane": 4,
+          "fret": 20
+        },
+        {
+          "label_index": 70,
+          "note": 48,
+          "lane": 0,
+          "fret": 16
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 8
+    },
+    {
+      "start_sample": 1305839,
+      "end_sample": 1377600,
+      "notes": [
+        {
+          "label_index": 71,
+          "note": 65,
+          "lane": 5,
+          "fret": 13
+        },
+        {
+          "label_index": 72,
+          "note": 66,
+          "lane": 4,
+          "fret": 18
+        },
+        {
+          "label_index": 73,
+          "note": 63,
+          "lane": 2,
+          "fret": 23
+        },
+        {
+          "label_index": 74,
+          "note": 57,
+          "lane": 1,
+          "fret": 21
+        },
+        {
+          "label_index": 75,
+          "note": 45,
+          "lane": 0,
+          "fret": 13
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 1387399,
+      "end_sample": 1459200,
+      "notes": [
+        {
+          "label_index": 76,
+          "note": 65,
+          "lane": 5,
+          "fret": 13
+        },
+        {
+          "label_index": 77,
+          "note": 67,
+          "lane": 4,
+          "fret": 19
+        },
+        {
+          "label_index": 78,
+          "note": 47,
+          "lane": 1,
+          "fret": 11
+        },
+        {
+          "label_index": 79,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 1469017,
+      "end_sample": 1540800,
+      "notes": [
+        {
+          "label_index": 80,
+          "note": 65,
+          "lane": 5,
+          "fret": 13
+        },
+        {
+          "label_index": 81,
+          "note": 68,
+          "lane": 4,
+          "fret": 20
+        },
+        {
+          "label_index": 82,
+          "note": 51,
+          "lane": 0,
+          "fret": 19
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 7
+    },
+    {
+      "start_sample": 1550639,
+      "end_sample": 1622400,
+      "notes": [
+        {
+          "label_index": 83,
+          "note": 65,
+          "lane": 5,
+          "fret": 13
+        },
+        {
+          "label_index": 84,
+          "note": 69,
+          "lane": 4,
+          "fret": 21
+        },
+        {
+          "label_index": 85,
+          "note": 44,
+          "lane": 2,
+          "fret": 4
+        },
+        {
+          "label_index": 86,
+          "note": 45,
+          "lane": 1,
+          "fret": 9
+        },
+        {
+          "label_index": 87,
+          "note": 46,
+          "lane": 0,
+          "fret": 14
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 1632230,
+      "end_sample": 1704000,
+      "notes": [
+        {
+          "label_index": 88,
+          "note": 66,
+          "lane": 5,
+          "fret": 14
+        },
+        {
+          "label_index": 89,
+          "note": 67,
+          "lane": 4,
+          "fret": 19
+        },
+        {
+          "label_index": 90,
+          "note": 68,
+          "lane": 3,
+          "fret": 24
+        },
+        {
+          "label_index": 91,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 92,
+          "note": 34,
+          "lane": 0,
+          "fret": 2
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 22
+    },
+    {
+      "start_sample": 1713817,
+      "end_sample": 1785600,
+      "notes": [
+        {
+          "label_index": 93,
+          "note": 66,
+          "lane": 5,
+          "fret": 14
+        },
+        {
+          "label_index": 94,
+          "note": 68,
+          "lane": 4,
+          "fret": 20
+        },
+        {
+          "label_index": 95,
+          "note": 51,
+          "lane": 1,
+          "fret": 15
+        },
+        {
+          "label_index": 96,
+          "note": 35,
+          "lane": 0,
+          "fret": 3
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 1795439,
+      "end_sample": 1867200,
+      "notes": [
+        {
+          "label_index": 97,
+          "note": 66,
+          "lane": 5,
+          "fret": 14
+        },
+        {
+          "label_index": 98,
+          "note": 69,
+          "lane": 4,
+          "fret": 21
+        },
+        {
+          "label_index": 99,
+          "note": 56,
+          "lane": 2,
+          "fret": 16
+        },
+        {
+          "label_index": 100,
+          "note": 60,
+          "lane": 1,
+          "fret": 24
+        },
+        {
+          "label_index": 101,
+          "note": 35,
+          "lane": 0,
+          "fret": 3
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 21
+    },
+    {
+      "start_sample": 1876999,
+      "end_sample": 1926199,
+      "notes": [
+        {
+          "label_index": 102,
+          "note": 66,
+          "lane": 5,
+          "fret": 14
+        },
+        {
+          "label_index": 103,
+          "note": 70,
+          "lane": 4,
+          "fret": 22
+        },
+        {
+          "label_index": 104,
+          "note": 54,
+          "lane": 2,
+          "fret": 14
+        },
+        {
+          "label_index": 105,
+          "note": 48,
+          "lane": 1,
+          "fret": 12
+        },
+        {
+          "label_index": 106,
+          "note": 43,
+          "lane": 0,
+          "fret": 11
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 11
+    },
+    {
+      "start_sample": 1958586,
+      "end_sample": 2021853,
+      "notes": [
+        {
+          "label_index": 107,
+          "note": 66,
+          "lane": 5,
+          "fret": 14
+        },
+        {
+          "label_index": 108,
+          "note": 71,
+          "lane": 4,
+          "fret": 23
+        },
+        {
+          "label_index": 109,
+          "note": 45,
+          "lane": 2,
+          "fret": 5
+        },
+        {
+          "label_index": 110,
+          "note": 60,
+          "lane": 1,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 2040239,
+      "end_sample": 2090546,
+      "notes": [
+        {
+          "label_index": 111,
+          "note": 66,
+          "lane": 5,
+          "fret": 14
+        },
+        {
+          "label_index": 112,
+          "note": 72,
+          "lane": 4,
+          "fret": 24
+        },
+        {
+          "label_index": 113,
+          "note": 60,
+          "lane": 2,
+          "fret": 20
+        },
+        {
+          "label_index": 114,
+          "note": 50,
+          "lane": 1,
+          "fret": 14
+        },
+        {
+          "label_index": 115,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 2121799,
+      "end_sample": 2193600,
+      "notes": [
+        {
+          "label_index": 116,
+          "note": 69,
+          "lane": 5,
+          "fret": 17
+        },
+        {
+          "label_index": 117,
+          "note": 60,
+          "lane": 4,
+          "fret": 12
+        },
+        {
+          "label_index": 118,
+          "note": 61,
+          "lane": 2,
+          "fret": 21
+        },
+        {
+          "label_index": 119,
+          "note": 53,
+          "lane": 1,
+          "fret": 17
+        },
+        {
+          "label_index": 120,
+          "note": 38,
+          "lane": 0,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 2203417,
+      "end_sample": 2275200,
+      "notes": [
+        {
+          "label_index": 121,
+          "note": 69,
+          "lane": 5,
+          "fret": 17
+        },
+        {
+          "label_index": 122,
+          "note": 61,
+          "lane": 4,
+          "fret": 13
+        },
+        {
+          "label_index": 123,
+          "note": 37,
+          "lane": 1,
+          "fret": 1
+        },
+        {
+          "label_index": 124,
+          "note": 45,
+          "lane": 0,
+          "fret": 13
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 16
+    },
+    {
+      "start_sample": 2285008,
+      "end_sample": 2356800,
+      "notes": [
+        {
+          "label_index": 125,
+          "note": 70,
+          "lane": 5,
+          "fret": 18
+        },
+        {
+          "label_index": 126,
+          "note": 62,
+          "lane": 4,
+          "fret": 14
+        },
+        {
+          "label_index": 127,
+          "note": 48,
+          "lane": 3,
+          "fret": 4
+        },
+        {
+          "label_index": 128,
+          "note": 45,
+          "lane": 2,
+          "fret": 5
+        },
+        {
+          "label_index": 129,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 2366599,
+      "end_sample": 2438400,
+      "notes": [
+        {
+          "label_index": 130,
+          "note": 75,
+          "lane": 5,
+          "fret": 23
+        },
+        {
+          "label_index": 131,
+          "note": 61,
+          "lane": 4,
+          "fret": 13
+        },
+        {
+          "label_index": 132,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 133,
+          "note": 54,
+          "lane": 0,
+          "fret": 22
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 2448186,
+      "end_sample": 2508542,
+      "notes": [
+        {
+          "label_index": 134,
+          "note": 76,
+          "lane": 5,
+          "fret": 24
+        },
+        {
+          "label_index": 135,
+          "note": 60,
+          "lane": 4,
+          "fret": 12
+        },
+        {
+          "label_index": 136,
+          "note": 66,
+          "lane": 3,
+          "fret": 22
+        },
+        {
+          "label_index": 137,
+          "note": 56,
+          "lane": 2,
+          "fret": 16
+        },
+        {
+          "label_index": 138,
+          "note": 45,
+          "lane": 1,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 2529839,
+      "end_sample": 2601600,
+      "notes": [
+        {
+          "label_index": 139,
+          "note": 73,
+          "lane": 7,
+          "fret": 13
+        },
+        {
+          "label_index": 140,
+          "note": 61,
+          "lane": 3,
+          "fret": 17
+        },
+        {
+          "label_index": 141,
+          "note": 48,
+          "lane": 1,
+          "fret": 12
+        },
+        {
+          "label_index": 142,
+          "note": 32,
+          "lane": 0,
+          "fret": 0
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 5
+    },
+    {
+      "start_sample": 2611430,
+      "end_sample": 2683200,
+      "notes": [
+        {
+          "label_index": 143,
+          "note": 75,
+          "lane": 7,
+          "fret": 15
+        },
+        {
+          "label_index": 144,
+          "note": 47,
+          "lane": 3,
+          "fret": 3
+        },
+        {
+          "label_index": 145,
+          "note": 57,
+          "lane": 2,
+          "fret": 17
+        },
+        {
+          "label_index": 146,
+          "note": 55,
+          "lane": 0,
+          "fret": 23
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 2692986,
+      "end_sample": 2764800,
+      "notes": [
+        {
+          "label_index": 147,
+          "note": 81,
+          "lane": 7,
+          "fret": 21
+        },
+        {
+          "label_index": 148,
+          "note": 72,
+          "lane": 5,
+          "fret": 20
+        },
+        {
+          "label_index": 149,
+          "note": 55,
+          "lane": 3,
+          "fret": 11
+        },
+        {
+          "label_index": 150,
+          "note": 43,
+          "lane": 2,
+          "fret": 3
+        },
+        {
+          "label_index": 151,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 2774639,
+      "end_sample": 2846400,
+      "notes": [
+        {
+          "label_index": 152,
+          "note": 84,
+          "lane": 7,
+          "fret": 24
+        },
+        {
+          "label_index": 153,
+          "note": 45,
+          "lane": 3,
+          "fret": 1
+        },
+        {
+          "label_index": 154,
+          "note": 40,
+          "lane": 2,
+          "fret": 0
+        },
+        {
+          "label_index": 155,
+          "note": 56,
+          "lane": 1,
+          "fret": 20
+        },
+        {
+          "label_index": 156,
+          "note": 47,
+          "lane": 0,
+          "fret": 15
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 23
+    },
+    {
+      "start_sample": 2856230,
+      "end_sample": 2894506,
+      "notes": [
+        {
+          "label_index": 157,
+          "note": 84,
+          "lane": 7,
+          "fret": 24
+        },
+        {
+          "label_index": 158,
+          "note": 59,
+          "lane": 3,
+          "fret": 15
+        },
+        {
+          "label_index": 159,
+          "note": 47,
+          "lane": 2,
+          "fret": 7
+        },
+        {
+          "label_index": 160,
+          "note": 51,
+          "lane": 1,
+          "fret": 15
+        },
+        {
+          "label_index": 161,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 2937786,
+      "end_sample": 3009600,
+      "notes": [
+        {
+          "label_index": 162,
+          "note": 62,
+          "lane": 6,
+          "fret": 6
+        },
+        {
+          "label_index": 163,
+          "note": 67,
+          "lane": 3,
+          "fret": 23
+        },
+        {
+          "label_index": 164,
+          "note": 60,
+          "lane": 2,
+          "fret": 20
+        },
+        {
+          "label_index": 165,
+          "note": 40,
+          "lane": 1,
+          "fret": 4
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 3019439,
+      "end_sample": 3091200,
+      "notes": [
+        {
+          "label_index": 166,
+          "note": 65,
+          "lane": 6,
+          "fret": 9
+        },
+        {
+          "label_index": 167,
+          "note": 67,
+          "lane": 3,
+          "fret": 23
+        },
+        {
+          "label_index": 168,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 169,
+          "note": 35,
+          "lane": 0,
+          "fret": 3
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 3101030,
+      "end_sample": 3172800,
+      "notes": [
+        {
+          "label_index": 170,
+          "note": 71,
+          "lane": 6,
+          "fret": 15
+        },
+        {
+          "label_index": 171,
+          "note": 54,
+          "lane": 5,
+          "fret": 2
+        },
+        {
+          "label_index": 172,
+          "note": 60,
+          "lane": 3,
+          "fret": 16
+        },
+        {
+          "label_index": 173,
+          "note": 62,
+          "lane": 2,
+          "fret": 22
+        },
+        {
+          "label_index": 174,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 3182617,
+      "end_sample": 3254400,
+      "notes": [
+        {
+          "label_index": 175,
+          "note": 71,
+          "lane": 6,
+          "fret": 15
+        },
+        {
+          "label_index": 176,
+          "note": 66,
+          "lane": 3,
+          "fret": 22
+        },
+        {
+          "label_index": 177,
+          "note": 63,
+          "lane": 2,
+          "fret": 23
+        },
+        {
+          "label_index": 178,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 179,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 22
+    },
+    {
+      "start_sample": 3264239,
+      "end_sample": 3336000,
+      "notes": [
+        {
+          "label_index": 180,
+          "note": 73,
+          "lane": 6,
+          "fret": 17
+        },
+        {
+          "label_index": 181,
+          "note": 58,
+          "lane": 3,
+          "fret": 14
+        },
+        {
+          "label_index": 182,
+          "note": 47,
+          "lane": 2,
+          "fret": 7
+        },
+        {
+          "label_index": 183,
+          "note": 38,
+          "lane": 1,
+          "fret": 2
+        },
+        {
+          "label_index": 184,
+          "note": 43,
+          "lane": 0,
+          "fret": 11
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 3345830,
+      "end_sample": 3417600,
+      "notes": [
+        {
+          "label_index": 185,
+          "note": 75,
+          "lane": 6,
+          "fret": 19
+        },
+        {
+          "label_index": 186,
+          "note": 74,
+          "lane": 5,
+          "fret": 22
+        },
+        {
+          "label_index": 187,
+          "note": 54,
+          "lane": 3,
+          "fret": 10
+        },
+        {
+          "label_index": 188,
+          "note": 49,
+          "lane": 2,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 3427417,
+      "end_sample": 3499200,
+      "notes": [
+        {
+          "label_index": 189,
+          "note": 75,
+          "lane": 6,
+          "fret": 19
+        },
+        {
+          "label_index": 190,
+          "note": 58,
+          "lane": 3,
+          "fret": 14
+        },
+        {
+          "label_index": 191,
+          "note": 56,
+          "lane": 2,
+          "fret": 16
+        },
+        {
+          "label_index": 192,
+          "note": 36,
+          "lane": 1,
+          "fret": 0
+        },
+        {
+          "label_index": 193,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 3509039,
+      "end_sample": 3570804,
+      "notes": [
+        {
+          "label_index": 194,
+          "note": 80,
+          "lane": 6,
+          "fret": 24
+        },
+        {
+          "label_index": 195,
+          "note": 57,
+          "lane": 3,
+          "fret": 13
+        },
+        {
+          "label_index": 196,
+          "note": 50,
+          "lane": 2,
+          "fret": 10
+        },
+        {
+          "label_index": 197,
+          "note": 42,
+          "lane": 1,
+          "fret": 6
+        },
+        {
+          "label_index": 198,
+          "note": 37,
+          "lane": 0,
+          "fret": 5
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 3590630,
+      "end_sample": 3662400,
+      "notes": [
+        {
+          "label_index": 199,
+          "note": 70,
+          "lane": 5,
+          "fret": 18
+        },
+        {
+          "label_index": 200,
+          "note": 50,
+          "lane": 3,
+          "fret": 6
+        },
+        {
+          "label_index": 201,
+          "note": 49,
+          "lane": 2,
+          "fret": 9
+        },
+        {
+          "label_index": 202,
+          "note": 54,
+          "lane": 1,
+          "fret": 18
+        },
+        {
+          "label_index": 203,
+          "note": 43,
+          "lane": 0,
+          "fret": 11
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 3672217,
+      "end_sample": 3744000,
+      "notes": [
+        {
+          "label_index": 204,
+          "note": 71,
+          "lane": 5,
+          "fret": 19
+        },
+        {
+          "label_index": 205,
+          "note": 51,
+          "lane": 3,
+          "fret": 7
+        },
+        {
+          "label_index": 206,
+          "note": 46,
+          "lane": 2,
+          "fret": 6
+        },
+        {
+          "label_index": 207,
+          "note": 57,
+          "lane": 1,
+          "fret": 21
+        },
+        {
+          "label_index": 208,
+          "note": 53,
+          "lane": 0,
+          "fret": 21
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 3753839,
+      "end_sample": 3825600,
+      "notes": [
+        {
+          "label_index": 209,
+          "note": 72,
+          "lane": 5,
+          "fret": 20
+        },
+        {
+          "label_index": 210,
+          "note": 56,
+          "lane": 3,
+          "fret": 12
+        },
+        {
+          "label_index": 211,
+          "note": 45,
+          "lane": 2,
+          "fret": 5
+        },
+        {
+          "label_index": 212,
+          "note": 50,
+          "lane": 1,
+          "fret": 14
+        },
+        {
+          "label_index": 213,
+          "note": 40,
+          "lane": 0,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 3835430,
+      "end_sample": 3907200,
+      "notes": [
+        {
+          "label_index": 214,
+          "note": 73,
+          "lane": 5,
+          "fret": 21
+        },
+        {
+          "label_index": 215,
+          "note": 48,
+          "lane": 3,
+          "fret": 4
+        },
+        {
+          "label_index": 216,
+          "note": 43,
+          "lane": 2,
+          "fret": 3
+        },
+        {
+          "label_index": 217,
+          "note": 35,
+          "lane": 0,
+          "fret": 3
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 3917017,
+      "end_sample": 3988800,
+      "notes": [
+        {
+          "label_index": 218,
+          "note": 74,
+          "lane": 5,
+          "fret": 22
+        },
+        {
+          "label_index": 219,
+          "note": 49,
+          "lane": 3,
+          "fret": 5
+        },
+        {
+          "label_index": 220,
+          "note": 63,
+          "lane": 2,
+          "fret": 23
+        },
+        {
+          "label_index": 221,
+          "note": 46,
+          "lane": 1,
+          "fret": 10
+        },
+        {
+          "label_index": 222,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 3998577,
+      "end_sample": 4070400,
+      "notes": [
+        {
+          "label_index": 223,
+          "note": 74,
+          "lane": 5,
+          "fret": 22
+        },
+        {
+          "label_index": 224,
+          "note": 56,
+          "lane": 3,
+          "fret": 12
+        },
+        {
+          "label_index": 225,
+          "note": 46,
+          "lane": 0,
+          "fret": 14
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 4080230,
+      "end_sample": 4152000,
+      "notes": [
+        {
+          "label_index": 226,
+          "note": 74,
+          "lane": 5,
+          "fret": 22
+        },
+        {
+          "label_index": 227,
+          "note": 60,
+          "lane": 3,
+          "fret": 16
+        },
+        {
+          "label_index": 228,
+          "note": 51,
+          "lane": 1,
+          "fret": 15
+        },
+        {
+          "label_index": 229,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 4161817,
+      "end_sample": 4233600,
+      "notes": [
+        {
+          "label_index": 230,
+          "note": 65,
+          "lane": 7,
+          "fret": 5
+        },
+        {
+          "label_index": 231,
+          "note": 62,
+          "lane": 2,
+          "fret": 22
+        },
+        {
+          "label_index": 232,
+          "note": 58,
+          "lane": 1,
+          "fret": 22
+        },
+        {
+          "label_index": 233,
+          "note": 38,
+          "lane": 0,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 4243408,
+      "end_sample": 4309493,
+      "notes": [
+        {
+          "label_index": 234,
+          "note": 76,
+          "lane": 7,
+          "fret": 16
+        },
+        {
+          "label_index": 235,
+          "note": 48,
+          "lane": 2,
+          "fret": 8
+        },
+        {
+          "label_index": 236,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 8
+    },
+    {
+      "start_sample": 4324999,
+      "end_sample": 4380106,
+      "notes": [
+        {
+          "label_index": 237,
+          "note": 77,
+          "lane": 7,
+          "fret": 17
+        },
+        {
+          "label_index": 238,
+          "note": 64,
+          "lane": 6,
+          "fret": 8
+        },
+        {
+          "label_index": 239,
+          "note": 48,
+          "lane": 4,
+          "fret": 0
+        },
+        {
+          "label_index": 240,
+          "note": 53,
+          "lane": 2,
+          "fret": 13
+        },
+        {
+          "label_index": 241,
+          "note": 54,
+          "lane": 0,
+          "fret": 22
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 4406586,
+      "end_sample": 4478400,
+      "notes": [
+        {
+          "label_index": 242,
+          "note": 78,
+          "lane": 7,
+          "fret": 18
+        },
+        {
+          "label_index": 243,
+          "note": 55,
+          "lane": 3,
+          "fret": 11
+        },
+        {
+          "label_index": 244,
+          "note": 60,
+          "lane": 2,
+          "fret": 20
+        },
+        {
+          "label_index": 245,
+          "note": 48,
+          "lane": 1,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 9
+    },
+    {
+      "start_sample": 4488239,
+      "end_sample": 4560000,
+      "notes": [
+        {
+          "label_index": 246,
+          "note": 79,
+          "lane": 7,
+          "fret": 19
+        },
+        {
+          "label_index": 247,
+          "note": 49,
+          "lane": 2,
+          "fret": 9
+        },
+        {
+          "label_index": 248,
+          "note": 50,
+          "lane": 1,
+          "fret": 14
+        },
+        {
+          "label_index": 249,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 4569706,
+      "end_sample": 4641600,
+      "notes": [
+        {
+          "label_index": 250,
+          "note": 79,
+          "lane": 7,
+          "fret": 19
+        },
+        {
+          "label_index": 251,
+          "note": 53,
+          "lane": 2,
+          "fret": 13
+        },
+        {
+          "label_index": 252,
+          "note": 55,
+          "lane": 1,
+          "fret": 19
+        },
+        {
+          "label_index": 253,
+          "note": 50,
+          "lane": 0,
+          "fret": 18
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 6
+    },
+    {
+      "start_sample": 4651417,
+      "end_sample": 4702800,
+      "notes": [
+        {
+          "label_index": 254,
+          "note": 80,
+          "lane": 7,
+          "fret": 20
+        },
+        {
+          "label_index": 255,
+          "note": 77,
+          "lane": 6,
+          "fret": 21
+        },
+        {
+          "label_index": 256,
+          "note": 51,
+          "lane": 2,
+          "fret": 11
+        },
+        {
+          "label_index": 257,
+          "note": 49,
+          "lane": 1,
+          "fret": 13
+        },
+        {
+          "label_index": 258,
+          "note": 45,
+          "lane": 0,
+          "fret": 13
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 4733039,
+      "end_sample": 4766453,
+      "notes": [
+        {
+          "label_index": 259,
+          "note": 81,
+          "lane": 7,
+          "fret": 21
+        },
+        {
+          "label_index": 260,
+          "note": 63,
+          "lane": 6,
+          "fret": 7
+        },
+        {
+          "label_index": 261,
+          "note": 61,
+          "lane": 2,
+          "fret": 21
+        },
+        {
+          "label_index": 262,
+          "note": 59,
+          "lane": 1,
+          "fret": 23
+        },
+        {
+          "label_index": 263,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 22
+    },
+    {
+      "start_sample": 4814506,
+      "end_sample": 4886400,
+      "notes": [
+        {
+          "label_index": 264,
+          "note": 82,
+          "lane": 7,
+          "fret": 22
+        },
+        {
+          "label_index": 265,
+          "note": 55,
+          "lane": 2,
+          "fret": 15
+        },
+        {
+          "label_index": 266,
+          "note": 38,
+          "lane": 1,
+          "fret": 2
+        },
+        {
+          "label_index": 267,
+          "note": 36,
+          "lane": 0,
+          "fret": 4
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 4896217,
+      "end_sample": 4968000,
+      "notes": [
+        {
+          "label_index": 268,
+          "note": 83,
+          "lane": 7,
+          "fret": 23
+        },
+        {
+          "label_index": 269,
+          "note": 45,
+          "lane": 2,
+          "fret": 5
+        },
+        {
+          "label_index": 270,
+          "note": 51,
+          "lane": 1,
+          "fret": 15
+        },
+        {
+          "label_index": 271,
+          "note": 38,
+          "lane": 0,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 4977839,
+      "end_sample": 5010053,
+      "notes": [
+        {
+          "label_index": 272,
+          "note": 83,
+          "lane": 7,
+          "fret": 23
+        },
+        {
+          "label_index": 273,
+          "note": 58,
+          "lane": 2,
+          "fret": 18
+        },
+        {
+          "label_index": 274,
+          "note": 42,
+          "lane": 1,
+          "fret": 6
+        },
+        {
+          "label_index": 275,
+          "note": 49,
+          "lane": 0,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 5059430,
+      "end_sample": 5131200,
+      "notes": [
+        {
+          "label_index": 276,
+          "note": 62,
+          "lane": 6,
+          "fret": 6
+        },
+        {
+          "label_index": 277,
+          "note": 54,
+          "lane": 3,
+          "fret": 10
+        },
+        {
+          "label_index": 278,
+          "note": 64,
+          "lane": 2,
+          "fret": 24
+        },
+        {
+          "label_index": 279,
+          "note": 47,
+          "lane": 1,
+          "fret": 11
+        },
+        {
+          "label_index": 280,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 23
+    },
+    {
+      "start_sample": 5141017,
+      "end_sample": 5212800,
+      "notes": [
+        {
+          "label_index": 281,
+          "note": 63,
+          "lane": 6,
+          "fret": 7
+        },
+        {
+          "label_index": 282,
+          "note": 59,
+          "lane": 2,
+          "fret": 19
+        },
+        {
+          "label_index": 283,
+          "note": 50,
+          "lane": 0,
+          "fret": 18
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 5222639,
+      "end_sample": 5294400,
+      "notes": [
+        {
+          "label_index": 284,
+          "note": 63,
+          "lane": 6,
+          "fret": 7
+        },
+        {
+          "label_index": 285,
+          "note": 64,
+          "lane": 2,
+          "fret": 24
+        },
+        {
+          "label_index": 286,
+          "note": 57,
+          "lane": 1,
+          "fret": 21
+        },
+        {
+          "label_index": 287,
+          "note": 49,
+          "lane": 0,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 5304137,
+      "end_sample": 5376000,
+      "notes": [
+        {
+          "label_index": 288,
+          "note": 66,
+          "lane": 6,
+          "fret": 10
+        },
+        {
+          "label_index": 289,
+          "note": 42,
+          "lane": 2,
+          "fret": 2
+        },
+        {
+          "label_index": 290,
+          "note": 50,
+          "lane": 1,
+          "fret": 14
+        },
+        {
+          "label_index": 291,
+          "note": 48,
+          "lane": 0,
+          "fret": 16
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 5385786,
+      "end_sample": 5457600,
+      "notes": [
+        {
+          "label_index": 292,
+          "note": 66,
+          "lane": 6,
+          "fret": 10
+        },
+        {
+          "label_index": 293,
+          "note": 59,
+          "lane": 2,
+          "fret": 19
+        },
+        {
+          "label_index": 294,
+          "note": 60,
+          "lane": 1,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 5467439,
+      "end_sample": 5539200,
+      "notes": [
+        {
+          "label_index": 295,
+          "note": 76,
+          "lane": 6,
+          "fret": 20
+        },
+        {
+          "label_index": 296,
+          "note": 73,
+          "lane": 5,
+          "fret": 21
+        },
+        {
+          "label_index": 297,
+          "note": 50,
+          "lane": 2,
+          "fret": 10
+        },
+        {
+          "label_index": 298,
+          "note": 43,
+          "lane": 1,
+          "fret": 7
+        },
+        {
+          "label_index": 299,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 5548937,
+      "end_sample": 5601737,
+      "notes": [
+        {
+          "label_index": 300,
+          "note": 80,
+          "lane": 6,
+          "fret": 24
+        },
+        {
+          "label_index": 301,
+          "note": 54,
+          "lane": 2,
+          "fret": 14
+        },
+        {
+          "label_index": 302,
+          "note": 43,
+          "lane": 0,
+          "fret": 11
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 5630617,
+      "end_sample": 5702400,
+      "notes": [
+        {
+          "label_index": 303,
+          "note": 72,
+          "lane": 5,
+          "fret": 20
+        },
+        {
+          "label_index": 304,
+          "note": 46,
+          "lane": 2,
+          "fret": 6
+        },
+        {
+          "label_index": 305,
+          "note": 50,
+          "lane": 1,
+          "fret": 14
+        },
+        {
+          "label_index": 306,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 5712208,
+      "end_sample": 5784000,
+      "notes": [
+        {
+          "label_index": 307,
+          "note": 71,
+          "lane": 4,
+          "fret": 23
+        },
+        {
+          "label_index": 308,
+          "note": 47,
+          "lane": 2,
+          "fret": 7
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 16
+    },
+    {
+      "start_sample": 5793830,
+      "end_sample": 5857159,
+      "notes": [
+        {
+          "label_index": 309,
+          "note": 71,
+          "lane": 4,
+          "fret": 23
+        },
+        {
+          "label_index": 310,
+          "note": 53,
+          "lane": 3,
+          "fret": 9
+        },
+        {
+          "label_index": 311,
+          "note": 56,
+          "lane": 2,
+          "fret": 16
+        },
+        {
+          "label_index": 312,
+          "note": 51,
+          "lane": 1,
+          "fret": 15
+        },
+        {
+          "label_index": 313,
+          "note": 38,
+          "lane": 0,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 5875386,
+      "end_sample": 5935773,
+      "notes": [
+        {
+          "label_index": 314,
+          "note": 64,
+          "lane": 7,
+          "fret": 4
+        },
+        {
+          "label_index": 315,
+          "note": 72,
+          "lane": 4,
+          "fret": 24
+        },
+        {
+          "label_index": 316,
+          "note": 46,
+          "lane": 3,
+          "fret": 2
+        },
+        {
+          "label_index": 317,
+          "note": 55,
+          "lane": 1,
+          "fret": 19
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 22
+    },
+    {
+      "start_sample": 5957039,
+      "end_sample": 6007346,
+      "notes": [
+        {
+          "label_index": 318,
+          "note": 70,
+          "lane": 7,
+          "fret": 10
+        },
+        {
+          "label_index": 319,
+          "note": 72,
+          "lane": 4,
+          "fret": 24
+        },
+        {
+          "label_index": 320,
+          "note": 42,
+          "lane": 1,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 6038506,
+      "end_sample": 6110400,
+      "notes": [
+        {
+          "label_index": 321,
+          "note": 74,
+          "lane": 7,
+          "fret": 14
+        },
+        {
+          "label_index": 322,
+          "note": 45,
+          "lane": 1,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 5
+    },
+    {
+      "start_sample": 6120217,
+      "end_sample": 6189213,
+      "notes": [
+        {
+          "label_index": 323,
+          "note": 76,
+          "lane": 7,
+          "fret": 16
+        },
+        {
+          "label_index": 324,
+          "note": 74,
+          "lane": 6,
+          "fret": 18
+        },
+        {
+          "label_index": 325,
+          "note": 60,
+          "lane": 4,
+          "fret": 12
+        },
+        {
+          "label_index": 326,
+          "note": 47,
+          "lane": 1,
+          "fret": 11
+        },
+        {
+          "label_index": 327,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 9
+    },
+    {
+      "start_sample": 6201839,
+      "end_sample": 6273600,
+      "notes": [
+        {
+          "label_index": 328,
+          "note": 77,
+          "lane": 7,
+          "fret": 17
+        },
+        {
+          "label_index": 329,
+          "note": 49,
+          "lane": 4,
+          "fret": 1
+        },
+        {
+          "label_index": 330,
+          "note": 45,
+          "lane": 3,
+          "fret": 1
+        },
+        {
+          "label_index": 331,
+          "note": 57,
+          "lane": 1,
+          "fret": 21
+        },
+        {
+          "label_index": 332,
+          "note": 36,
+          "lane": 0,
+          "fret": 4
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 6283306,
+      "end_sample": 6355200,
+      "notes": [
+        {
+          "label_index": 333,
+          "note": 78,
+          "lane": 7,
+          "fret": 18
+        },
+        {
+          "label_index": 334,
+          "note": 56,
+          "lane": 1,
+          "fret": 20
+        },
+        {
+          "label_index": 335,
+          "note": 37,
+          "lane": 0,
+          "fret": 5
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 6365017,
+      "end_sample": 6436800,
+      "notes": [
+        {
+          "label_index": 336,
+          "note": 78,
+          "lane": 7,
+          "fret": 18
+        },
+        {
+          "label_index": 337,
+          "note": 61,
+          "lane": 3,
+          "fret": 17
+        },
+        {
+          "label_index": 338,
+          "note": 57,
+          "lane": 1,
+          "fret": 21
+        },
+        {
+          "label_index": 339,
+          "note": 56,
+          "lane": 0,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 7
+    },
+    {
+      "start_sample": 6446639,
+      "end_sample": 6480053,
+      "notes": [
+        {
+          "label_index": 340,
+          "note": 81,
+          "lane": 7,
+          "fret": 21
+        },
+        {
+          "label_index": 341,
+          "note": 57,
+          "lane": 1,
+          "fret": 21
+        },
+        {
+          "label_index": 342,
+          "note": 34,
+          "lane": 0,
+          "fret": 2
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 6528137,
+      "end_sample": 6600000,
+      "notes": [
+        {
+          "label_index": 343,
+          "note": 83,
+          "lane": 7,
+          "fret": 23
+        },
+        {
+          "label_index": 344,
+          "note": 69,
+          "lane": 6,
+          "fret": 13
+        },
+        {
+          "label_index": 345,
+          "note": 52,
+          "lane": 1,
+          "fret": 16
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 6609786,
+      "end_sample": 6681600,
+      "notes": [
+        {
+          "label_index": 346,
+          "note": 83,
+          "lane": 7,
+          "fret": 23
+        },
+        {
+          "label_index": 347,
+          "note": 54,
+          "lane": 1,
+          "fret": 18
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 5
+    },
+    {
+      "start_sample": 6691439,
+      "end_sample": 6763200,
+      "notes": [
+        {
+          "label_index": 348,
+          "note": 84,
+          "lane": 7,
+          "fret": 24
+        },
+        {
+          "label_index": 349,
+          "note": 54,
+          "lane": 1,
+          "fret": 18
+        },
+        {
+          "label_index": 350,
+          "note": 39,
+          "lane": 0,
+          "fret": 7
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 6772999,
+      "end_sample": 6844800,
+      "notes": [
+        {
+          "label_index": 351,
+          "note": 60,
+          "lane": 6,
+          "fret": 4
+        },
+        {
+          "label_index": 352,
+          "note": 52,
+          "lane": 5,
+          "fret": 0
+        },
+        {
+          "label_index": 353,
+          "note": 69,
+          "lane": 4,
+          "fret": 21
+        },
+        {
+          "label_index": 354,
+          "note": 48,
+          "lane": 1,
+          "fret": 12
+        },
+        {
+          "label_index": 355,
+          "note": 39,
+          "lane": 0,
+          "fret": 7
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 6854617,
+      "end_sample": 6926400,
+      "notes": [
+        {
+          "label_index": 356,
+          "note": 61,
+          "lane": 6,
+          "fret": 5
+        },
+        {
+          "label_index": 357,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 358,
+          "note": 53,
+          "lane": 0,
+          "fret": 21
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 16
+    },
+    {
+      "start_sample": 6936239,
+      "end_sample": 7008000,
+      "notes": [
+        {
+          "label_index": 359,
+          "note": 72,
+          "lane": 6,
+          "fret": 16
+        },
+        {
+          "label_index": 360,
+          "note": 43,
+          "lane": 1,
+          "fret": 7
+        },
+        {
+          "label_index": 361,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 7017737,
+      "end_sample": 7089600,
+      "notes": [
+        {
+          "label_index": 362,
+          "note": 74,
+          "lane": 6,
+          "fret": 18
+        },
+        {
+          "label_index": 363,
+          "note": 46,
+          "lane": 1,
+          "fret": 10
+        },
+        {
+          "label_index": 364,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 8
+    },
+    {
+      "start_sample": 7099417,
+      "end_sample": 7171200,
+      "notes": [
+        {
+          "label_index": 365,
+          "note": 74,
+          "lane": 6,
+          "fret": 18
+        },
+        {
+          "label_index": 366,
+          "note": 52,
+          "lane": 1,
+          "fret": 16
+        },
+        {
+          "label_index": 367,
+          "note": 49,
+          "lane": 0,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 2
+    },
+    {
+      "start_sample": 7181039,
+      "end_sample": 7252800,
+      "notes": [
+        {
+          "label_index": 368,
+          "note": 75,
+          "lane": 6,
+          "fret": 19
+        },
+        {
+          "label_index": 369,
+          "note": 48,
+          "lane": 1,
+          "fret": 12
+        },
+        {
+          "label_index": 370,
+          "note": 46,
+          "lane": 0,
+          "fret": 14
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 7
+    },
+    {
+      "start_sample": 7262537,
+      "end_sample": 7334400,
+      "notes": [
+        {
+          "label_index": 371,
+          "note": 79,
+          "lane": 6,
+          "fret": 23
+        },
+        {
+          "label_index": 372,
+          "note": 44,
+          "lane": 1,
+          "fret": 8
+        },
+        {
+          "label_index": 373,
+          "note": 34,
+          "lane": 0,
+          "fret": 2
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 21
+    },
+    {
+      "start_sample": 7344217,
+      "end_sample": 7416000,
+      "notes": [
+        {
+          "label_index": 374,
+          "note": 67,
+          "lane": 5,
+          "fret": 15
+        },
+        {
+          "label_index": 375,
+          "note": 41,
+          "lane": 1,
+          "fret": 5
+        },
+        {
+          "label_index": 376,
+          "note": 49,
+          "lane": 0,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 7425839,
+      "end_sample": 7497600,
+      "notes": [
+        {
+          "label_index": 377,
+          "note": 67,
+          "lane": 5,
+          "fret": 15
+        },
+        {
+          "label_index": 378,
+          "note": 53,
+          "lane": 1,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 2
+    },
+    {
+      "start_sample": 7507368,
+      "end_sample": 7579200,
+      "notes": [
+        {
+          "label_index": 379,
+          "note": 69,
+          "lane": 5,
+          "fret": 17
+        },
+        {
+          "label_index": 380,
+          "note": 39,
+          "lane": 1,
+          "fret": 3
+        },
+        {
+          "label_index": 381,
+          "note": 56,
+          "lane": 0,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 21
+    },
+    {
+      "start_sample": 7589017,
+      "end_sample": 7660800,
+      "notes": [
+        {
+          "label_index": 382,
+          "note": 72,
+          "lane": 5,
+          "fret": 20
+        },
+        {
+          "label_index": 383,
+          "note": 62,
+          "lane": 4,
+          "fret": 14
+        },
+        {
+          "label_index": 384,
+          "note": 51,
+          "lane": 1,
+          "fret": 15
+        },
+        {
+          "label_index": 385,
+          "note": 46,
+          "lane": 0,
+          "fret": 14
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 6
+    },
+    {
+      "start_sample": 7670639,
+      "end_sample": 7719715,
+      "notes": [
+        {
+          "label_index": 386,
+          "note": 75,
+          "lane": 5,
+          "fret": 23
+        },
+        {
+          "label_index": 387,
+          "note": 61,
+          "lane": 2,
+          "fret": 21
+        },
+        {
+          "label_index": 388,
+          "note": 50,
+          "lane": 1,
+          "fret": 14
+        },
+        {
+          "label_index": 389,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 22
+    },
+    {
+      "start_sample": 7752230,
+      "end_sample": 7824000,
+      "notes": [
+        {
+          "label_index": 390,
+          "note": 67,
+          "lane": 3,
+          "fret": 23
+        },
+        {
+          "label_index": 391,
+          "note": 58,
+          "lane": 1,
+          "fret": 22
+        },
+        {
+          "label_index": 392,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 11
+    },
+    {
+      "start_sample": 7833817,
+      "end_sample": 7905600,
+      "notes": [
+        {
+          "label_index": 393,
+          "note": 64,
+          "lane": 7,
+          "fret": 4
+        },
+        {
+          "label_index": 394,
+          "note": 55,
+          "lane": 4,
+          "fret": 7
+        },
+        {
+          "label_index": 395,
+          "note": 56,
+          "lane": 0,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 7915377,
+      "end_sample": 7987200,
+      "notes": [
+        {
+          "label_index": 396,
+          "note": 68,
+          "lane": 7,
+          "fret": 8
+        },
+        {
+          "label_index": 397,
+          "note": 63,
+          "lane": 3,
+          "fret": 19
+        },
+        {
+          "label_index": 398,
+          "note": 34,
+          "lane": 0,
+          "fret": 2
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 17
+    },
+    {
+      "start_sample": 7996906,
+      "end_sample": 8068800,
+      "notes": [
+        {
+          "label_index": 399,
+          "note": 71,
+          "lane": 7,
+          "fret": 11
+        },
+        {
+          "label_index": 400,
+          "note": 33,
+          "lane": 0,
+          "fret": 1
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 8078617,
+      "end_sample": 8150400,
+      "notes": [
+        {
+          "label_index": 401,
+          "note": 71,
+          "lane": 7,
+          "fret": 11
+        },
+        {
+          "label_index": 402,
+          "note": 68,
+          "lane": 5,
+          "fret": 16
+        },
+        {
+          "label_index": 403,
+          "note": 35,
+          "lane": 0,
+          "fret": 3
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 13
+    },
+    {
+      "start_sample": 8160239,
+      "end_sample": 8232000,
+      "notes": [
+        {
+          "label_index": 404,
+          "note": 71,
+          "lane": 7,
+          "fret": 11
+        },
+        {
+          "label_index": 405,
+          "note": 54,
+          "lane": 3,
+          "fret": 10
+        },
+        {
+          "label_index": 406,
+          "note": 59,
+          "lane": 1,
+          "fret": 23
+        },
+        {
+          "label_index": 407,
+          "note": 40,
+          "lane": 0,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 8241830,
+      "end_sample": 8313600,
+      "notes": [
+        {
+          "label_index": 408,
+          "note": 71,
+          "lane": 7,
+          "fret": 11
+        },
+        {
+          "label_index": 409,
+          "note": 55,
+          "lane": 5,
+          "fret": 3
+        },
+        {
+          "label_index": 410,
+          "note": 59,
+          "lane": 3,
+          "fret": 15
+        },
+        {
+          "label_index": 411,
+          "note": 58,
+          "lane": 2,
+          "fret": 18
+        },
+        {
+          "label_index": 412,
+          "note": 43,
+          "lane": 0,
+          "fret": 11
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 8323417,
+      "end_sample": 8395200,
+      "notes": [
+        {
+          "label_index": 413,
+          "note": 73,
+          "lane": 7,
+          "fret": 13
+        },
+        {
+          "label_index": 414,
+          "note": 35,
+          "lane": 0,
+          "fret": 3
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 8405039,
+      "end_sample": 8476800,
+      "notes": [
+        {
+          "label_index": 415,
+          "note": 74,
+          "lane": 7,
+          "fret": 14
+        },
+        {
+          "label_index": 416,
+          "note": 59,
+          "lane": 4,
+          "fret": 11
+        },
+        {
+          "label_index": 417,
+          "note": 67,
+          "lane": 3,
+          "fret": 23
+        },
+        {
+          "label_index": 418,
+          "note": 56,
+          "lane": 1,
+          "fret": 20
+        },
+        {
+          "label_index": 419,
+          "note": 50,
+          "lane": 0,
+          "fret": 18
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 8486630,
+      "end_sample": 8558400,
+      "notes": [
+        {
+          "label_index": 420,
+          "note": 76,
+          "lane": 7,
+          "fret": 16
+        },
+        {
+          "label_index": 421,
+          "note": 65,
+          "lane": 3,
+          "fret": 21
+        },
+        {
+          "label_index": 422,
+          "note": 43,
+          "lane": 0,
+          "fret": 11
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 8568217,
+      "end_sample": 8623200,
+      "notes": [
+        {
+          "label_index": 423,
+          "note": 77,
+          "lane": 7,
+          "fret": 17
+        },
+        {
+          "label_index": 424,
+          "note": 66,
+          "lane": 3,
+          "fret": 22
+        },
+        {
+          "label_index": 425,
+          "note": 40,
+          "lane": 0,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 8649715,
+      "end_sample": 8721600,
+      "notes": [
+        {
+          "label_index": 426,
+          "note": 77,
+          "lane": 7,
+          "fret": 17
+        },
+        {
+          "label_index": 427,
+          "note": 68,
+          "lane": 5,
+          "fret": 16
+        },
+        {
+          "label_index": 428,
+          "note": 49,
+          "lane": 0,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 1
+    },
+    {
+      "start_sample": 8731306,
+      "end_sample": 8803200,
+      "notes": [
+        {
+          "label_index": 429,
+          "note": 78,
+          "lane": 7,
+          "fret": 18
+        },
+        {
+          "label_index": 430,
+          "note": 40,
+          "lane": 0,
+          "fret": 8
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 10
+    },
+    {
+      "start_sample": 8813017,
+      "end_sample": 8884800,
+      "notes": [
+        {
+          "label_index": 431,
+          "note": 82,
+          "lane": 7,
+          "fret": 22
+        },
+        {
+          "label_index": 432,
+          "note": 70,
+          "lane": 5,
+          "fret": 18
+        },
+        {
+          "label_index": 433,
+          "note": 68,
+          "lane": 3,
+          "fret": 24
+        },
+        {
+          "label_index": 434,
+          "note": 37,
+          "lane": 1,
+          "fret": 1
+        },
+        {
+          "label_index": 435,
+          "note": 46,
+          "lane": 0,
+          "fret": 14
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 23
+    },
+    {
+      "start_sample": 8894453,
+      "end_sample": 8947253,
+      "notes": [
+        {
+          "label_index": 436,
+          "note": 82,
+          "lane": 7,
+          "fret": 22
+        },
+        {
+          "label_index": 437,
+          "note": 49,
+          "lane": 0,
+          "fret": 17
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 5
+    },
+    {
+      "start_sample": 8976199,
+      "end_sample": 9014506,
+      "notes": [
+        {
+          "label_index": 438,
+          "note": 84,
+          "lane": 7,
+          "fret": 24
+        },
+        {
+          "label_index": 439,
+          "note": 57,
+          "lane": 4,
+          "fret": 9
+        },
+        {
+          "label_index": 440,
+          "note": 56,
+          "lane": 0,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 15
+    },
+    {
+      "start_sample": 9057817,
+      "end_sample": 9129600,
+      "notes": [
+        {
+          "label_index": 441,
+          "note": 56,
+          "lane": 6,
+          "fret": 0
+        },
+        {
+          "label_index": 442,
+          "note": 50,
+          "lane": 4,
+          "fret": 2
+        },
+        {
+          "label_index": 443,
+          "note": 61,
+          "lane": 3,
+          "fret": 17
+        },
+        {
+          "label_index": 444,
+          "note": 58,
+          "lane": 1,
+          "fret": 22
+        },
+        {
+          "label_index": 445,
+          "note": 47,
+          "lane": 0,
+          "fret": 15
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 20
+    },
+    {
+      "start_sample": 9139377,
+      "end_sample": 9211200,
+      "notes": [
+        {
+          "label_index": 446,
+          "note": 59,
+          "lane": 6,
+          "fret": 3
+        },
+        {
+          "label_index": 447,
+          "note": 68,
+          "lane": 5,
+          "fret": 16
+        },
+        {
+          "label_index": 448,
+          "note": 69,
+          "lane": 4,
+          "fret": 21
+        },
+        {
+          "label_index": 449,
+          "note": 53,
+          "lane": 3,
+          "fret": 9
+        },
+        {
+          "label_index": 450,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 18
+    },
+    {
+      "start_sample": 9220937,
+      "end_sample": 9292800,
+      "notes": [
+        {
+          "label_index": 451,
+          "note": 65,
+          "lane": 6,
+          "fret": 9
+        },
+        {
+          "label_index": 452,
+          "note": 47,
+          "lane": 0,
+          "fret": 15
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 6
+    },
+    {
+      "start_sample": 9302617,
+      "end_sample": 9374400,
+      "notes": [
+        {
+          "label_index": 453,
+          "note": 71,
+          "lane": 6,
+          "fret": 15
+        },
+        {
+          "label_index": 454,
+          "note": 55,
+          "lane": 3,
+          "fret": 11
+        },
+        {
+          "label_index": 455,
+          "note": 56,
+          "lane": 2,
+          "fret": 16
+        },
+        {
+          "label_index": 456,
+          "note": 47,
+          "lane": 1,
+          "fret": 11
+        },
+        {
+          "label_index": 457,
+          "note": 45,
+          "lane": 0,
+          "fret": 13
+        }
+      ],
+      "fretted_note_count": 5,
+      "fretted_span": 5
+    },
+    {
+      "start_sample": 9384084,
+      "end_sample": 9456000,
+      "notes": [
+        {
+          "label_index": 458,
+          "note": 72,
+          "lane": 6,
+          "fret": 16
+        },
+        {
+          "label_index": 459,
+          "note": 45,
+          "lane": 0,
+          "fret": 13
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 3
+    },
+    {
+      "start_sample": 9465799,
+      "end_sample": 9537600,
+      "notes": [
+        {
+          "label_index": 460,
+          "note": 78,
+          "lane": 6,
+          "fret": 22
+        },
+        {
+          "label_index": 461,
+          "note": 61,
+          "lane": 4,
+          "fret": 13
+        },
+        {
+          "label_index": 462,
+          "note": 38,
+          "lane": 0,
+          "fret": 6
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 16
+    },
+    {
+      "start_sample": 9547417,
+      "end_sample": 9619200,
+      "notes": [
+        {
+          "label_index": 463,
+          "note": 78,
+          "lane": 6,
+          "fret": 22
+        },
+        {
+          "label_index": 464,
+          "note": 47,
+          "lane": 0,
+          "fret": 15
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 7
+    },
+    {
+      "start_sample": 9628977,
+      "end_sample": 9700800,
+      "notes": [
+        {
+          "label_index": 465,
+          "note": 79,
+          "lane": 6,
+          "fret": 23
+        },
+        {
+          "label_index": 466,
+          "note": 58,
+          "lane": 3,
+          "fret": 14
+        },
+        {
+          "label_index": 467,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 11
+    },
+    {
+      "start_sample": 9710630,
+      "end_sample": 9763337,
+      "notes": [
+        {
+          "label_index": 468,
+          "note": 80,
+          "lane": 6,
+          "fret": 24
+        },
+        {
+          "label_index": 469,
+          "note": 61,
+          "lane": 3,
+          "fret": 17
+        },
+        {
+          "label_index": 470,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 9792217,
+      "end_sample": 9864000,
+      "notes": [
+        {
+          "label_index": 471,
+          "note": 80,
+          "lane": 6,
+          "fret": 24
+        },
+        {
+          "label_index": 472,
+          "note": 53,
+          "lane": 0,
+          "fret": 21
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 3
+    },
+    {
+      "start_sample": 9873777,
+      "end_sample": 9945600,
+      "notes": [
+        {
+          "label_index": 473,
+          "note": 73,
+          "lane": 5,
+          "fret": 21
+        },
+        {
+          "label_index": 474,
+          "note": 53,
+          "lane": 3,
+          "fret": 9
+        },
+        {
+          "label_index": 475,
+          "note": 52,
+          "lane": 0,
+          "fret": 20
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 9955368,
+      "end_sample": 10027200,
+      "notes": [
+        {
+          "label_index": 476,
+          "note": 75,
+          "lane": 5,
+          "fret": 23
+        },
+        {
+          "label_index": 477,
+          "note": 52,
+          "lane": 0,
+          "fret": 20
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 3
+    },
+    {
+      "start_sample": 10037017,
+      "end_sample": 10108800,
+      "notes": [
+        {
+          "label_index": 478,
+          "note": 51,
+          "lane": 4,
+          "fret": 3
+        },
+        {
+          "label_index": 479,
+          "note": 55,
+          "lane": 2,
+          "fret": 15
+        },
+        {
+          "label_index": 480,
+          "note": 47,
+          "lane": 1,
+          "fret": 11
+        },
+        {
+          "label_index": 481,
+          "note": 42,
+          "lane": 0,
+          "fret": 10
+        }
+      ],
+      "fretted_note_count": 4,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 10118577,
+      "end_sample": 10190400,
+      "notes": [
+        {
+          "label_index": 482,
+          "note": 54,
+          "lane": 4,
+          "fret": 6
+        },
+        {
+          "label_index": 483,
+          "note": 64,
+          "lane": 3,
+          "fret": 20
+        },
+        {
+          "label_index": 484,
+          "note": 39,
+          "lane": 0,
+          "fret": 7
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 14
+    },
+    {
+      "start_sample": 10200199,
+      "end_sample": 10272000,
+      "notes": [
+        {
+          "label_index": 485,
+          "note": 64,
+          "lane": 4,
+          "fret": 16
+        },
+        {
+          "label_index": 486,
+          "note": 56,
+          "lane": 0,
+          "fret": 24
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 8
+    },
+    {
+      "start_sample": 10281817,
+      "end_sample": 10353600,
+      "notes": [
+        {
+          "label_index": 487,
+          "note": 65,
+          "lane": 4,
+          "fret": 17
+        },
+        {
+          "label_index": 488,
+          "note": 67,
+          "lane": 3,
+          "fret": 23
+        },
+        {
+          "label_index": 489,
+          "note": 36,
+          "lane": 0,
+          "fret": 4
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 19
+    },
+    {
+      "start_sample": 10363377,
+      "end_sample": 10435200,
+      "notes": [
+        {
+          "label_index": 490,
+          "note": 65,
+          "lane": 4,
+          "fret": 17
+        },
+        {
+          "label_index": 491,
+          "note": 61,
+          "lane": 3,
+          "fret": 17
+        },
+        {
+          "label_index": 492,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 3,
+      "fretted_span": 8
+    },
+    {
+      "start_sample": 10445030,
+      "end_sample": 10516800,
+      "notes": [
+        {
+          "label_index": 493,
+          "note": 62,
+          "lane": 3,
+          "fret": 18
+        },
+        {
+          "label_index": 494,
+          "note": 48,
+          "lane": 0,
+          "fret": 16
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 2
+    },
+    {
+      "start_sample": 10526617,
+      "end_sample": 10598400,
+      "notes": [
+        {
+          "label_index": 495,
+          "note": 65,
+          "lane": 3,
+          "fret": 21
+        },
+        {
+          "label_index": 496,
+          "note": 41,
+          "lane": 0,
+          "fret": 9
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 12
+    },
+    {
+      "start_sample": 10608177,
+      "end_sample": 10680000,
+      "notes": [
+        {
+          "label_index": 497,
+          "note": 66,
+          "lane": 3,
+          "fret": 22
+        },
+        {
+          "label_index": 498,
+          "note": 44,
+          "lane": 0,
+          "fret": 12
+        }
+      ],
+      "fretted_note_count": 2,
+      "fretted_span": 10
+    }
+  ]
+}
