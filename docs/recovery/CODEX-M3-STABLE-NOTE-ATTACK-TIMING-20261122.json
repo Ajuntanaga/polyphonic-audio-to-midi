@@ -1,0 +1,625 @@
+{
+  "schema": "m3_saved_stable_note_attack_timing_v1",
+  "run_id": 44245557161,
+  "report_sha256": "a4bf4ff24e2b927524624c53276e73916adb93325dee9a561f6d90ae24e129a7",
+  "selection": "Seven labels from the already published Claude count check.",
+  "scope": "Saved accepted component callbacks; no audio opened or replayed.",
+  "datasets": {
+    "constructed": {
+      "sample_rate": 96000,
+      "label_file": "build/physical-capture/note-combination-corpus-tuning/combinations.tsv",
+      "label_sha256": "294a31b0dfe69f423ed56ab88c288f116d7e945d4f35ddce7aff2de3dbbe1384",
+      "traces": {
+        "per_voice": {
+          "file": "build/github-results/vst3-stable-note-corpus-44245557161/attack-timing-evidence/constructed/per_voice-32-512-plain-callbacks.tsv.gz",
+          "sha256": "1ec2ff541b4b3a7077e4c832fd4ebc8486d9a038a7950d2c2160d82c1623b6e9",
+          "raw_sha256": "25e898932fc6f0314c57dae47045d8ed224994a8530af0cdc98bf0bb222dd6e4",
+          "accepted_events": 5118
+        },
+        "stable_note": {
+          "file": "build/github-results/vst3-stable-note-corpus-44245557161/attack-timing-evidence/constructed/stable_note-32-512-plain-callbacks.tsv.gz",
+          "sha256": "43b80e0d307c45f5f57bbe51c9c91db73f168c6d9b0e592da432665161605de3",
+          "raw_sha256": "8dde495398a00a7e2f1c8599887e84240c7ef279e121085e26cbe6d77d6e27cc",
+          "accepted_events": 3054
+        }
+      }
+    },
+    "physical-highmid": {
+      "sample_rate": 96000,
+      "label_file": "build/physical-capture/unison-04-03-02/unison-labels.tsv",
+      "label_sha256": "619d517c894ef6f6aeca04608ad27048872e175d091dead5fd0d83ff4b2a175b",
+      "traces": {
+        "per_voice": {
+          "file": "build/github-results/vst3-stable-note-corpus-44245557161/attack-timing-evidence/physical-highmid/per_voice-32-512-plain-callbacks.tsv.gz",
+          "sha256": "da88313ef324733f63b1b99d50d3820b8e1af5a3e0a031cefc1d94ab967b75e8",
+          "raw_sha256": "76348703c51ce399824d0300b68b4383d861580b46dc052d80478802dba0fb02",
+          "accepted_events": 328
+        },
+        "stable_note": {
+          "file": "build/github-results/vst3-stable-note-corpus-44245557161/attack-timing-evidence/physical-highmid/stable_note-32-512-plain-callbacks.tsv.gz",
+          "sha256": "3ac36149ec163256ff12dfd808104af74c203bc540f2bf875eb7235d5ddcdc09",
+          "raw_sha256": "133d75999b0e490e0d8add91d1dcb9339184a858804576763e8a688ad593458c",
+          "accepted_events": 202
+        }
+      }
+    },
+    "physical-high": {
+      "sample_rate": 96000,
+      "label_file": "build/physical-capture/unison-03-02-01/unison-labels.tsv",
+      "label_sha256": "9ed3dd8c8d29a35d9d62525e5f57c0df7c863072a94f9b7ace150f2bd29df248",
+      "traces": {
+        "per_voice": {
+          "file": "build/github-results/vst3-stable-note-corpus-44245557161/attack-timing-evidence/physical-high/per_voice-32-512-plain-callbacks.tsv.gz",
+          "sha256": "158698e2c41fa4ba2734b90a1109c01568afd2ae754e654646ae137773bee1cf",
+          "raw_sha256": "27244b81eb3af6754a38c0eb6a80ccd126c7a531f6d203e972b5710f65ea4625",
+          "accepted_events": 342
+        },
+        "stable_note": {
+          "file": "build/github-results/vst3-stable-note-corpus-44245557161/attack-timing-evidence/physical-high/stable_note-32-512-plain-callbacks.tsv.gz",
+          "sha256": "2eed25003d319b8a693086344776cfb612bc3c52fa12ce29e130fcbd65d5cbe0",
+          "raw_sha256": "982834dd41dbcf51743e5ec59a8a5f6da62c5b6fade6f5182690dba9e27a2b41",
+          "accepted_events": 212
+        }
+      }
+    }
+  },
+  "labels": [
+    {
+      "dataset": "constructed",
+      "label_index": 112,
+      "start_sample": 7142453,
+      "end_sample": 7363200,
+      "midi_note": 51,
+      "string_mask": 2,
+      "before": {
+        "label_index": 112,
+        "midi_note": 51,
+        "label_samples": 220747,
+        "pitch_present_samples": 220747,
+        "longest_sink_hold_samples": 152193,
+        "note_ons_inside_label": 4
+      },
+      "after": {
+        "label_index": 112,
+        "midi_note": 51,
+        "label_samples": 220747,
+        "pitch_present_samples": 220747,
+        "longest_sink_hold_samples": 220747,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 7210303,
+          "ms_after_label_start": 706.7708333333334,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7210431,
+          "ms_after_label_start": 708.1041666666666,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        },
+        {
+          "sample": 7210559,
+          "ms_after_label_start": 709.4375,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7211007,
+          "ms_after_label_start": 714.1041666666666,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0,
+          "ms_before_label_start": 727.8958333333334,
+          "ms_after_label_end": 502.65625
+        }
+      ]
+    },
+    {
+      "dataset": "constructed",
+      "label_index": 113,
+      "start_sample": 7142484,
+      "end_sample": 7363200,
+      "midi_note": 51,
+      "string_mask": 4,
+      "before": {
+        "label_index": 113,
+        "midi_note": 51,
+        "label_samples": 220716,
+        "pitch_present_samples": 220716,
+        "longest_sink_hold_samples": 152193,
+        "note_ons_inside_label": 4
+      },
+      "after": {
+        "label_index": 113,
+        "midi_note": 51,
+        "label_samples": 220716,
+        "pitch_present_samples": 220716,
+        "longest_sink_hold_samples": 220716,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 7210303,
+          "ms_after_label_start": 706.4479166666666,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7210431,
+          "ms_after_label_start": 707.78125,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        },
+        {
+          "sample": 7210559,
+          "ms_after_label_start": 709.1145833333334,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7211007,
+          "ms_after_label_start": 713.78125,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0,
+          "ms_before_label_start": 728.21875,
+          "ms_after_label_end": 502.65625
+        }
+      ]
+    },
+    {
+      "dataset": "constructed",
+      "label_index": 114,
+      "start_sample": 7142515,
+      "end_sample": 7363200,
+      "midi_note": 51,
+      "string_mask": 8,
+      "before": {
+        "label_index": 114,
+        "midi_note": 51,
+        "label_samples": 220685,
+        "pitch_present_samples": 220685,
+        "longest_sink_hold_samples": 152193,
+        "note_ons_inside_label": 4
+      },
+      "after": {
+        "label_index": 114,
+        "midi_note": 51,
+        "label_samples": 220685,
+        "pitch_present_samples": 220685,
+        "longest_sink_hold_samples": 220685,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 7210303,
+          "ms_after_label_start": 706.125,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7210431,
+          "ms_after_label_start": 707.4583333333334,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        },
+        {
+          "sample": 7210559,
+          "ms_after_label_start": 708.7916666666666,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7211007,
+          "ms_after_label_start": 713.4583333333334,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0,
+          "ms_before_label_start": 728.5416666666666,
+          "ms_after_label_end": 502.65625
+        }
+      ]
+    },
+    {
+      "dataset": "constructed",
+      "label_index": 115,
+      "start_sample": 7142546,
+      "end_sample": 7363200,
+      "midi_note": 51,
+      "string_mask": 16,
+      "before": {
+        "label_index": 115,
+        "midi_note": 51,
+        "label_samples": 220654,
+        "pitch_present_samples": 220654,
+        "longest_sink_hold_samples": 152193,
+        "note_ons_inside_label": 4
+      },
+      "after": {
+        "label_index": 115,
+        "midi_note": 51,
+        "label_samples": 220654,
+        "pitch_present_samples": 220654,
+        "longest_sink_hold_samples": 220654,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 7210303,
+          "ms_after_label_start": 705.8020833333334,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7210431,
+          "ms_after_label_start": 707.1354166666666,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        },
+        {
+          "sample": 7210559,
+          "ms_after_label_start": 708.46875,
+          "from_channels": [
+            0
+          ],
+          "to_channel": 2
+        },
+        {
+          "sample": 7211007,
+          "ms_after_label_start": 713.1354166666666,
+          "from_channels": [
+            2
+          ],
+          "to_channel": 0
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0,
+          "ms_before_label_start": 728.8645833333334,
+          "ms_after_label_end": 502.65625
+        }
+      ]
+    },
+    {
+      "dataset": "physical-highmid",
+      "label_index": 2,
+      "start_sample": 952320,
+      "end_sample": 1173120,
+      "midi_note": 56,
+      "string_mask": 80,
+      "before": {
+        "label_index": 2,
+        "midi_note": 56,
+        "label_samples": 220800,
+        "pitch_present_samples": 220800,
+        "longest_sink_hold_samples": 182721,
+        "note_ons_inside_label": 1
+      },
+      "after": {
+        "label_index": 2,
+        "midi_note": 56,
+        "label_samples": 220800,
+        "pitch_present_samples": 220800,
+        "longest_sink_hold_samples": 220800,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 990399,
+          "ms_after_label_start": 396.65625,
+          "from_channels": [
+            6
+          ],
+          "to_channel": 0
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 951679,
+          "end": 1301503,
+          "note": 56,
+          "channel": 0,
+          "ms_before_label_start": 6.677083333333333,
+          "ms_after_label_end": 1337.3229166666667
+        }
+      ]
+    },
+    {
+      "dataset": "physical-high",
+      "label_index": 3,
+      "start_sample": 1649280,
+      "end_sample": 1870080,
+      "midi_note": 60,
+      "string_mask": 192,
+      "before": {
+        "label_index": 3,
+        "midi_note": 60,
+        "label_samples": 220800,
+        "pitch_present_samples": 220800,
+        "longest_sink_hold_samples": 190145,
+        "note_ons_inside_label": 1
+      },
+      "after": {
+        "label_index": 3,
+        "midi_note": 60,
+        "label_samples": 220800,
+        "pitch_present_samples": 220800,
+        "longest_sink_hold_samples": 220800,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 1679935,
+          "ms_after_label_start": 319.3229166666667,
+          "from_channels": [
+            5
+          ],
+          "to_channel": 1
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 1633727,
+          "end": 1941567,
+          "note": 60,
+          "channel": 0,
+          "ms_before_label_start": 162.01041666666666,
+          "ms_after_label_end": 744.65625
+        }
+      ]
+    },
+    {
+      "dataset": "physical-high",
+      "label_index": 4,
+      "start_sample": 2048640,
+      "end_sample": 2252160,
+      "midi_note": 60,
+      "string_mask": 192,
+      "before": {
+        "label_index": 4,
+        "midi_note": 60,
+        "label_samples": 203520,
+        "pitch_present_samples": 203520,
+        "longest_sink_hold_samples": 196545,
+        "note_ons_inside_label": 1
+      },
+      "after": {
+        "label_index": 4,
+        "midi_note": 60,
+        "label_samples": 203520,
+        "pitch_present_samples": 203520,
+        "longest_sink_hold_samples": 203520,
+        "note_ons_inside_label": 0
+      },
+      "removed_ons": [
+        {
+          "sample": 2055615,
+          "ms_after_label_start": 72.65625,
+          "from_channels": [
+            7
+          ],
+          "to_channel": 4
+        }
+      ],
+      "stable_callbacks_inside": [],
+      "stable_covering_spans": [
+        {
+          "start": 2032639,
+          "end": 2305919,
+          "note": 60,
+          "channel": 0,
+          "ms_before_label_start": 166.67708333333334,
+          "ms_after_label_end": 559.9895833333334
+        }
+      ]
+    }
+  ],
+  "unique_removed_pairs": [
+    {
+      "dataset": "constructed",
+      "note": 51,
+      "sample": 7210303,
+      "from_channels": [
+        0
+      ],
+      "to_channel": 2,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0
+        }
+      ]
+    },
+    {
+      "dataset": "constructed",
+      "note": 51,
+      "sample": 7210431,
+      "from_channels": [
+        2
+      ],
+      "to_channel": 0,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0
+        }
+      ]
+    },
+    {
+      "dataset": "constructed",
+      "note": 51,
+      "sample": 7210559,
+      "from_channels": [
+        0
+      ],
+      "to_channel": 2,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0
+        }
+      ]
+    },
+    {
+      "dataset": "constructed",
+      "note": 51,
+      "sample": 7211007,
+      "from_channels": [
+        2
+      ],
+      "to_channel": 0,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 7072575,
+          "end": 7411455,
+          "note": 51,
+          "channel": 0
+        }
+      ]
+    },
+    {
+      "dataset": "physical-highmid",
+      "note": 56,
+      "sample": 990399,
+      "from_channels": [
+        6
+      ],
+      "to_channel": 0,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 951679,
+          "end": 1301503,
+          "note": 56,
+          "channel": 0
+        }
+      ]
+    },
+    {
+      "dataset": "physical-high",
+      "note": 60,
+      "sample": 1679935,
+      "from_channels": [
+        5
+      ],
+      "to_channel": 1,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 1633727,
+          "end": 1941567,
+          "note": 60,
+          "channel": 0
+        }
+      ]
+    },
+    {
+      "dataset": "physical-high",
+      "note": 60,
+      "sample": 2055615,
+      "from_channels": [
+        7
+      ],
+      "to_channel": 4,
+      "unique_other_channel_off": true,
+      "stable_pitch_callbacks_at_sample": [],
+      "stable_continuing_spans": [
+        {
+          "start": 2032639,
+          "end": 2305919,
+          "note": 60,
+          "channel": 0
+        }
+      ]
+    }
+  ],
+  "acoustic_repluck_preservation": "not measured",
+  "summary": {
+    "labels": 7,
+    "unique_windows": 4,
+    "unique_removed_note_ons": 7,
+    "all_have_unique_same_sample_other_channel_off": true,
+    "all_removed_samples_have_no_stable_pitch_callback": true,
+    "all_removed_samples_have_a_continuing_stable_pitch": true,
+    "all_target_metrics_equal_saved_report": true,
+    "all_labels_continuously_covered_by_stable_sink_note": true
+  }
+}
