@@ -1,3 +1,21 @@
+## Active M3 checkpoint — original-teacher preservation running, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-TEACHER-PRESERVATION-RUNNING-20261123.md` and
+`docs/recovery/github-basic-pitch-teacher-adaptation-20261123.json` first.
+One CPU GitHub run **45191602866**, source **886caf2**, worker **8350641**.
+Frozen fit: original 4096/1024/1024 windows, two epochs, note-label BCE plus
+original-note and original-onset preservation KL, all coefficients one.
+Original, earlier rejected BCE epoch2 and new epoch2 share the same windows.
+Window screen only: no export or continuous replay in this job; no retry/tuning.
+Require test recall +5pp, no extras/silence/exact-frame regression by role,
+no newly missed occurrence, and present/longest loss <=25ms AND <=5% per
+source occurrence. Strict zero-loss and absolute targets reported separately.
+Local pure tests 17/17; actual TensorFlow gradient/optimizer checks run on GHA
+before fitting. Native/host/live gates are not measured by this window screen.
+Collect only the small report/log artifact once, bulk remains remote. Installed
+output, defaults and scoreboard unchanged. Claude's ordinary58 acoustic lane
+is independent and does not block this fit. No duplicate processing.
+
 ## Active M3 checkpoint — copied-excerpt attack observation closed, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-FIXTURE-ATTACK-ANATOMY-RESULT-20261123.md` and

@@ -1,0 +1,160 @@
+{
+  "schema": "m3_basic_pitch_teacher_adaptation_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "basic-pitch-teacher-adaptation.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "886caf279463eefbfad3081975d3f41cbd1f2ade",
+  "worker_sha": "83506417e2ae5658ea572c83eb1a054a4ab9c93a",
+  "source_ref": "work/tuner-stability-20261027",
+  "spec_path": "docs/recovery/basic-pitch-teacher-adaptation-20261123.json",
+  "spec_sha256": "6836721dcb8fbcc2d4e799f8cbde4e91da5552799db23a7955b19cfb4d18caa9",
+  "plan_path": "docs/recovery/CODEX-M3-TEACHER-PRESERVATION-PLAN-20261123.md",
+  "state": "in_progress",
+  "final": false,
+  "prepared_at": "2026-11-23T14:11:46.301617+00:00",
+  "dispatch_count": 1,
+  "collection_state": "not_available",
+  "authorization": "Standing user authorization for bounded M3 CPU GitHub work; peers may implement and dispatch independently.",
+  "scope": "One frozen original-teacher fit and three-model window screen only; no continuous replay, export, native execution, installation or promotion.",
+  "local_checks": {
+    "pure_tests_passed": 17,
+    "yaml_parsed": true,
+    "diff_check_passed": true,
+    "audio_or_model_run_locally": false
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "promotion_accepted": false,
+  "next": "Monitor one recorded job; collect small report/logs once; retain bulk remotely; no retry or tuning.",
+  "dispatched_at": "2026-11-23T14:11:53.515538+00:00",
+  "dispatch_directory": "build/recovery/teacher-preservation-20261123",
+  "dispatch_returncode": 0,
+  "dispatch_capture": "build/recovery/teacher-preservation-20261123/dispatch.stdout",
+  "run_id": 45191602866,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45191602866",
+  "local_output_directory": "build/github-results/basic-pitch-teacher-adaptation-45191602866",
+  "small_artifact_name": "m3-basic-pitch-teacher-adaptation-report-45191602866-1",
+  "bulk_artifact_name": "m3-basic-pitch-teacher-adaptation-evidence-45191602866-1",
+  "last_observed": {
+    "conclusion": "",
+    "createdAt": "2026-11-23T14:11:54Z",
+    "databaseId": 45191602866,
+    "headSha": "83506417e2ae5658ea572c83eb1a054a4ab9c93a",
+    "jobs": [
+      {
+        "completedAt": "0001-01-01T00:00:00Z",
+        "conclusion": "",
+        "databaseId": 137751110752,
+        "name": "adaptation",
+        "startedAt": "2026-11-23T14:11:59Z",
+        "status": "in_progress",
+        "steps": [
+          {
+            "completedAt": "2026-11-23T14:12:01Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-23T14:12:00Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T14:12:01Z",
+            "conclusion": "success",
+            "name": "Check bounded dispatch inputs",
+            "number": 2,
+            "startedAt": "2026-11-23T14:12:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T14:12:03Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-23T14:12:01Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T14:12:04Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-23T14:12:03Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Pin source and CPU dependencies",
+            "number": 5,
+            "startedAt": "2026-11-23T14:12:04Z",
+            "status": "in_progress"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Verify frozen windows, scoring and remote guard",
+            "number": 6,
+            "startedAt": "0001-01-01T00:00:00Z",
+            "status": "pending"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Fit once and score three models on identical windows",
+            "number": 7,
+            "startedAt": "0001-01-01T00:00:00Z",
+            "status": "pending"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Retain small report and logs",
+            "number": 8,
+            "startedAt": "0001-01-01T00:00:00Z",
+            "status": "pending"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Retain model checkpoints and evidence remotely",
+            "number": 9,
+            "startedAt": "0001-01-01T00:00:00Z",
+            "status": "pending"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 17,
+            "startedAt": "0001-01-01T00:00:00Z",
+            "status": "pending"
+          },
+          {
+            "completedAt": "0001-01-01T00:00:00Z",
+            "conclusion": "",
+            "name": "Post Run actions/checkout@v7",
+            "number": 18,
+            "startedAt": "0001-01-01T00:00:00Z",
+            "status": "pending"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45191602866/job/137751110752"
+      }
+    ],
+    "status": "in_progress",
+    "updatedAt": "2026-11-23T14:12:00Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45191602866"
+  },
+  "conclusion": "",
+  "last_checked_at": "2026-11-23T14:12:21.758858+00:00",
+  "source_ci": [
+    {
+      "conclusion": "",
+      "databaseId": 45191462785,
+      "headSha": "886caf279463eefbfad3081975d3f41cbd1f2ade",
+      "status": "in_progress",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45191462785",
+      "workflowName": "Portable offline replay"
+    }
+  ]
+}
