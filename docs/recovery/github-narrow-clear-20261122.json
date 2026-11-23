@@ -1,0 +1,90 @@
+{
+  "schema": "m3_narrow_clear_checkpoint_v1",
+  "created_at": "2026-11-23T02:46:16.790643+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "narrow-clear.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "e844ea0d84978c23252f9094e2b2848278d41f63",
+  "worker_sha": "db991769dc24ea1db33cb1fce298207a1f316b8c",
+  "state": "in_progress",
+  "final": false,
+  "dispatch_count": 1,
+  "plan": "docs/recovery/CODEX-M3-NARROW-CLEAR-20261122.md",
+  "timing_reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
+  "companion_reference": "docs/recovery/exact-cell-sharing-companion-references-20261122.json",
+  "operation": "One default-off redundant narrow-state clear CPU screen: six trace-free block-32 timed replays then six block-512 MIDI companions",
+  "cases": [
+    {
+      "dataset": "ordinary",
+      "condition": "current-on"
+    },
+    {
+      "dataset": "ordinary",
+      "condition": "completion-midi-retention-on"
+    },
+    {
+      "dataset": "physical-long",
+      "condition": "completion-midi-retention-on"
+    }
+  ],
+  "local_tests": {
+    "mocked_runner_tests": 21,
+    "result": "passed",
+    "worker_yaml": "parsed",
+    "worker_shell_sections_parsed": 6,
+    "scoped_diff_check": "passed",
+    "native_execution": false
+  },
+  "review": "One static review found no material blocker; native state/lifecycle execution remains for GHA.",
+  "required": {
+    "cpu_total_reduction_percent_each_pair": 2,
+    "cpu_p99_growth_ns": 0,
+    "processing_allocations": 0,
+    "processing_frees": 0,
+    "reference_snapshots": "bit-identical",
+    "paired_raw_midi": "bit-identical",
+    "quiet_counts": "equal OFF/ON and positive; OFF all cleared, ON all skipped; zero narrow updates at max fret 24"
+  },
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "collection_state": "pending; retrieve small report once after completion",
+  "peer_lane": "Claude independently checks saved stable-note ledger result",
+  "next": "Observe the recorded run; collect small report once, leaving bulk remote. Do not repeat the screen.",
+  "dispatch_attempt_at": "2026-11-23T02:48:09.295509+00:00",
+  "dispatch_request_attempts": 1,
+  "dispatch_output": "build/recovery/narrow-clear-20261122/dispatch.stdout",
+  "dispatch_error": "build/recovery/narrow-clear-20261122/dispatch.stderr",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T02:48:15.848944+00:00",
+  "run_id": 45102267147,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45102267147",
+  "run_attempt": 1,
+  "output_directory": "build/github-results/narrow-clear-45102267147",
+  "report_artifact": "m3-narrow-clear-report-45102267147-1",
+  "evidence_artifact": "m3-narrow-clear-evidence-45102267147-1",
+  "conclusion": "",
+  "last_observed_at": "2026-11-23T02:48:38.985621+00:00",
+  "source_checks": [
+    {
+      "conclusion": "",
+      "databaseId": 45102220580,
+      "headSha": "e844ea0d84978c23252f9094e2b2848278d41f63",
+      "name": "CI",
+      "status": "in_progress",
+      "updatedAt": "2026-11-23T02:47:49Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45102220580"
+    },
+    {
+      "conclusion": "",
+      "databaseId": 45102220564,
+      "headSha": "e844ea0d84978c23252f9094e2b2848278d41f63",
+      "name": "Portable offline replay",
+      "status": "in_progress",
+      "updatedAt": "2026-11-23T02:47:50Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45102220564"
+    }
+  ],
+  "last_observation": "build/github-results/narrow-clear-45102267147/run.json",
+  "stage": "Verify the frozen input bundle"
+}
