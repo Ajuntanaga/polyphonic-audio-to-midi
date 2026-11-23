@@ -1,3 +1,16 @@
+## Active M3 checkpoint — repeated-attack control has one delayed response, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-CONTROLLED-REPLUCK-RESULT-20261123.md` and
+`docs/recovery/github-controlled-repluck-20261123.json` first.
+Run **45155740922** is final/success, collected once with verified digest.
+All 48 integrity checks pass. Stable-note retains the first extra response in
+3/4 repeated-copy controls; physical-high overlap delays it **124 ms**
+(47.323 ->171.323 ms after the approximate rise marker). Both single-copy
+first responses retain identity. This is constructed waveform evidence,
+not acoustic re-pluck acceptance. Attribute the removed callback before
+changing policy. No rerun/redownload, retuning, promotion or installed change.
+Audio and bulk remain remote. Core/component CPU gates below are complete.
+
 ## Active M3 checkpoint — batched-cell core and VST3 gates PASSED, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-BATCH-CELL-VST3-RESULT-20261123.md` and

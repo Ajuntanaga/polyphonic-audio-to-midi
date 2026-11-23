@@ -1,0 +1,301 @@
+{
+  "schema": "m3_controlled_repluck_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "m3-controlled-repluck.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "2ded4d9f7bcbb60d22c3fcff465f9c7b357c0edb",
+  "worker_sha": "6f2bc0f90e8ad04d83cf9a4ccd4f8cdf73277347",
+  "state": "completed",
+  "final": true,
+  "run_id": 45155740922,
+  "dispatch_count": 1,
+  "plan": "docs/recovery/CODEX-M3-CONTROLLED-REPLUCK-PLAN-20261123.md",
+  "spec": "docs/recovery/controlled-repluck-20261123.json",
+  "spec_sha256": "ee729097a54091ab2f87b13ad3632eee21e86e727ff50a6c4846cd80471d3171",
+  "binary_reference": {
+    "source_sha": "89f66c166c86c489ef4256df669555220f1267fd",
+    "run_id": 45150026998,
+    "artifact_id": 14807466382,
+    "artifact_name": "m3-vst3-evidence-45150026998-1",
+    "archive_sha256": "763dd5aad719aaa2f72d9dc2376ccaff5447ad3159b8aa2bd8cb756c1f4c9cce",
+    "sha256": "073e59f4310f7c50fa09cbdbeeeca27e205d965cedadd92c182b7c74c63513f7"
+  },
+  "scope": {
+    "datasets": 2,
+    "fixtures": 3,
+    "modes": 2,
+    "formats": [
+      32,
+      64
+    ],
+    "blocks": [
+      512,
+      32
+    ],
+    "replays": 48,
+    "new_native_build": false
+  },
+  "local_checks": {
+    "python_contracts": 12,
+    "contracts_pass": true,
+    "python_ast_files": 3,
+    "workflow_yaml_parsed": true,
+    "bash_sections_parsed": 5,
+    "native_or_audio_execution": false
+  },
+  "prepared_at": "2026-11-23T10:23:32.296080+00:00",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "acoustic_repluck_preservation": "not measured",
+  "next": "Attribute the removed overlapping-repeat callbacks using existing evidence/source before any policy change. Do not rerun or redownload the completed check; bulk and audio remain remote.",
+  "dispatch_request_attempts": 1,
+  "dispatch_attempt_at": "2026-11-23T10:24:02.650130+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T10:24:04.299490+00:00",
+  "dispatch_output": "build/recovery/controlled-repluck-20261123/dispatch.stdout",
+  "dispatch_error": "build/recovery/controlled-repluck-20261123/dispatch.stderr",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45155740922",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-23T10:26:04.187679+00:00",
+  "run_created_at": "2026-11-23T10:24:04Z",
+  "output_directory": "build/github-results/controlled-repluck-45155740922",
+  "collection_state": "collected once; digest verified; report only; no local audio",
+  "artifact_names": {
+    "report": "m3-controlled-repluck-report-45155740922-1",
+    "evidence": "m3-controlled-repluck-evidence-45155740922-1"
+  },
+  "current_stage": [
+    {
+      "job": "compare",
+      "status": "completed",
+      "step": null
+    }
+  ],
+  "collection_receipt": "build/github-results/controlled-repluck-45155740922/collection.json",
+  "report": "build/github-results/controlled-repluck-45155740922/report/controlled-repluck/report.json",
+  "report_sha256": "e2764707e56a7dd63394a5131ac4ae9fa0518923c455404669c4915393a46076",
+  "result_note": "docs/recovery/CODEX-M3-CONTROLLED-REPLUCK-RESULT-20261123.md",
+  "collected_at": "2026-11-23T10:27:26.832632+00:00",
+  "integrity_pass": true,
+  "run_gates_passed": 48,
+  "run_gates_total": 48,
+  "baseline_response_windows": 6,
+  "baseline_response_windows_retained": 5,
+  "repeated_copy_baseline_responses": 4,
+  "repeated_copy_first_responses_retained": 3,
+  "comparisons": {
+    "physical-highmid": {
+      "single": {
+        "responses": {
+          "per_voice": {
+            "note_ons": 1,
+            "control_note_ons": 0,
+            "added_note_ons": 1,
+            "added_on_samples": [
+              54911
+            ],
+            "first_added_on_sample": 54911,
+            "first_added_delay_ms": 71.98958333333333,
+            "pitch_active_before_insertion": false
+          },
+          "stable_note": {
+            "note_ons": 1,
+            "control_note_ons": 0,
+            "added_note_ons": 1,
+            "added_on_samples": [
+              54911
+            ],
+            "first_added_on_sample": 54911,
+            "first_added_delay_ms": 71.98958333333333,
+            "pitch_active_before_insertion": false
+          }
+        },
+        "verdict": "baseline_response_retained",
+        "baseline_response_observed": true,
+        "baseline_first_response_retained": true
+      },
+      "overlap": {
+        "responses": {
+          "per_voice": {
+            "note_ons": 6,
+            "control_note_ons": 1,
+            "added_note_ons": 6,
+            "added_on_samples": [
+              110399,
+              115839,
+              118783,
+              129407,
+              129471,
+              129599
+            ],
+            "first_added_on_sample": 110399,
+            "first_added_delay_ms": 49.989583333333336,
+            "pitch_active_before_insertion": true
+          },
+          "stable_note": {
+            "note_ons": 3,
+            "control_note_ons": 0,
+            "added_note_ons": 3,
+            "added_on_samples": [
+              110399,
+              129407,
+              129471
+            ],
+            "first_added_on_sample": 110399,
+            "first_added_delay_ms": 49.989583333333336,
+            "pitch_active_before_insertion": true
+          }
+        },
+        "verdict": "baseline_response_retained",
+        "baseline_response_observed": true,
+        "baseline_first_response_retained": true
+      },
+      "separated": {
+        "responses": {
+          "per_voice": {
+            "note_ons": 1,
+            "control_note_ons": 0,
+            "added_note_ons": 1,
+            "added_on_samples": [
+              246911
+            ],
+            "first_added_on_sample": 246911,
+            "first_added_delay_ms": 71.98958333333333,
+            "pitch_active_before_insertion": false
+          },
+          "stable_note": {
+            "note_ons": 1,
+            "control_note_ons": 0,
+            "added_note_ons": 1,
+            "added_on_samples": [
+              246911
+            ],
+            "first_added_on_sample": 246911,
+            "first_added_delay_ms": 71.98958333333333,
+            "pitch_active_before_insertion": false
+          }
+        },
+        "verdict": "baseline_response_retained",
+        "baseline_response_observed": true,
+        "baseline_first_response_retained": true
+      }
+    },
+    "physical-high": {
+      "single": {
+        "responses": {
+          "per_voice": {
+            "note_ons": 3,
+            "control_note_ons": 0,
+            "added_note_ons": 3,
+            "added_on_samples": [
+              54591,
+              55231,
+              71359
+            ],
+            "first_added_on_sample": 54591,
+            "first_added_delay_ms": 68.65625,
+            "pitch_active_before_insertion": false
+          },
+          "stable_note": {
+            "note_ons": 1,
+            "control_note_ons": 0,
+            "added_note_ons": 1,
+            "added_on_samples": [
+              54591
+            ],
+            "first_added_on_sample": 54591,
+            "first_added_delay_ms": 68.65625,
+            "pitch_active_before_insertion": false
+          }
+        },
+        "verdict": "baseline_response_retained",
+        "baseline_response_observed": true,
+        "baseline_first_response_retained": true
+      },
+      "overlap": {
+        "responses": {
+          "per_voice": {
+            "note_ons": 6,
+            "control_note_ons": 1,
+            "added_note_ons": 6,
+            "added_on_samples": [
+              110143,
+              113151,
+              121151,
+              122047,
+              122175,
+              122239
+            ],
+            "first_added_on_sample": 110143,
+            "first_added_delay_ms": 47.322916666666664,
+            "pitch_active_before_insertion": true
+          },
+          "stable_note": {
+            "note_ons": 2,
+            "control_note_ons": 0,
+            "added_note_ons": 2,
+            "added_on_samples": [
+              122047,
+              122175
+            ],
+            "first_added_on_sample": 122047,
+            "first_added_delay_ms": 171.32291666666666,
+            "pitch_active_before_insertion": true
+          }
+        },
+        "verdict": "baseline_response_removed_or_retimed",
+        "baseline_response_observed": true,
+        "baseline_first_response_retained": false
+      },
+      "separated": {
+        "responses": {
+          "per_voice": {
+            "note_ons": 3,
+            "control_note_ons": 0,
+            "added_note_ons": 3,
+            "added_on_samples": [
+              246591,
+              247231,
+              263359
+            ],
+            "first_added_on_sample": 246591,
+            "first_added_delay_ms": 68.65625,
+            "pitch_active_before_insertion": false
+          },
+          "stable_note": {
+            "note_ons": 1,
+            "control_note_ons": 0,
+            "added_note_ons": 1,
+            "added_on_samples": [
+              246591
+            ],
+            "first_added_on_sample": 246591,
+            "first_added_delay_ms": 68.65625,
+            "pitch_active_before_insertion": false
+          }
+        },
+        "verdict": "baseline_response_retained",
+        "baseline_response_observed": true,
+        "baseline_first_response_retained": true
+      }
+    }
+  },
+  "decision": "controlled waveform response only; no promotion or acoustic acceptance",
+  "external_daw_device_acceptance": "not measured",
+  "new_timing_or_allocation_measurement": false,
+  "remaining_issue": "physical-high overlapping copy: first extra note60 callback 110143 -> 122047, 124ms later under stable-note; classify removed callbacks before changing policy",
+  "artifacts": {
+    "m3-controlled-repluck-evidence-45155740922-1": {
+      "id": 14808656500,
+      "size_in_bytes": 3525142,
+      "digest": "sha256:4a89a38f2293bd0934af149b51470f93fd052278fb0db5f991ce69a0e316a518",
+      "expires_at": "2026-11-30T10:24:59Z"
+    },
+    "m3-controlled-repluck-report-45155740922-1": {
+      "id": 14807523635,
+      "size_in_bytes": 46903,
+      "digest": "sha256:e25f1423410ebfaff7eed59cdc8b9761e5972399fc0ea91d2e1056bd70067ff3",
+      "expires_at": "2026-12-07T10:24:58Z"
+    }
+  }
+}
