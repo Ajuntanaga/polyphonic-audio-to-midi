@@ -1,0 +1,1974 @@
+{
+  "schema": "m3_quiet_cell_restart_v1",
+  "state": "complete",
+  "final": true,
+  "source_commit": "634c3471bda09a8bb8a50cb3cb20ef7ee2e6329b",
+  "worker_commit": "040a36c142d3b6503859e45f4fe8bf0d88c50706",
+  "run_id": "45087140206",
+  "specification_sha256": "864adcea99510d3a01e989d9cd2f506535f126fef02466d3488103409ef97777",
+  "reading": "no scalar route meets the frozen design bar",
+  "predictions": [
+    {
+      "prediction": "primary_fails_design_bar",
+      "probability": 0.65,
+      "observed": true,
+      "brier": 0.12249999999999998
+    },
+    {
+      "prediction": "recent_over_raw_outranks_interval_fundamental",
+      "probability": 0.6,
+      "observed": false,
+      "brier": 0.36
+    },
+    {
+      "prediction": "positive_interval_coverage_at_least_90_percent",
+      "probability": 0.85,
+      "observed": true,
+      "brier": 0.022500000000000006
+    }
+  ],
+  "elapsed_seconds": 16.82679578599999,
+  "finished_at": "2026-11-23T00:10:27.524956+00:00",
+  "policy_change": false,
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "summary_schema": "m3_quiet_cell_restart_result_summary_v1",
+  "report_path": "build/github-results/quiet-cell-restart-45087140206/report/quiet-cell-restart/report/report.json",
+  "report_sha256": "edfcaad6ea998524b787d7535828d110daee2b37583a0654b03dace25b6174cf",
+  "report_bytes": 814191,
+  "collection_receipt": "build/github-results/quiet-cell-restart-45087140206/collection.json",
+  "archive_verified": true,
+  "datasets": {
+    "ordinary": {
+      "rows": 246651,
+      "interval_status_counts": {
+        "ok": 181406,
+        "missing_anchor": 55835,
+        "unavailable_current": 9410
+      },
+      "quiet_counts": {
+        "0": 202615,
+        "5": 24665,
+        "2": 16985,
+        "7": 2386
+      },
+      "original_span_classes": {
+        "negative": 224,
+        "positive": 21
+      },
+      "pairs": 279,
+      "pair_classes": {
+        "negative": 254,
+        "positive": 23,
+        "continuing": 2
+      },
+      "expected_positive_labels": [
+        19,
+        31,
+        42,
+        70,
+        91,
+        123,
+        128,
+        159,
+        174,
+        178,
+        200,
+        225,
+        239,
+        245,
+        263,
+        302,
+        306,
+        349,
+        355,
+        364,
+        456,
+        459,
+        470
+      ],
+      "covered_positive_labels": [
+        19,
+        31,
+        42,
+        70,
+        91,
+        123,
+        128,
+        159,
+        174,
+        178,
+        200,
+        225,
+        239,
+        245,
+        263,
+        302,
+        306,
+        349,
+        355,
+        364,
+        456,
+        459,
+        470
+      ],
+      "missing_positive_labels": [],
+      "additional_positive_labels": [],
+      "summaries": {
+        "in_run": {
+          "interval_fundamental_share": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.6081821294077371,
+            "cluster_bootstrap_95": [
+              0.4960908122589287,
+              0.7175018012069643
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 0.08039082392641198
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 0.05962018789781808
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 0.059613711785756966
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 0.055597467823229364
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 0.04900938443515307
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.06784173378013784
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.027160445987477286
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "interval_harmonic_share": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.5840465593974666,
+            "cluster_bootstrap_95": [
+              0.475899233258635,
+              0.6937378618358645
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 0.22954550812483576
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 0.23068717482182105
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 0.12719875645941353
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 0.12454603793411055
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 0.23278641282871015
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.09642531730741012
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.07137541519982446
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "recent_to_raw_harmonics": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.609380349195481,
+            "cluster_bootstrap_95": [
+              0.4841975782629166,
+              0.7296721430981299
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 5.820209094602359
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 5.431580546012983
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 4.322066605835003
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 5.010581289970468
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 12.486435973931027
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 19.135726902976884
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 2.152845559799201
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "raw_fundamental_share": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.47740499828825744,
+            "cluster_bootstrap_95": [
+              0.35407244052713743,
+              0.6019622547563723
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 0.04886668822906991
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 0.05641717516319785
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 0.07642152339568425
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 0.04728433559341848
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 0.006762066879450572
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.012793432347007973
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.07160662564010747
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          }
+        },
+        "by_25ms": {
+          "interval_fundamental_share": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.6843546730571722,
+            "cluster_bootstrap_95": [
+              0.5691604571243126,
+              0.7891571264472796
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 0.29582483653694003
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 0.19594365096855093
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 0.18916176685108158
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 0.1554978124564939
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 0.04900938443515307
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.07634560880171962
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.07133634769382508
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "interval_harmonic_share": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.6330023964395755,
+            "cluster_bootstrap_95": [
+              0.5180663269323794,
+              0.7428995812796642
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 0.40286197830007187
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 0.35808469141129956
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 0.2685062931082343
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 0.20215938035405334
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 0.23278641282871015
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.09642531730741012
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.10617238794848158
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "recent_to_raw_harmonics": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.4279356384799726,
+            "cluster_bootstrap_95": [
+              0.30608210403221187,
+              0.5562696224522253
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 7.174459080430794
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 7.2428671612136375
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 9.248513593260148
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 9.14821225369484
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 15.59714728778549
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 19.135726902976884
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 10.041107549678562
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "raw_fundamental_share": {
+            "total": {
+              "negative": 254,
+              "positive": 23
+            },
+            "measured": {
+              "negative": 254,
+              "positive": 23
+            },
+            "coverage": {
+              "positive": 1.0,
+              "negative": 1.0
+            },
+            "auc": 0.687778158165012,
+            "cluster_bootstrap_95": [
+              0.5614766930646243,
+              0.8072604788229788
+            ],
+            "valid_bootstraps": 2000,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 15,
+                  "measured": 15,
+                  "median": 0.11091257713140784
+                },
+                "negative": {
+                  "total": 145,
+                  "measured": 145,
+                  "median": 0.08785345957582162
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 7,
+                  "measured": 7,
+                  "median": 0.10545003062480142
+                },
+                "negative": {
+                  "total": 101,
+                  "measured": 101,
+                  "median": 0.07891938896585943
+                },
+                "continuing": {
+                  "total": 2,
+                  "measured": 2,
+                  "median": 0.006762066879450572
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.018023066547516953
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.07160662564010747
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "paired_primary_comparison": {
+        "interval_fundamental_share": {
+          "total": {
+            "negative": 254,
+            "positive": 23
+          },
+          "measured": {
+            "negative": 254,
+            "positive": 23
+          },
+          "coverage": {
+            "positive": 1.0,
+            "negative": 1.0
+          },
+          "auc": 0.6843546730571722,
+          "cluster_bootstrap_95": [
+            0.5691604571243126,
+            0.7891571264472796
+          ],
+          "valid_bootstraps": 2000,
+          "design_bar": false,
+          "bands": {
+            "below48": {
+              "positive": {
+                "total": 15,
+                "measured": 15,
+                "median": 0.29582483653694003
+              },
+              "negative": {
+                "total": 145,
+                "measured": 145,
+                "median": 0.19594365096855093
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "48-59": {
+              "positive": {
+                "total": 7,
+                "measured": 7,
+                "median": 0.18916176685108158
+              },
+              "negative": {
+                "total": 101,
+                "measured": 101,
+                "median": 0.1554978124564939
+              },
+              "continuing": {
+                "total": 2,
+                "measured": 2,
+                "median": 0.04900938443515307
+              }
+            },
+            "60-71": {
+              "positive": {
+                "total": 1,
+                "measured": 1,
+                "median": 0.07634560880171962
+              },
+              "negative": {
+                "total": 8,
+                "measured": 8,
+                "median": 0.07133634769382508
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "72+": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            }
+          }
+        },
+        "raw_fundamental_share": {
+          "total": {
+            "negative": 254,
+            "positive": 23
+          },
+          "measured": {
+            "negative": 254,
+            "positive": 23
+          },
+          "coverage": {
+            "positive": 1.0,
+            "negative": 1.0
+          },
+          "auc": 0.687778158165012,
+          "cluster_bootstrap_95": [
+            0.5614766930646243,
+            0.8072604788229788
+          ],
+          "valid_bootstraps": 2000,
+          "design_bar": false,
+          "bands": {
+            "below48": {
+              "positive": {
+                "total": 15,
+                "measured": 15,
+                "median": 0.11091257713140784
+              },
+              "negative": {
+                "total": 145,
+                "measured": 145,
+                "median": 0.08785345957582162
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "48-59": {
+              "positive": {
+                "total": 7,
+                "measured": 7,
+                "median": 0.10545003062480142
+              },
+              "negative": {
+                "total": 101,
+                "measured": 101,
+                "median": 0.07891938896585943
+              },
+              "continuing": {
+                "total": 2,
+                "measured": 2,
+                "median": 0.006762066879450572
+              }
+            },
+            "60-71": {
+              "positive": {
+                "total": 1,
+                "measured": 1,
+                "median": 0.018023066547516953
+              },
+              "negative": {
+                "total": 8,
+                "measured": 8,
+                "median": 0.07160662564010747
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "72+": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            }
+          }
+        }
+      },
+      "primary_auc_gain_over_raw": -0.003423485107839741,
+      "primary_supported": false,
+      "any_interval_design_bar": false,
+      "policy_change": false,
+      "promotion_accepted": false,
+      "input_verified": true
+    },
+    "extended-middle": {
+      "rows": 2572,
+      "interval_status_counts": {
+        "ok": 2107,
+        "negative_power": 369,
+        "missing_anchor": 96
+      },
+      "quiet_counts": {
+        "0": 316,
+        "5": 1239,
+        "4": 472,
+        "2": 491,
+        "3": 54
+      },
+      "original_span_classes": {
+        "negative": 9
+      },
+      "pairs": 9,
+      "pair_classes": {
+        "negative": 9
+      },
+      "expected_positive_labels": [],
+      "covered_positive_labels": [],
+      "missing_positive_labels": [],
+      "additional_positive_labels": [],
+      "summaries": {
+        "in_run": {
+          "interval_fundamental_share": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.008816845086263157
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.0022589746887742637
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "interval_harmonic_share": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.012838110837695963
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.002888671119895066
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "recent_to_raw_harmonics": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 5.714100031961511e-07
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 4.317357244876406e-07
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "raw_fundamental_share": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.09160386079786476
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.10491303059460687
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          }
+        },
+        "by_25ms": {
+          "interval_fundamental_share": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.3279367338573371
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.002259238962541343
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "interval_harmonic_share": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.47964182649088516
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.0028890090567529236
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "recent_to_raw_harmonics": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 5.714100031961511e-07
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 4.317357244876406e-07
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          },
+          "raw_fundamental_share": {
+            "total": {
+              "negative": 9
+            },
+            "measured": {
+              "negative": 9
+            },
+            "coverage": {
+              "positive": null,
+              "negative": 1.0
+            },
+            "auc": null,
+            "cluster_bootstrap_95": [
+              null,
+              null
+            ],
+            "valid_bootstraps": 0,
+            "design_bar": false,
+            "bands": {
+              "below48": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "48-59": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 8,
+                  "measured": 8,
+                  "median": 0.09160386079786476
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "60-71": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 1,
+                  "measured": 1,
+                  "median": 0.10491303059460687
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              },
+              "72+": {
+                "positive": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "negative": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                },
+                "continuing": {
+                  "total": 0,
+                  "measured": 0,
+                  "median": null
+                }
+              }
+            }
+          }
+        }
+      },
+      "paired_primary_comparison": {
+        "interval_fundamental_share": {
+          "total": {
+            "negative": 9
+          },
+          "measured": {
+            "negative": 9
+          },
+          "coverage": {
+            "positive": null,
+            "negative": 1.0
+          },
+          "auc": null,
+          "cluster_bootstrap_95": [
+            null,
+            null
+          ],
+          "valid_bootstraps": 0,
+          "design_bar": false,
+          "bands": {
+            "below48": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "48-59": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 8,
+                "measured": 8,
+                "median": 0.3279367338573371
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "60-71": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 1,
+                "measured": 1,
+                "median": 0.002259238962541343
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "72+": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            }
+          }
+        },
+        "raw_fundamental_share": {
+          "total": {
+            "negative": 9
+          },
+          "measured": {
+            "negative": 9
+          },
+          "coverage": {
+            "positive": null,
+            "negative": 1.0
+          },
+          "auc": null,
+          "cluster_bootstrap_95": [
+            null,
+            null
+          ],
+          "valid_bootstraps": 0,
+          "design_bar": false,
+          "bands": {
+            "below48": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "48-59": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 8,
+                "measured": 8,
+                "median": 0.09160386079786476
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "60-71": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 1,
+                "measured": 1,
+                "median": 0.10491303059460687
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            },
+            "72+": {
+              "positive": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "negative": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              },
+              "continuing": {
+                "total": 0,
+                "measured": 0,
+                "median": null
+              }
+            }
+          }
+        }
+      },
+      "primary_auc_gain_over_raw": null,
+      "primary_supported": false,
+      "any_interval_design_bar": false,
+      "policy_change": false,
+      "promotion_accepted": false,
+      "input_verified": true
+    }
+  },
+  "interpretation": "These three scalar routes fail their frozen design bar. No policy result, acceptance or exclusion of all temporal/vector evidence follows. Per-label maxima include observations from run start, possibly before label onset."
+}

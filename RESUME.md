@@ -1,3 +1,18 @@
+## Active M3 checkpoint — quiet-cell restart analysis final, 2026-11-23 00:15 UTC
+
+Read `docs/recovery/github-quiet-cell-restart-analysis-20261122.json` and
+`docs/recovery/CODEX-M3-QUIET-CELL-RESTART-RESULT-20261122.md` first.
+Run **45087140206** is final/success; source **634c347**, worker **040a36c**.
+All three frozen scalar restart routes fail the design bar. Ordinary has
+23 positive /254 negative /2 continuing span-run pairs, all23 problem labels
+covered. Primary AUC0.684 (95%0.569–0.789), raw comparison0.688; gain-0.00342.
+Extended-middle has nine negative pairs, no positive cases and no AUC.
+Ten synthetic tests and pinned input identities pass. Compact report collected
+once successfully after a zero-byte transfer failure; bulk tables stay remote.
+No rerun, tuning, policy or installed/default change. Claude retains the distinct
+v5 boundary census; its recorded usage reset is00:30 UTC, clearance unverified.
+Read that result before a new causal design; do not duplicate its lane.
+
 ## Active M3 checkpoint — saved trial owner attribution final, 2026-11-22 23:52 UTC
 
 Read `docs/recovery/CODEX-M3-JOINT-RESET-OWNER-ATTRIBUTION-20261122.md` and
