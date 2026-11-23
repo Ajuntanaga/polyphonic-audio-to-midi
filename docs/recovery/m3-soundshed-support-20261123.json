@@ -1,0 +1,224 @@
+{
+  "schema": "m3_soundshed_support_checkpoint_v1",
+  "state": "completed",
+  "final": true,
+  "completed_at": "2026-11-23T16:49:00.518506+00:00",
+  "recorded_at": "2026-11-23T16:50:19.389451+00:00",
+  "verdict": "REJECTED_SAVED_SPAN_SUPPORT",
+  "source_commit": "b92ee59abc96b15e01bff7f03a8c014bafae8e9f",
+  "freeze_commit": "b92ee59",
+  "plan_path": "docs/recovery/CODEX-M3-SOUNDSHED-SUPPORT-PLAN-20261123.md",
+  "source_events_run": 45218379585,
+  "report_path": "build/recovery/m3-soundshed-support-20261123/report.json",
+  "report_bytes": 724993,
+  "report_sha256": "e5069f34d173f1a6f3bed1bba9dce93e9c42148c3eb0ba4f0c00450f2b05e5ea",
+  "collection_receipt": "build/github-results/soundshed-comparison-45218379585/bulk-collection.json",
+  "candidate": {
+    "hold_ms": 220,
+    "pitch_range": [
+      35,
+      88
+    ],
+    "rule": "CURRENT intersect forward-held Soundshed union native confirmation; CURRENT preserved outside model range"
+  },
+  "screen": {
+    "checks": {
+      "ordinary_wrong_reduction_20pct": true,
+      "ordinary_gap_reduction_250000": true,
+      "ordinary_coverage_loss_010pp": false,
+      "extended_middle_strict": true,
+      "both_label_budgets": false
+    },
+    "passed": false,
+    "promotion_accepted": false
+  },
+  "datasets": {
+    "ordinary": {
+      "current": {
+        "present": 13525345,
+        "expected": 33819101,
+        "coverage_pct": 39.993212711360954,
+        "wrong": 7808309,
+        "gap": 3621485,
+        "precision_pct": 54.19863620074406,
+        "exact_set": 53249,
+        "all_expected": 53249
+      },
+      "candidate": {
+        "present": 13479236,
+        "expected": 33819101,
+        "coverage_pct": 39.856872599895546,
+        "wrong": 5989213,
+        "gap": 3326878,
+        "precision_pct": 59.13157551984229,
+        "exact_set": 53249,
+        "all_expected": 53249
+      },
+      "present_delta": -46109,
+      "wrong_delta": -1819096,
+      "wrong_removed_percent": 23.29692638956783,
+      "gap_delta": -294607,
+      "current_pitch_runs": 528,
+      "candidate_pitch_runs": 465,
+      "budget": {
+        "per_label_ms": 25,
+        "per_label_percent": 5,
+        "failures": [
+          {
+            "label_index": 150,
+            "midi_note": 43,
+            "reasons": [
+              "present",
+              "longest_present"
+            ]
+          },
+          {
+            "label_index": 229,
+            "midi_note": 42,
+            "reasons": [
+              "present"
+            ]
+          },
+          {
+            "label_index": 306,
+            "midi_note": 42,
+            "reasons": [
+              "present",
+              "longest_present"
+            ]
+          },
+          {
+            "label_index": 364,
+            "midi_note": 42,
+            "reasons": [
+              "present",
+              "longest_present"
+            ]
+          }
+        ],
+        "failed_labels": 4,
+        "aggregate_safe": true,
+        "budget_screen_pass": false,
+        "strict_screen_pass": false,
+        "promotion_accepted": false
+      },
+      "failing_label_deltas": [
+        {
+          "label_index": 150,
+          "midi_note": 43,
+          "start_sample": 2692986,
+          "end_sample": 2764800,
+          "annotated_samples": 71814,
+          "current_present_samples": 67393,
+          "model_present_samples": 45504,
+          "current_longest_present_samples": 67393,
+          "model_longest_present_samples": 45504,
+          "present_samples_delta": -21889,
+          "longest_present_samples_delta": -21889
+        },
+        {
+          "label_index": 229,
+          "midi_note": 42,
+          "start_sample": 4080230,
+          "end_sample": 4152000,
+          "annotated_samples": 71770,
+          "current_present_samples": 18304,
+          "model_present_samples": 3713,
+          "current_longest_present_samples": 2880,
+          "model_longest_present_samples": 2880,
+          "present_samples_delta": -14591,
+          "longest_present_samples_delta": 0
+        },
+        {
+          "label_index": 306,
+          "midi_note": 42,
+          "start_sample": 5630617,
+          "end_sample": 5702400,
+          "annotated_samples": 71783,
+          "current_present_samples": 71783,
+          "model_present_samples": 67328,
+          "current_longest_present_samples": 71783,
+          "model_longest_present_samples": 67328,
+          "present_samples_delta": -4455,
+          "longest_present_samples_delta": -4455
+        },
+        {
+          "label_index": 364,
+          "midi_note": 42,
+          "start_sample": 7017737,
+          "end_sample": 7089600,
+          "annotated_samples": 71863,
+          "current_present_samples": 71863,
+          "model_present_samples": 67008,
+          "current_longest_present_samples": 71863,
+          "model_longest_present_samples": 67008,
+          "present_samples_delta": -4855,
+          "longest_present_samples_delta": -4855
+        }
+      ],
+      "integrity": {
+        "full_current_identity": true,
+        "common_current_identity": true,
+        "soundshed_identity": true,
+        "causal_pairing": true,
+        "annotations_unchanged": true
+      }
+    },
+    "extended-middle": {
+      "current": {
+        "present": 2021510,
+        "expected": 2073600,
+        "coverage_pct": 97.4879436728395,
+        "wrong": 528259,
+        "gap": 183006,
+        "precision_pct": 73.97279322300592,
+        "exact_set": 1516739,
+        "all_expected": 2021510
+      },
+      "candidate": {
+        "present": 2021510,
+        "expected": 2073600,
+        "coverage_pct": 97.4879436728395,
+        "wrong": 390915,
+        "gap": 161632,
+        "precision_pct": 78.53400293777489,
+        "exact_set": 1654083,
+        "all_expected": 2021510
+      },
+      "present_delta": 0,
+      "wrong_delta": -137344,
+      "wrong_removed_percent": 25.999367734387867,
+      "gap_delta": -21374,
+      "current_pitch_runs": 14,
+      "candidate_pitch_runs": 14,
+      "budget": {
+        "per_label_ms": 25,
+        "per_label_percent": 5,
+        "failures": [],
+        "failed_labels": 0,
+        "aggregate_safe": true,
+        "budget_screen_pass": true,
+        "strict_screen_pass": true,
+        "promotion_accepted": false
+      },
+      "failing_label_deltas": [],
+      "integrity": {
+        "full_current_identity": true,
+        "common_current_identity": true,
+        "soundshed_identity": true,
+        "causal_pairing": true,
+        "annotations_unchanged": true
+      }
+    }
+  },
+  "checks": {
+    "synthetic_contracts": 6,
+    "corpus_scoring_runs": 1,
+    "remote_processing_started": false,
+    "local_audio_or_model_execution": false
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "promotion_accepted": false,
+  "next": "Fixed combination closed: no retuning or native integration. Preserve earlier core/component/REAPER performance passes; ordinary acoustic re-pluck evidence remains separate peer work."
+}

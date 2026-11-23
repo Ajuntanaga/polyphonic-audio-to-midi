@@ -71,6 +71,18 @@ def compact(measured):
         exact_set=t['exact_pitch_set_samples'], all_expected=t['all_expected_pitches_samples'])
 
 
+def delay_deltas(current, measured):
+    rows = []
+    for before, after in zip(current['labels'], measured['labels'], strict=True):
+        if (before['label_index'], before['midi_note']) != (after['label_index'], after['midi_note']):
+            raise ValueError('Delay rows are not aligned')
+        a, b = before['first_present_delay_samples'], after['first_present_delay_samples']
+        rows.append(dict(label_index=before['label_index'], midi_note=before['midi_note'],
+            current_first_present_delay_samples=a, candidate_first_present_delay_samples=b,
+            delay_delta_samples=None if a is None or b is None else b-a))
+    return rows
+
+
 def utility_gate(rows):
     ordinary = rows['ordinary']
     before, after = ordinary['current_summary'], ordinary['candidate_summary']
@@ -128,6 +140,7 @@ def run(root, event_dir, output):
             current_pitch_runs=len(union_spans(current_spans, sample_count=horizon)),
             candidate_pitch_runs=len(candidate_spans),
             comparison=comparison, budget=label_budget(comparison, full['sample_rate']),
+            first_present_delay_deltas=delay_deltas(current, measured),
             measurement=measured, candidate_spans=candidate_spans,
             soundshed_timing=saved['timing'])
     screen = utility_gate(rows)

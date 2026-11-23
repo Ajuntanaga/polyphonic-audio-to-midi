@@ -391,5 +391,14 @@
     },
     "promotion_accepted": false,
     "interpretation": "Causal detector sample-clock pitch occupancy. Range-preserving arm is a saved-span combination; no combined implementation. No string, unison multiplicity, acoustic re-pluck, allocation, VST3 host or live-guitar acceptance. Detector-only callback cost is reported separately; no fitted timing offset."
+  },
+  "bulk_collection": {
+    "receipt": "build/github-results/soundshed-comparison-45218379585/bulk-collection.json",
+    "archive_sha256": "769a4600d84157483fa22397e18a277dae9dbe18b31783aa3bcb1a5b86f3b944",
+    "extracted_members": [
+      "ordinary-events.tsv",
+      "extended-middle-events.tsv"
+    ],
+    "collected_once": true
   }
 }
