@@ -1,3 +1,27 @@
+## Active M3 checkpoint — batched cell full-corpus validation prepared, 2026-11-23
+
+Read `docs/recovery/github-batch-cell-corpus-20261122.json` and
+`docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md` first.
+One fixed GitHub CPU validation: 14 datasets, three saved modes, blocks
+512/32/1024 (126 replays). Require all saved snapshots, 42 complete MIDI
+captures and 84 buffer checks to retain identity, plus all 42 uninstrumented
+allocation/deadline gates. No native changes, replay retries or policy tuning.
+All 28 mocked runner tests and worker shell/YAML checks pass locally. Record
+source/worker SHAs and the single dispatch here; collect small reports once,
+keep bulk remote. Installed output and acoustic re-pluck acceptance unchanged.
+Claude explicitly stopped heavy work at its usage limit and scheduled its own
+resume at 21:32 PST; respect that stop and keep the peer lanes distinct.
+
+## Batched cell bounded screen — final, passed
+
+Run **45109184192**, source **5c2d999**, worker **6b3e63b**, is final/success.
+Read `docs/recovery/CODEX-M3-BATCH-CELL-RESULT-20261122.md` and its checkpoint.
+The three cases save 16.679%, 16.601% and 18.387% thread CPU with lower CPU
+p99, twelve identical saved snapshots, three identical paired MIDI captures
+and zero observed allocations/frees. Native tests and source workflows pass.
+Small report collected once and digest verified; bulk remote. No repoll or
+rerun. This is a bounded diagnostic success, not installed/live acceptance.
+
 ## Active M3 checkpoint — quiet-cell restart analysis final, 2026-11-23 00:15 UTC
 
 Read `docs/recovery/github-quiet-cell-restart-analysis-20261122.json` and

@@ -1,0 +1,51 @@
+{
+  "schema": "m3_batch_cell_corpus_checkpoint_v1",
+  "created_at": "2026-11-23T04:27:20.437239+00:00",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "batch-cell-corpus.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": null,
+  "worker_sha": null,
+  "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
+  "state": "prepared",
+  "final": false,
+  "dispatch_count": 0,
+  "dispatch_request_attempts": 0,
+  "plan": "docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-PLAN-20261122.md",
+  "reference": "docs/recovery/batch-cell-corpus-references-20261122.json",
+  "preceding_screen": {
+    "run_id": 45109184192,
+    "usefulness_screen_pass": true,
+    "report_sha256": "1e95b28dd72646ea2cbbbe3a429a5db5fd0995a16f7338915640ecde01a90212"
+  },
+  "scope": {
+    "datasets": 14,
+    "modes": 3,
+    "blocks": [
+      512,
+      32,
+      1024
+    ],
+    "replays": 126,
+    "snapshot_identities_required": 126,
+    "raw_midi_identities_required": 42,
+    "buffer_identities_required": 84,
+    "timed_runs": 42,
+    "p99_limit_ns": 166666,
+    "maximum_limit_ns": 333333,
+    "deadline_overruns_required": 0,
+    "processing_allocations_and_frees_required": 0
+  },
+  "local_tests": {
+    "mocked_runner_tests": 28,
+    "result": "passed",
+    "worker_yaml": "parsed",
+    "worker_shell_sections_parsed": 6,
+    "reference_contract": "passed",
+    "native_execution": false
+  },
+  "collection_state": "not dispatched",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Commit scoped runner and workflow; dispatch one fixed full-corpus validation"
+}

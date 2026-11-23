@@ -1,0 +1,2756 @@
+{
+  "schema": "m3_batch_cell_corpus_references_v1",
+  "anchor_report_sha256": "78c405a8e8845171b49b8240ff6ec91efbc0e62ef18005ad4d920b12d6bea45d",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "83c51e3b257f57e9af75293d3a765c6bae677e5b",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "43756240245",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "conditions": {
+    "reference-off": [],
+    "current-on": [
+      "--diagnostic-spectral-lane-collision"
+    ],
+    "completion-midi-retention-on": [
+      "--diagnostic-spectral-lane-collision",
+      "--diagnostic-completion-midi-retention"
+    ]
+  },
+  "blocks": [
+    512,
+    32,
+    1024
+  ],
+  "datasets": {
+    "ordinary": {
+      "reference-off-512": {
+        "tsv_sha256": "8d72e5d5ba5efaa4bcaec1be664c761292fd5ab425db0c451990dc91ac9c64a7",
+        "output": {
+          "labeled": 528632,
+          "matched": 145385,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92653,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319772,
+          "fingerprint": "bbed96f3be505756"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145385
+          }
+        },
+        "midi_sha256": "ca799c800d75556ed8dcf0b1a424e8885fc346bdd271690c12f8c2927c70e28b",
+        "midi_rows": 11903,
+        "sample_count": 10689600,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        },
+        "midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "midi_rows": 11851,
+        "sample_count": 10689600,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        },
+        "midi_sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a",
+        "midi_rows": 11851,
+        "sample_count": 10689600,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "ed4388c868974c2594eaffe8ba08cc20a48315216561621523e1af65168016bd",
+        "output": {
+          "labeled": 528632,
+          "matched": 145385,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92653,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319772,
+          "fingerprint": "bbed96f3be505756"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145385
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "0f97cf246b04da47f628a3025648d7dcbd3e7e89b665a4b7f6f35f1fa19a8e8b",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "6ff2a9ebf384ca9dbd66986b29a4de0f2a83d82a235cc1dbf608ab86a9e11170",
+        "output": {
+          "labeled": 528632,
+          "matched": 145385,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92653,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319772,
+          "fingerprint": "bbed96f3be505756"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145385
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "2fb8c57e1cfa400b415cb3c79ce89ae5866f7e3a7d7cad8e43852ab7cbd34d62",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "2fb8c57e1cfa400b415cb3c79ce89ae5866f7e3a7d7cad8e43852ab7cbd34d62",
+        "output": {
+          "labeled": 528632,
+          "matched": 145400,
+          "false_wrong_note_voices": 164263,
+          "false_wrong_string_voices": 92638,
+          "false_gap_voices": 62856,
+          "false_positive_voices": 319757,
+          "fingerprint": "002540bbc3759cd6"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 528632,
+            "matched": 145400
+          }
+        }
+      }
+    },
+    "constructed": {
+      "reference-off-512": {
+        "tsv_sha256": "686b4fc7d16aabb8e7478734cd0f1e5cee7a5c8d397d35ca34a355eb2ce47b02",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "199db8fd25ada73e"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        },
+        "midi_sha256": "7ebeeca2ea2ccec8e3aad601f11cf1c60e3a884ee11405ea2329870f02a7c32e",
+        "midi_rows": 5126,
+        "sample_count": 29491200,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "d72b66f6f4051741b1117939461d1d50a37b268883b52743d6b6488458ffb856",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "6c233e125bcd97ea"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        },
+        "midi_sha256": "454b8ac217ed5664483475d0f475de16cda288c68cbe8f097e01cc873d6c41e7",
+        "midi_rows": 5118,
+        "sample_count": 29491200,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "d72b66f6f4051741b1117939461d1d50a37b268883b52743d6b6488458ffb856",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "6c233e125bcd97ea"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        },
+        "midi_sha256": "454b8ac217ed5664483475d0f475de16cda288c68cbe8f097e01cc873d6c41e7",
+        "midi_rows": 5118,
+        "sample_count": 29491200,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "fa1d4c079c4cc81ba32923d4d65b71c087a4feaef04fe1bbb3f8d8ec22d9e9c3",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "199db8fd25ada73e"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "a1704405086b9f945427e7b87b3ff329d843004c89163907fbe83c5229b8b78c",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "6c233e125bcd97ea"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "a1704405086b9f945427e7b87b3ff329d843004c89163907fbe83c5229b8b78c",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "6c233e125bcd97ea"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "efb2e43dccfb52c06e2592ed1bd2b5d439f595f6b6ec1afccc3d1a2ca5623eeb",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "199db8fd25ada73e"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "1893c7bdda66e8dfda29854b5c7e1b0ed3ca9f7cb01a996c9638522dbf45a59c",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "6c233e125bcd97ea"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "1893c7bdda66e8dfda29854b5c7e1b0ed3ca9f7cb01a996c9638522dbf45a59c",
+        "output": {
+          "labeled": 1614601,
+          "matched": 259074,
+          "false_wrong_note_voices": 167722,
+          "false_wrong_string_voices": 103754,
+          "false_gap_voices": 23176,
+          "false_positive_voices": 294652,
+          "fingerprint": "6c233e125bcd97ea"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 1614601,
+            "matched": 259074
+          }
+        }
+      }
+    },
+    "isolated-08": {
+      "reference-off-512": {
+        "tsv_sha256": "8fc8d5c34c2e285f86371ca9b9d96324ef0209a354dee01bc4b19c3e725b2d52",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        },
+        "midi_sha256": "dc1b9413fc26b878dd7b6c1357ebd7a1551535bf2660b03fabe3f6fbe6966c1d",
+        "midi_rows": 170,
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "8fc8d5c34c2e285f86371ca9b9d96324ef0209a354dee01bc4b19c3e725b2d52",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        },
+        "midi_sha256": "dc1b9413fc26b878dd7b6c1357ebd7a1551535bf2660b03fabe3f6fbe6966c1d",
+        "midi_rows": 170,
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "8fc8d5c34c2e285f86371ca9b9d96324ef0209a354dee01bc4b19c3e725b2d52",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        },
+        "midi_sha256": "dc1b9413fc26b878dd7b6c1357ebd7a1551535bf2660b03fabe3f6fbe6966c1d",
+        "midi_rows": 170,
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "ccc2f929817a92c053ad715e53ae335f0e6c73180c8391c0776d743f30a734ce",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "ccc2f929817a92c053ad715e53ae335f0e6c73180c8391c0776d743f30a734ce",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "ccc2f929817a92c053ad715e53ae335f0e6c73180c8391c0776d743f30a734ce",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "47ad14641716442a19db1196f7bb5e02115f1a72258bfc8303e093e42690535c",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "47ad14641716442a19db1196f7bb5e02115f1a72258bfc8303e093e42690535c",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "47ad14641716442a19db1196f7bb5e02115f1a72258bfc8303e093e42690535c",
+        "output": {
+          "labeled": 31050,
+          "matched": 29816,
+          "false_wrong_note_voices": 2462,
+          "false_wrong_string_voices": 579,
+          "false_gap_voices": 2928,
+          "false_positive_voices": 5969,
+          "fingerprint": "06c4e7fdb2a739e4"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 29816
+          }
+        }
+      }
+    },
+    "isolated-05": {
+      "reference-off-512": {
+        "tsv_sha256": "7aecb002039d562af504b12fd008b8bc303a25938100c7626dbcc65826cc14c5",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        },
+        "midi_sha256": "59d3f70f8e9e74abee95d4326338ac4ae9e312f61cf30552c65df22c431326e2",
+        "midi_rows": 114,
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "7aecb002039d562af504b12fd008b8bc303a25938100c7626dbcc65826cc14c5",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        },
+        "midi_sha256": "59d3f70f8e9e74abee95d4326338ac4ae9e312f61cf30552c65df22c431326e2",
+        "midi_rows": 114,
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "7aecb002039d562af504b12fd008b8bc303a25938100c7626dbcc65826cc14c5",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        },
+        "midi_sha256": "59d3f70f8e9e74abee95d4326338ac4ae9e312f61cf30552c65df22c431326e2",
+        "midi_rows": 114,
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "f47b5883dfbdca4fb57a62daef5e356635f3a7a216bfe8fe17ce0b31b8d0e4bd",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "ced53bd74f6fec82c3c29b2e7fd58dc2ef8108b28b7f4e6882209daf3e5cc405",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "ced53bd74f6fec82c3c29b2e7fd58dc2ef8108b28b7f4e6882209daf3e5cc405",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "ced53bd74f6fec82c3c29b2e7fd58dc2ef8108b28b7f4e6882209daf3e5cc405",
+        "output": {
+          "labeled": 31050,
+          "matched": 25681,
+          "false_wrong_note_voices": 12028,
+          "false_wrong_string_voices": 4037,
+          "false_gap_voices": 3860,
+          "false_positive_voices": 19925,
+          "fingerprint": "87edbea93db1fb35"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 31050,
+            "matched": 25681
+          }
+        }
+      }
+    },
+    "isolated-02": {
+      "reference-off-512": {
+        "tsv_sha256": "1f66a5082a0983d6ba57549099faf0cae34059d483f2ff9a9936921008b1e095",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "e1436099f9cfb492"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        },
+        "midi_sha256": "e0a4576d9467d3fe402cbb38cb91bb8808419b5f3483f41ee2866fee532e3c53",
+        "midi_rows": 44,
+        "sample_count": 2515200,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "3725151a65719c9b86daca455a8a58496dd2d3ac3fc6d0e6b4108bf30adc96ea",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "6ea741f3e8464742"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        },
+        "midi_sha256": "d8c994c9003b0b3dc8e5a2f459bafcfd82d03afe1e41900b822161e9c3bc881a",
+        "midi_rows": 44,
+        "sample_count": 2515200,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "3725151a65719c9b86daca455a8a58496dd2d3ac3fc6d0e6b4108bf30adc96ea",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "6ea741f3e8464742"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        },
+        "midi_sha256": "d8c994c9003b0b3dc8e5a2f459bafcfd82d03afe1e41900b822161e9c3bc881a",
+        "midi_rows": 44,
+        "sample_count": 2515200,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "7e0677b2224f64a2b7c23ae855cb9126d5ae7771f4b561dce7db0062423e59be",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "e1436099f9cfb492"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "560ec917202f80dbba7e83050e78302b98c297ee3379e42c8ed6cd40ef629025",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "6ea741f3e8464742"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "560ec917202f80dbba7e83050e78302b98c297ee3379e42c8ed6cd40ef629025",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "6ea741f3e8464742"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "3ecf08d40ca1fff17ed9b9c1c737ee44b9a6a04e0f35bd0bf69dfbbc2c0caad5",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "e1436099f9cfb492"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "bfefd7013508bf2bd75cac18e5ea3229c2412523a12237c8efa991f929783a96",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "6ea741f3e8464742"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "bfefd7013508bf2bd75cac18e5ea3229c2412523a12237c8efa991f929783a96",
+        "output": {
+          "labeled": 35550,
+          "matched": 29240,
+          "false_wrong_note_voices": 2491,
+          "false_wrong_string_voices": 1400,
+          "false_gap_voices": 1840,
+          "false_positive_voices": 5731,
+          "fingerprint": "6ea741f3e8464742"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 35550,
+            "matched": 29240
+          }
+        }
+      }
+    },
+    "physical-long": {
+      "reference-off-512": {
+        "tsv_sha256": "5d41ad94928861ec11a1c6f0494b9968dbb52a8b6c6c7f9f76fe1f4c493b0c15",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "519bc0f9f4710566"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "midi_sha256": "6c99330cec3b262a25be751ab50514bfa3677efed852e93c003b3e182a7072bf",
+        "midi_rows": 1462,
+        "sample_count": 5646848,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "bce5ab56f14da796e8c3f8eeef9e921a96ef444a95c398f7221ef01953861d09",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "6ecf88865ddc34e4"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "midi_sha256": "26e532cca01261d4d2ba2b832f05242850f0219a67c7f363439bcb4ac8188ab4",
+        "midi_rows": 1510,
+        "sample_count": 5646848,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "4297875fe20b2ac64cc5f1fe361c131a95ba236e44b1c72c47d2a16ac7af759e",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "238b4fedc0263a94"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        },
+        "midi_sha256": "7a5d0981ba645e9dcc3424e16fcc105872136df52c736d7939ce0d33b08d3763",
+        "midi_rows": 1478,
+        "sample_count": 5646848,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "2a6d8cdcbdf45f07c710cd0fd386190fc4468e07c89ca4e8172162885af44d12",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "519bc0f9f4710566"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "e38241d4b21228dbe202d62ec517b02012a188de575bf325da37893c09fa1f1f",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "6ecf88865ddc34e4"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "92458744bd015128e384d36b0222ff2072353c92b5707b178a0578027212a26d",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "238b4fedc0263a94"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "ab8eaf6888475a679a5f4f3e4ca3dab85e7723185d3b478cd2b6e47e5f07bd3b",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "519bc0f9f4710566"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "4e3cbce44b34977f1023c8c04ed9f21876dea1da560e4d645adc5fbe40d6ca04",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "6ecf88865ddc34e4"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "22c68ae684c826789a97e340bd2a8ce6c50953b8c7aa88312f1dc25b85c7679d",
+        "output": {
+          "labeled": 68441,
+          "matched": 41452,
+          "false_wrong_note_voices": 67769,
+          "false_wrong_string_voices": 2709,
+          "false_gap_voices": 5403,
+          "false_positive_voices": 75881,
+          "fingerprint": "238b4fedc0263a94"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 29063,
+            "matched": 16233
+          },
+          "3": {
+            "labeled": 39378,
+            "matched": 25219
+          }
+        }
+      }
+    },
+    "physical-middle": {
+      "reference-off-512": {
+        "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "d25d957bd434fae7b9c24e95cf75b10c94e4c183a7e56d51b811b43e3b367b33",
+        "midi_rows": 570,
+        "sample_count": 6198016,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "d25d957bd434fae7b9c24e95cf75b10c94e4c183a7e56d51b811b43e3b367b33",
+        "midi_rows": 570,
+        "sample_count": 6198016,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "8a2d80ecf673327cc82dd6e3960d7b670f122f3da369c85d141c4a1cc9e67b15",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "d25d957bd434fae7b9c24e95cf75b10c94e4c183a7e56d51b811b43e3b367b33",
+        "midi_rows": 570,
+        "sample_count": 6198016,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "8cf7bc3486ab431004e3572d7fdefb29a5565b1c3879dd13f3dba54fea5bf89b",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "8cf7bc3486ab431004e3572d7fdefb29a5565b1c3879dd13f3dba54fea5bf89b",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "8cf7bc3486ab431004e3572d7fdefb29a5565b1c3879dd13f3dba54fea5bf89b",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "7e7b0ab8fb4668fb1bb4f672226f6aee2c6930527e2140a4ca4a49346308a62c",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "7e7b0ab8fb4668fb1bb4f672226f6aee2c6930527e2140a4ca4a49346308a62c",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "7e7b0ab8fb4668fb1bb4f672226f6aee2c6930527e2140a4ca4a49346308a62c",
+        "output": {
+          "labeled": 24139,
+          "matched": 0,
+          "false_wrong_note_voices": 4516,
+          "false_wrong_string_voices": 17921,
+          "false_gap_voices": 94413,
+          "false_positive_voices": 116850,
+          "fingerprint": "b40da4a6fcfd543a"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 20389,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3750,
+            "matched": 0
+          }
+        }
+      }
+    },
+    "physical-highmid": {
+      "reference-off-512": {
+        "tsv_sha256": "09b49ce2fca08ad0a494458f1605a11af8561acccb9cda4480c564e3ed7ffc10",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "cfe42adf5a7b507b7b65103d050127c8d8b682e419828bd3e1506f4c270904c3",
+        "midi_rows": 328,
+        "sample_count": 5819136,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "09b49ce2fca08ad0a494458f1605a11af8561acccb9cda4480c564e3ed7ffc10",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "cfe42adf5a7b507b7b65103d050127c8d8b682e419828bd3e1506f4c270904c3",
+        "midi_rows": 328,
+        "sample_count": 5819136,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "09b49ce2fca08ad0a494458f1605a11af8561acccb9cda4480c564e3ed7ffc10",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "cfe42adf5a7b507b7b65103d050127c8d8b682e419828bd3e1506f4c270904c3",
+        "midi_rows": 328,
+        "sample_count": 5819136,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "45dff0dd24397663d430e18f7ab7c40a95f0907769f6c0099a03c8b3e6cf2ed4",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "45dff0dd24397663d430e18f7ab7c40a95f0907769f6c0099a03c8b3e6cf2ed4",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "45dff0dd24397663d430e18f7ab7c40a95f0907769f6c0099a03c8b3e6cf2ed4",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "feb9d53316c811ad76a0fe94637118e80c5f1ed9851b9d12e01b44dcf05b0db8",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "feb9d53316c811ad76a0fe94637118e80c5f1ed9851b9d12e01b44dcf05b0db8",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "feb9d53316c811ad76a0fe94637118e80c5f1ed9851b9d12e01b44dcf05b0db8",
+        "output": {
+          "labeled": 23452,
+          "matched": 0,
+          "false_wrong_note_voices": 3729,
+          "false_wrong_string_voices": 15251,
+          "false_gap_voices": 46672,
+          "false_positive_voices": 65652,
+          "fingerprint": "fcabcff914676ab2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 19740,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 3712,
+            "matched": 0
+          }
+        }
+      }
+    },
+    "physical-high": {
+      "reference-off-512": {
+        "tsv_sha256": "cda242ca3e27eb72bc820de2208bec13ee637bae5c3d4261b3627843c20221e2",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "8fe6f25a9f4b6100688c1afbe2646c75d9d4057ff489b488a89554d8a6f48835",
+        "midi_rows": 342,
+        "sample_count": 4933632,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "cda242ca3e27eb72bc820de2208bec13ee637bae5c3d4261b3627843c20221e2",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "8fe6f25a9f4b6100688c1afbe2646c75d9d4057ff489b488a89554d8a6f48835",
+        "midi_rows": 342,
+        "sample_count": 4933632,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "cda242ca3e27eb72bc820de2208bec13ee637bae5c3d4261b3627843c20221e2",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "8fe6f25a9f4b6100688c1afbe2646c75d9d4057ff489b488a89554d8a6f48835",
+        "midi_rows": 342,
+        "sample_count": 4933632,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "09bb3c36e81b2f7b17ea6015d9fc9a168f1f592ee2215e6e53a7b8dcc9aee1ef",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "09bb3c36e81b2f7b17ea6015d9fc9a168f1f592ee2215e6e53a7b8dcc9aee1ef",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "09bb3c36e81b2f7b17ea6015d9fc9a168f1f592ee2215e6e53a7b8dcc9aee1ef",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "41d12df7c3f217c7489873747fe9c91634fdb31e9ce95b7599a567c61f8a3a14",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "41d12df7c3f217c7489873747fe9c91634fdb31e9ce95b7599a567c61f8a3a14",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "41d12df7c3f217c7489873747fe9c91634fdb31e9ce95b7599a567c61f8a3a14",
+        "output": {
+          "labeled": 28043,
+          "matched": 0,
+          "false_wrong_note_voices": 8685,
+          "false_wrong_string_voices": 15403,
+          "false_gap_voices": 33638,
+          "false_positive_voices": 57726,
+          "fingerprint": "0b868703201511e1"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 21143,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 6900,
+            "matched": 0
+          }
+        }
+      }
+    },
+    "extended-middle": {
+      "reference-off-512": {
+        "tsv_sha256": "826fac40de309ff0838e68a7f301e146291b6197eab2493847ddee853bdf66c3",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "midi_rows": 906,
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "826fac40de309ff0838e68a7f301e146291b6197eab2493847ddee853bdf66c3",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "midi_rows": 906,
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "826fac40de309ff0838e68a7f301e146291b6197eab2493847ddee853bdf66c3",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "a52eb7d46ae0fd7345e97e5652c29a367b8bfc45bf0db4803eba304bcc8ec601",
+        "midi_rows": 906,
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "edaaae595e7db59daf80835232cd068ca0cccce2fc24034a5c420dfce0d5f516",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "edaaae595e7db59daf80835232cd068ca0cccce2fc24034a5c420dfce0d5f516",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "edaaae595e7db59daf80835232cd068ca0cccce2fc24034a5c420dfce0d5f516",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "73671b1fadf5689c4651bc4786da527035fad4b98078582369a59292736cf1ed",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "73671b1fadf5689c4651bc4786da527035fad4b98078582369a59292736cf1ed",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "73671b1fadf5689c4651bc4786da527035fad4b98078582369a59292736cf1ed",
+        "output": {
+          "labeled": 32400,
+          "matched": 4511,
+          "false_wrong_note_voices": 9393,
+          "false_wrong_string_voices": 24725,
+          "false_gap_voices": 7052,
+          "false_positive_voices": 41170,
+          "fingerprint": "73d712146be4b1d2"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 4511
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      }
+    },
+    "extended-highmid": {
+      "reference-off-512": {
+        "tsv_sha256": "0ce0f5bdebb771b14fec8d2aa6877a1e9f05b35e64b9fae4e70ef500fe793628",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "0bea8d9278aca50ac37341d6f64aa4c1695310098fec147338bce50d54f848bf",
+        "midi_rows": 106,
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "0ce0f5bdebb771b14fec8d2aa6877a1e9f05b35e64b9fae4e70ef500fe793628",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "0bea8d9278aca50ac37341d6f64aa4c1695310098fec147338bce50d54f848bf",
+        "midi_rows": 106,
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "0ce0f5bdebb771b14fec8d2aa6877a1e9f05b35e64b9fae4e70ef500fe793628",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "0bea8d9278aca50ac37341d6f64aa4c1695310098fec147338bce50d54f848bf",
+        "midi_rows": 106,
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "50d8c05a24820a8fe74726068d5eae074b5cf0adcaea49f926ea7a34cc34cf7f",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "50d8c05a24820a8fe74726068d5eae074b5cf0adcaea49f926ea7a34cc34cf7f",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "50d8c05a24820a8fe74726068d5eae074b5cf0adcaea49f926ea7a34cc34cf7f",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "e39301184b5745b521eb5ab3f91502d517cd55482a80c9c3850f2ac3eb32e925",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "e39301184b5745b521eb5ab3f91502d517cd55482a80c9c3850f2ac3eb32e925",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "e39301184b5745b521eb5ab3f91502d517cd55482a80c9c3850f2ac3eb32e925",
+        "output": {
+          "labeled": 32400,
+          "matched": 0,
+          "false_wrong_note_voices": 7164,
+          "false_wrong_string_voices": 13629,
+          "false_gap_voices": 2027,
+          "false_positive_voices": 22820,
+          "fingerprint": "db4f4b6e6d078738"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 0
+          },
+          "3": {
+            "labeled": 5400,
+            "matched": 0
+          }
+        }
+      }
+    },
+    "extended-high": {
+      "reference-off-512": {
+        "tsv_sha256": "013bfa87aed7844bbb7b596a1752b92167d92dd85650cc65408a3e6c5608fb8b",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "182dc6c63e32ab7c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "f4405214124665b9dccb9ea76a65a2f565bc2ce457db1081c508c88b130ee145",
+        "midi_rows": 344,
+        "sample_count": 2611200,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "fba574903527e92e6f324df026a69e0128630ad86434c5a302423d313a093003",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "e23f74e8c710377d32668472702458fad0fa08cc49501d71f888bfd8685a57a6",
+        "midi_rows": 344,
+        "sample_count": 2611200,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "fba574903527e92e6f324df026a69e0128630ad86434c5a302423d313a093003",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        },
+        "midi_sha256": "e23f74e8c710377d32668472702458fad0fa08cc49501d71f888bfd8685a57a6",
+        "midi_rows": 344,
+        "sample_count": 2611200,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "34d3ed6ad81207029eddb336c77f4281a7c6b2cacaa69afe2b34bb0dcf1ae816",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "182dc6c63e32ab7c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "48ac93c4f4b31d66c0f41dd2c169bead9762d41768896a313f25b68e6c954d44",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "48ac93c4f4b31d66c0f41dd2c169bead9762d41768896a313f25b68e6c954d44",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "35422fd79d9a6f4e704fb3babe395e876b01157e083a87be0d79739ec9070e6b",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "182dc6c63e32ab7c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "27ed2d26d34a67e6ff85150785a47005b7f95d312c869203a0c7d72dfeb36b4a",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "27ed2d26d34a67e6ff85150785a47005b7f95d312c869203a0c7d72dfeb36b4a",
+        "output": {
+          "labeled": 37800,
+          "matched": 3893,
+          "false_wrong_note_voices": 9082,
+          "false_wrong_string_voices": 27878,
+          "false_gap_voices": 7028,
+          "false_positive_voices": 43988,
+          "fingerprint": "8efaacef9ab10b2c"
+        },
+        "exact_matches_by_string_count": {
+          "2": {
+            "labeled": 27000,
+            "matched": 3893
+          },
+          "3": {
+            "labeled": 10800,
+            "matched": 0
+          }
+        }
+      }
+    },
+    "physical-four": {
+      "reference-off-512": {
+        "tsv_sha256": "00cf9dd96f6aca7f7b9ead4516cfd079a66c3edd6923743f84c83857f2c96e6f",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        },
+        "midi_sha256": "20a9f17ac64df86344ff1df79b4ec9e3872d31fcf70fe3c046be66b472e058ef",
+        "midi_rows": 932,
+        "sample_count": 12066797,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "00cf9dd96f6aca7f7b9ead4516cfd079a66c3edd6923743f84c83857f2c96e6f",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        },
+        "midi_sha256": "20a9f17ac64df86344ff1df79b4ec9e3872d31fcf70fe3c046be66b472e058ef",
+        "midi_rows": 932,
+        "sample_count": 12066797,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "00cf9dd96f6aca7f7b9ead4516cfd079a66c3edd6923743f84c83857f2c96e6f",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        },
+        "midi_sha256": "20a9f17ac64df86344ff1df79b4ec9e3872d31fcf70fe3c046be66b472e058ef",
+        "midi_rows": 932,
+        "sample_count": 12066797,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "a5a9e1d8e6a2c98a76a08f7c0480fbeca30d53edcc1fd886dbfdcea99765e838",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "a5a9e1d8e6a2c98a76a08f7c0480fbeca30d53edcc1fd886dbfdcea99765e838",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "a5a9e1d8e6a2c98a76a08f7c0480fbeca30d53edcc1fd886dbfdcea99765e838",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "c3b791ec3a8aca436e9cf13a41b2e26d4786ae4fe930676ba95f5d462c9496ec",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "c3b791ec3a8aca436e9cf13a41b2e26d4786ae4fe930676ba95f5d462c9496ec",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "c3b791ec3a8aca436e9cf13a41b2e26d4786ae4fe930676ba95f5d462c9496ec",
+        "output": {
+          "labeled": 55380,
+          "matched": 53051,
+          "false_wrong_note_voices": 18154,
+          "false_wrong_string_voices": 0,
+          "false_gap_voices": 73510,
+          "false_positive_voices": 91664,
+          "fingerprint": "0ac19cd2c6a694e5"
+        },
+        "exact_matches_by_string_count": {
+          "0": {
+            "labeled": 55380,
+            "matched": 53051
+          }
+        }
+      }
+    },
+    "synthetic-four": {
+      "reference-off-512": {
+        "tsv_sha256": "9215fe22b0cdc8f4bc7db16b5408811b37c1c909df999a5257c7595feb2fdb22",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c66176b514c4f1d3"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        },
+        "midi_sha256": "4efb636f7bcb962abc52db340e728d17e8c405448c2aaa847057ba16e29ecaec",
+        "midi_rows": 938,
+        "sample_count": 5529600,
+        "sample_rate": 96000
+      },
+      "current-on-512": {
+        "tsv_sha256": "26121651951692e087c72927278dc894fb7a7eefd33e93bda329a80436abafd3",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c12f010c225a00a9"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        },
+        "midi_sha256": "eb38a1dda1589ddc0ad62defc063e4a30fcf522309007505fcb8496a8c2cc4c6",
+        "midi_rows": 928,
+        "sample_count": 5529600,
+        "sample_rate": 96000
+      },
+      "completion-midi-retention-on-512": {
+        "tsv_sha256": "26121651951692e087c72927278dc894fb7a7eefd33e93bda329a80436abafd3",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c12f010c225a00a9"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        },
+        "midi_sha256": "eb38a1dda1589ddc0ad62defc063e4a30fcf522309007505fcb8496a8c2cc4c6",
+        "midi_rows": 928,
+        "sample_count": 5529600,
+        "sample_rate": 96000
+      },
+      "reference-off-32": {
+        "tsv_sha256": "8e4fbbcf6143904465052bc9b39411af97e621e433d6634c1e24871d9c502f2e",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c66176b514c4f1d3"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        }
+      },
+      "current-on-32": {
+        "tsv_sha256": "6025390a50f688a57e2585ab524457d0753050d36140d0b67ff38a194312cbb5",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c12f010c225a00a9"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        }
+      },
+      "completion-midi-retention-on-32": {
+        "tsv_sha256": "6025390a50f688a57e2585ab524457d0753050d36140d0b67ff38a194312cbb5",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c12f010c225a00a9"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        }
+      },
+      "reference-off-1024": {
+        "tsv_sha256": "0ff81bdcc097cf15cb781e5ab0dfb0754b0e5a1c87a9aa6f0af5bdcd1ed37ef0",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c66176b514c4f1d3"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        }
+      },
+      "current-on-1024": {
+        "tsv_sha256": "1546a8d5e819cda8f1e9feb7a6993dddaedd3ff0e1719cea9f5abae77704f98c",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c12f010c225a00a9"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        }
+      },
+      "completion-midi-retention-on-1024": {
+        "tsv_sha256": "1546a8d5e819cda8f1e9feb7a6993dddaedd3ff0e1719cea9f5abae77704f98c",
+        "output": {
+          "labeled": 310640,
+          "matched": 51027,
+          "false_wrong_note_voices": 39044,
+          "false_wrong_string_voices": 12339,
+          "false_gap_voices": 6721,
+          "false_positive_voices": 58104,
+          "fingerprint": "c12f010c225a00a9"
+        },
+        "exact_matches_by_string_count": {
+          "1": {
+            "labeled": 310640,
+            "matched": 51027
+          }
+        }
+      }
+    }
+  }
+}
