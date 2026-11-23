@@ -14,6 +14,7 @@ option(M3_ENABLE_ASAN_UBSAN "Enable AddressSanitizer and UndefinedBehaviorSaniti
 option(M3_ENABLE_TSAN "Enable ThreadSanitizer" OFF)
 option(M3_ENABLE_RESIDUAL_SHADOW_TESTS "Exercise bounded residual work in test and replay callbacks only" OFF)
 option(M3_BUILD_FROZEN_CUE_PROBE "Build the standalone frozen cue parity and timing probe" OFF)
+option(M3_BUILD_BATCH_CELL_LAB "Build a separate uninstalled batched-cell VST3" OFF)
 option(M3_BUILD_NEURAL_LAB "Build the separate uninstalled 96 kHz neural experiment" OFF)
 option(M3_FROZEN_CUE_PFFFT "Use the experimental AVX double FFT in the standalone cue probe" OFF)
 option(M3_FROZEN_CUE_COOPERATIVE "Enable bounded native cue work in offline probes and replay only" OFF)
@@ -262,6 +263,37 @@ target_link_libraries(
 m3_apply_project_options(m3_vst3_realtime_tests)
 add_test(NAME m3_vst3_realtime_tests COMMAND m3_vst3_realtime_tests)
 
+if(M3_BUILD_BATCH_CELL_LAB)
+add_executable(m3_batch_cell_realtime_tests
+    ${M3_NATIVE_CORE_SOURCES}
+    ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
+    ${M3_NATIVE_PLUGIN_SOURCES}
+    ${M3_VST3_ADAPTER_SOURCES}
+    ${M3_VST3_PROBE_PROCESSOR_SOURCES}
+    native/tests/fake_vst3_host.cpp
+    native/tests/test_main.cpp
+    native/tests/test_support.cpp
+    native/tests/test_vst3_realtime.cpp
+    third_party/vst3sdk/public.sdk/source/main/linuxmain.cpp
+)
+target_compile_definitions(m3_batch_cell_realtime_tests PRIVATE M3_TESTING M3_BATCH_CELL_LAB=1)
+target_include_directories(m3_batch_cell_realtime_tests PRIVATE
+    native/include
+    native/plugin
+    native/vst3
+    third_party/clap/include
+)
+target_include_directories(m3_batch_cell_realtime_tests SYSTEM BEFORE PRIVATE
+    third_party/vst3sdk
+    third_party/vst3sdk/vstgui4
+)
+target_link_libraries(
+    m3_batch_cell_realtime_tests PRIVATE Threads::Threads vstgui_support sdk m
+)
+m3_apply_project_options(m3_batch_cell_realtime_tests)
+add_test(NAME m3_batch_cell_realtime_tests COMMAND m3_batch_cell_realtime_tests)
+endif()
+
 add_executable(m3_replay EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}
     ${M3_UNISON_SPECTRAL_SHADOW_SOURCES}
@@ -484,6 +516,47 @@ m3_configure_vst3_bundle(
     m3_vst3_production
     "M3_Polyphonic_Audio_to_MIDI"
 )
+
+if(M3_BUILD_BATCH_CELL_LAB)
+smtg_add_vst3plugin(m3_vst3_batch_cell_lab
+    PACKAGE_NAME "M3_Batch_Cell_Lab"
+    SOURCES_LIST
+        ${M3_NATIVE_CORE_SOURCES}
+        ${M3_NATIVE_SHARED_ADAPTER_SOURCES}
+        ${M3_VST3_ADAPTER_SOURCES}
+)
+target_compile_definitions(
+    m3_vst3_batch_cell_lab PRIVATE M3_BATCH_CELL_LAB=1
+)
+target_include_directories(m3_vst3_batch_cell_lab PRIVATE
+    native/include
+    native/plugin
+    native/vst3
+)
+target_include_directories(m3_vst3_batch_cell_lab SYSTEM BEFORE PRIVATE
+    third_party/vst3sdk
+    third_party/vst3sdk/vstgui4
+)
+target_link_libraries(
+    m3_vst3_batch_cell_lab PRIVATE Threads::Threads vstgui_support sdk m
+)
+m3_apply_project_options(m3_vst3_batch_cell_lab)
+set_target_properties(m3_vst3_batch_cell_lab PROPERTIES EXCLUDE_FROM_ALL TRUE)
+add_dependencies(m3_vst3_batch_cell_lab validator)
+m3_configure_vst3_bundle(
+    m3_vst3_batch_cell_lab
+    "M3_Batch_Cell_Lab"
+)
+add_custom_target(m3_validate_batch_cell_pair
+    COMMAND $<TARGET_FILE:validator>
+        "${CMAKE_BINARY_DIR}/VST3/M3_Polyphonic_Audio_to_MIDI.vst3"
+    COMMAND $<TARGET_FILE:validator>
+        "${CMAKE_BINARY_DIR}/VST3/M3_Batch_Cell_Lab.vst3"
+    DEPENDS validator m3_vst3_production m3_vst3_batch_cell_lab
+    USES_TERMINAL
+    VERBATIM
+)
+endif()
 
 add_executable(m3_detector_benchmark EXCLUDE_FROM_ALL
     ${M3_NATIVE_CORE_SOURCES}

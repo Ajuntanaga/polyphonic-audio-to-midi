@@ -11,6 +11,9 @@ namespace {
 #if defined(M3_VST3_PROBE_BUILD) || defined(M3_TESTING)
 const auto& selected_class_id_words = m3::vst3::kProbeClassIdWords;
 constexpr const char* selected_product_name = m3::vst3::kProbeProductName;
+#elif defined(M3_BATCH_CELL_LAB)
+const auto& selected_class_id_words = m3::vst3::kBatchCellLabClassIdWords;
+constexpr const char* selected_product_name = m3::vst3::kBatchCellLabProductName;
 #else
 const auto& selected_class_id_words = m3::vst3::kProductionClassIdWords;
 constexpr const char* selected_product_name = m3::vst3::kProductName;

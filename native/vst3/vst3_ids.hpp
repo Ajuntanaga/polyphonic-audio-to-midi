@@ -7,6 +7,8 @@ namespace m3::vst3 {
 
 inline constexpr std::array<std::uint32_t, 4> kProductionClassIdWords{
     0x4A1BA42FU, 0x6D704609U, 0x8B52450CU, 0x3842F11FU};
+inline constexpr std::array<std::uint32_t, 4> kBatchCellLabClassIdWords{
+    0x12F2F7A9U, 0x11C34C54U, 0xA8448E67U, 0x71CB862DU};
 inline constexpr std::array<std::uint32_t, 4> kProbeClassIdWords{
     0x6F62F8B1U, 0xB8A14872U, 0xA0D92C3CU, 0x274421D8U};
 inline constexpr std::array<std::uint32_t, 4> kBenchmarkClassIdWords{
@@ -16,6 +18,8 @@ inline constexpr char kDescriptiveId[] =
     "com.ajuntanaga.m3-polyphonic-audio-to-midi";
 inline constexpr char kVendorName[] = "ajuntanaga";
 inline constexpr char kProductName[] = "M3 Polyphonic Audio to MIDI";
+inline constexpr char kBatchCellLabProductName[] =
+    "M3 Batch Cell Lab";
 inline constexpr char kProbeProductName[] =
     "M3 Polyphonic Audio to MIDI Probe";
 inline constexpr char kBenchmarkProductName[] =

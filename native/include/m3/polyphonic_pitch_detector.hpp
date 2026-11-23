@@ -17,12 +17,19 @@
 #include "m3/types.hpp"
 #include "m3/unison_spectral_classifier.hpp"
 #include "m3/unison_spectral_tracker.hpp"
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_JOINT_RESIDUAL_SHADOW)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_JOINT_RESIDUAL_SHADOW) || defined(M3_BATCH_CELL_LAB)
 #include <memory>
 #include <new>
 #endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
 #include "m3/joint_pitch_residual.hpp"
+#endif
+
+#if defined(M3_BATCH_CELL_LAB) && defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#error "The batch-cell lab must not compile replay diagnostic policies"
+#endif
+#if defined(M3_BATCH_CELL_LAB) && !defined(__SSE2__) && !defined(_M_X64)
+#error "The batch-cell lab requires the measured SSE2 implementation"
 #endif
 
 namespace m3 {
@@ -1796,7 +1803,7 @@ class PolyphonicPitchDetector final {
     return candidate * kHarmonicCount + harmonic;
   }
 
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   mutable
 #endif
   std::array<Cell, kCellCount> cells_{};
@@ -1812,6 +1819,8 @@ class PolyphonicPitchDetector final {
   std::uint16_t diagnostic_duplicate_cell_count_{};
   bool diagnostic_exact_cell_sharing_{};
   bool diagnostic_packed_cell_update_{};
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   // Vector lanes are independent cells. Fixed storage is allocated before
   // audio calls; Cell mirrors are refreshed only when a consumer needs them.
   static constexpr std::size_t kBatchCellCapacity =
@@ -1820,7 +1829,9 @@ class PolyphonicPitchDetector final {
     alignas(16) std::array<double, kBatchCellCapacity> cosine{}, sine{};
     alignas(16) std::array<double, kBatchCellCapacity> cosine_step{}, sine_step{};
     alignas(16) std::array<double, kBatchCellCapacity> fast_real{}, fast_imaginary{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     alignas(16) std::array<double, kBatchCellCapacity> selection_real{}, selection_imaginary{};
+#endif
     // Identify original cells without storing pointers into the detector.
     std::array<std::uint16_t, kBatchCellCapacity> destinations{};
     std::size_t count{}, padded_count{};
@@ -1831,17 +1842,19 @@ class PolyphonicPitchDetector final {
   bool diagnostic_batch_cell_update_{};
   void initialize_batch_cells() noexcept;
   void synchronize_batch_cells() const noexcept;
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   bool diagnostic_elide_narrow_clears_{};
   bool diagnostic_narrow_state_dirty_{};
   NarrowClearStats diagnostic_narrow_clear_stats_{};
 #endif
   // Boundary-only analysis cells make the configured lowest/highest notes
   // tunable without adding selectable candidates to the pitch set.
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   mutable
 #endif
   std::array<Cell, kHarmonicCount> lower_cents_guard_cells_{};
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   mutable
 #endif
   std::array<Cell, kHarmonicCount> upper_cents_guard_cells_{};

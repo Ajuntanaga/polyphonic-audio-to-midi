@@ -1,0 +1,65 @@
+{
+  "schema": "m3_batch_cell_lab_host_spec_v1",
+  "purpose": "Separate production-shaped batched-cell plugin: scalar comparison inside real REAPER, no installation",
+  "inputs": {
+    "tag": "corpus-20261108",
+    "sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "recording": {
+    "name": "ordinary",
+    "sha256": "f244e7739b157e6e08baea6374f803c99c602b09ab38c57227d9573c5bc50fc5",
+    "samples": 10689600,
+    "sample_rate": 96000
+  },
+  "reaper": {
+    "version": "7.86",
+    "url": "https://www.reaper.fm/files/7.x/reaper786_linux_x86_64.tar.xz",
+    "sha256": "c2f9d8616bd1dc6175993b82451e1c6e352c6761e7ae6d72400a3f3dfb03bedb",
+    "hash_source": "https://www.reaper.fm/download.php?hashes=1",
+    "license": "Official fully functional evaluation; no copied license or license bypass"
+  },
+  "arms": [
+    {
+      "name": "scalar",
+      "package": "M3_Polyphonic_Audio_to_MIDI",
+      "plugin": "VST3: M3 Polyphonic Audio to MIDI",
+      "target": "m3_vst3_production"
+    },
+    {
+      "name": "batch",
+      "package": "M3_Batch_Cell_Lab",
+      "plugin": "VST3: M3 Batch Cell Lab",
+      "target": "m3_vst3_batch_cell_lab"
+    }
+  ],
+  "parameters_normalized": {
+    "MIDI routing": 0,
+    "Mode": 0,
+    "A4 reference": 0.5,
+    "Input trim": 0.5,
+    "Sensitivity": 0.5,
+    "Response": 0.25,
+    "Lowest MIDI note": 0.09523809523809523,
+    "Highest MIDI note": 0.7142857142857143,
+    "Maximum polyphony": 1,
+    "M3 maximum fret": 0.6666666666666666,
+    "Velocity mode": 1,
+    "Fixed velocity": 0.7857142857142857,
+    "MIDI channel": 0,
+    "Dry audio": 1,
+    "Panic": 0
+  },
+  "protocol": {
+    "host": "REAPER 7.86, isolated profiles, JACK dummy 96000/512, scalar then batch, one recording each",
+    "configuration": "Production defaults, factory calibration, Single routing channel 1. No offline diagnostic policy macros.",
+    "identity": "Compare ordered phase-1 MIDI rows at 0 <= sample < 10689600 including block offset, status, note and velocity, with no time shift or tolerance. Full source consumed continuously. Tail/Panic are separate controls, not clock-aligned by wall time.",
+    "state": "Save Input trim +6 dB, mutate to -12 dB, restore +6 dB, restore all frozen production defaults before playback.",
+    "panic": "Silence input upstream while notes are held, invoke Panic, require releases, no new notes, zero final owners and host parameter Ready within 3 seconds.",
+    "native_tests": "Both production-shaped realtime suites, including existing allocation/deadline assertions; batch detector configure/reset under production macros. Existing diagnostic core tests retained.",
+    "pairing": "Report raw pairing for each arm; preserved scalar pairing defects are not repaired or reclassified by this optimization.",
+    "limits": "Host delivery on dummy audio only; no device, live guitar, musical improvement, acoustic re-pluck or installed acceptance.",
+    "failure": "Fail closed, retain logs; no automatic retry or second dispatch.",
+    "artifacts": "Small report/logs collected once; bundles and host events remain remote."
+  }
+}

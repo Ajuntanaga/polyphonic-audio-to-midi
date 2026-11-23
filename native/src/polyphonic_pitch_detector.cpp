@@ -6,7 +6,7 @@
 #include <cstring>
 #include <limits>
 
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) && (defined(__SSE2__) || defined(_M_X64))
+#if (defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)) && (defined(__SSE2__) || defined(_M_X64))
 #include <emmintrin.h>
 #endif
 
@@ -1482,6 +1482,15 @@ void PolyphonicPitchDetector::update_spectral_lane_states(
 bool PolyphonicPitchDetector::configure(double sample_rate,
                                         const PersistentConfig& config) noexcept {
   configured_ = false;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
+  diagnostic_batch_cell_update_ = false;
+#endif
+#if defined(M3_BATCH_CELL_LAB)
+  if (diagnostic_batch_cells_ == nullptr) {
+    reset();
+    return false;
+  }
+#endif
 #if defined(M3_JOINT_RESIDUAL_SHADOW)
   if (joint_residual_shadow_ == nullptr) {
     reset();
@@ -1498,7 +1507,6 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
   diagnostic_duplicate_cell_count_ = 0U;
   diagnostic_exact_cell_sharing_ = false;
   diagnostic_packed_cell_update_ = false;
-  diagnostic_batch_cell_update_ = false;
   diagnostic_elide_narrow_clears_ = false;
 #endif
   lower_cents_guard_cells_ = {};
@@ -1648,6 +1656,9 @@ bool PolyphonicPitchDetector::configure(double sample_rate,
                   upper_cents_guard_indices_, upper_cents_guard_count_,
                   static_cast<std::uint8_t>(config.highest_note + 1U));
   configured_ = true;
+#if defined(M3_BATCH_CELL_LAB)
+  diagnostic_batch_cell_update_ = true;
+#endif
   reset();
   invalidate_fine_frequency_uniform_gram_cache();
   return true;
@@ -1809,7 +1820,7 @@ void PolyphonicPitchDetector::reset() noexcept {
   };
   reset_guard(lower_cents_guard_cells_);
   reset_guard(upper_cents_guard_cells_);
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   if (diagnostic_batch_cell_update_) initialize_batch_cells();
 #endif
 }
@@ -3161,6 +3172,9 @@ bool PolyphonicPitchDetector::set_batch_cell_update_for_diagnostics(
   return true;
 }
 
+#endif
+
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
 void PolyphonicPitchDetector::initialize_batch_cells() noexcept {
   auto& bank = *diagnostic_batch_cells_;
   bank.count = 0U;
@@ -3174,8 +3188,10 @@ void PolyphonicPitchDetector::initialize_batch_cells() noexcept {
     bank.sine_step[index] = cell.sine_step;
     bank.fast_real[index] = cell.fast_real;
     bank.fast_imaginary[index] = cell.fast_imaginary;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     bank.selection_real[index] = cell.diagnostic_selection_real;
     bank.selection_imaginary[index] = cell.diagnostic_selection_imaginary;
+#endif
   };
   for (std::size_t index = 0U; index < enabled_cell_count_; ++index) {
     const std::size_t cell = enabled_cell_indices_[index];
@@ -3196,7 +3212,9 @@ void PolyphonicPitchDetector::initialize_batch_cells() noexcept {
     bank.cosine[index] = bank.sine[index] = 0.0;
     bank.cosine_step[index] = bank.sine_step[index] = 0.0;
     bank.fast_real[index] = bank.fast_imaginary[index] = 0.0;
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     bank.selection_real[index] = bank.selection_imaginary[index] = 0.0;
+#endif
     bank.destinations[index] = 0U;
   }
 }
@@ -3214,8 +3232,10 @@ void PolyphonicPitchDetector::synchronize_batch_cells() const noexcept {
     cell.sine = bank.sine[index];
     cell.fast_real = bank.fast_real[index];
     cell.fast_imaginary = bank.fast_imaginary[index];
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     cell.diagnostic_selection_real = bank.selection_real[index];
     cell.diagnostic_selection_imaginary = bank.selection_imaginary[index];
+#endif
   }
   bank.dirty = false;
 }
@@ -3231,13 +3251,16 @@ void PolyphonicPitchDetector::update_cells(double sample) noexcept {
   const double selection_decay = diagnostic_selection_decay_;
   const double selection_sample =
       selection_enabled ? (1.0 - selection_decay) * sample : 0.0;
-#if defined(__SSE2__) || defined(_M_X64)
+#endif
+#if (defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)) && (defined(__SSE2__) || defined(_M_X64))
   if (diagnostic_batch_cell_update_) {
     auto& bank = *diagnostic_batch_cells_;
     const __m128d decay_pair = _mm_set1_pd(decay);
     const __m128d sample_pair = _mm_set1_pd(mixed_sample);
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
     const __m128d selection_decay_pair = _mm_set1_pd(selection_decay);
     const __m128d selection_sample_pair = _mm_set1_pd(selection_sample);
+#endif
     for (std::size_t index = 0U; index < bank.padded_count; index += 2U) {
       const __m128d cosine = _mm_load_pd(bank.cosine.data() + index);
       const __m128d sine = _mm_load_pd(bank.sine.data() + index);
@@ -3255,6 +3278,7 @@ void PolyphonicPitchDetector::update_cells(double sample) noexcept {
       _mm_store_pd(bank.fast_imaginary.data() + index, _mm_sub_pd(
           _mm_mul_pd(decay_pair, _mm_load_pd(bank.fast_imaginary.data() + index)),
           _mm_mul_pd(sample_pair, next_sine)));
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
       if (selection_enabled) {
         _mm_store_pd(bank.selection_real.data() + index, _mm_add_pd(
             _mm_mul_pd(selection_decay_pair, _mm_load_pd(bank.selection_real.data() + index)),
@@ -3263,10 +3287,14 @@ void PolyphonicPitchDetector::update_cells(double sample) noexcept {
             _mm_mul_pd(selection_decay_pair, _mm_load_pd(bank.selection_imaginary.data() + index)),
             _mm_mul_pd(selection_sample_pair, next_sine)));
       }
+#endif
     }
     bank.dirty = true;
     return;
   }
+#endif
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(__SSE2__) || defined(_M_X64)
   if (diagnostic_packed_cell_update_) {
     // Pair the real/imaginary lanes inside one cell; keep the indexed cell
     // order and each lane's multiply-then-add/subtract sequence unchanged.
@@ -12376,7 +12404,7 @@ bool PolyphonicPitchDetector::read_harmonic_correlations(
     std::uint8_t midi_note, std::array<double, 6U>& frequencies,
     std::array<std::complex<double>, 6U>& correlations,
     double& signal_energy, double& decay) const noexcept {
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   synchronize_batch_cells();
 #endif
   frequencies = {};
@@ -12918,7 +12946,7 @@ void PolyphonicPitchDetector::write_snapshot(
 }
 
 DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   synchronize_batch_cells();
 #endif
 #if defined(M3_OFFLINE_STAGE_TIMING)
@@ -13779,7 +13807,7 @@ DetectorDecision PolyphonicPitchDetector::process_sample(double sample) noexcept
   stage.switch_to(offline::stage_timing::Stage::signal_observe);
 #endif
   if (profile_mode_ == ProfileMode::m3 && max_fret_ <= 2U) {
-#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
     synchronize_batch_cells();
 #endif
 #if defined(M3_OFFLINE_SIGNAL_OBSERVATION_TIMING)
