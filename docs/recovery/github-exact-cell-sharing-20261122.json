@@ -301,7 +301,7 @@
     "collected": false
   },
   "harness_repair": {
-    "state": "published",
+    "state": "published; required portable source check passed",
     "published_at": "2026-11-23T01:51:45.126619+00:00",
     "source_commit": "f9e9063385561e1b0b4b4a161aa13ba790e17c6b",
     "source_pushed": true,
@@ -321,17 +321,15 @@
     "paired_raw_midi": "still unmeasured",
     "source_runs": [
       {
-        "conclusion": "",
-        "createdAt": "2026-11-23T01:50:58Z",
+        "conclusion": "success",
         "databaseId": 45096861342,
         "headSha": "f9e9063385561e1b0b4b4a161aa13ba790e17c6b",
-        "name": "Portable offline replay",
-        "status": "in_progress",
-        "updatedAt": "2026-11-23T01:51:02Z",
+        "status": "completed",
+        "updatedAt": "2026-11-23T01:52:39Z",
         "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45096861342"
       }
     ],
-    "source_runs_observed_at": "2026-11-23T01:51:45.126619+00:00",
+    "source_runs_observed_at": "2026-11-23T01:54:36.352184+00:00",
     "source_runs_returncode": 0
   }
 }

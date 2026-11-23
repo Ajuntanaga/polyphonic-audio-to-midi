@@ -25,7 +25,7 @@ audio, model or corpus execution ran locally. Published source `f9e9063385561e1b
 `db8b34cbd1213735d00710345d5e682e57d7c32b`; no workflow was dispatched. The old run is not rerun or rejudged;
 its missing paired-MIDI result remains unmeasured.
 
-Routine portable source check `45096861342` was in progress at the first read.
+Routine portable source check `45096861342` completed successfully at 2026-11-23 01:52:39 UTC.
 Its completion does not reopen the rejected CPU screen. Publication and exact
 source-run observations are recorded under
 `build/recovery/exact-cell-reference-fix-20261122/`.
