@@ -17,6 +17,11 @@ Installed output and acoustic re-pluck acceptance remain unchanged.
 Claude explicitly stopped heavy work at its usage limit and scheduled its own
 resume at 21:32 PST; respect that stop and keep the peer lanes distinct.
 
+VST3 follow-up is prepared and pushed: source **89f66c1**, worker **0f32d26**.
+Read `docs/recovery/github-batch-cell-vst3-20261122.json`. Its 224 saved-output
+and 56 process-timing checks are conditional on the core job passing every
+gate. No VST3 follow-up has been dispatched. All 27 local mock contracts pass.
+
 ## Batched cell bounded screen — final, passed
 
 Run **45109184192**, source **5c2d999**, worker **6b3e63b**, is final/success.

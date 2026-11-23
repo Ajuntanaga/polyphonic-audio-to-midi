@@ -1,0 +1,75 @@
+{
+  "schema": "m3_batch_cell_vst3_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "m3-vst3-replay.yml",
+  "scenario": "batch-cell-corpus",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "89f66c166c86c489ef4256df669555220f1267fd",
+  "worker_sha": "0f32d2613f58386e8f9f4a52dd039d4356372ae3",
+  "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
+  "plan": "docs/recovery/CODEX-M3-BATCH-CELL-VST3-PLAN-20261122.md",
+  "reference": "docs/recovery/batch-cell-vst3-corpus-references-20261122.json",
+  "state": "prepared; prerequisite core corpus running",
+  "final": false,
+  "run_id": null,
+  "dispatch_count": 0,
+  "prerequisite": {
+    "run_id": 45112657375,
+    "checkpoint": "docs/recovery/github-batch-cell-corpus-layout-fix-20261122.json",
+    "required": "complete identity, allocation and deadline acceptance"
+  },
+  "scope": {
+    "datasets": 14,
+    "modes": 2,
+    "sample_formats": [
+      32,
+      64
+    ],
+    "blocks": [
+      512,
+      32,
+      1024
+    ],
+    "runs": 224,
+    "timed_runs": 56,
+    "callback_and_outcome_identities_required": 224,
+    "p99_limit_ns": 166666,
+    "maximum_limit_ns": 333333,
+    "overruns_allocations_and_frees_required": 0
+  },
+  "source_checks": [
+    {
+      "databaseId": 45114310848,
+      "status": "completed",
+      "conclusion": "success",
+      "headSha": "89f66c166c86c489ef4256df669555220f1267fd",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45114310848",
+      "workflowName": "Portable offline replay"
+    },
+    {
+      "databaseId": 45114310847,
+      "status": "in_progress",
+      "conclusion": "",
+      "headSha": "89f66c166c86c489ef4256df669555220f1267fd",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45114310847",
+      "workflowName": "CI"
+    }
+  ],
+  "local_checks": {
+    "observed_at": "2026-11-23T04:51:14.834436+00:00",
+    "python_contracts": 27,
+    "contracts_pass": true,
+    "contracts_log_sha256": "043cc1407b1838451ba0f5b79d2c66812b92dd1fac3702406cf006f9a8aae0da",
+    "yaml_parsed": true,
+    "shell_sections_parsed": 17,
+    "workflow_sha256": "8b96fb1489dda7d0da1efa2c39c9058a0e246e441acf38dbbf78a5561edd9300",
+    "full_matrix_command_checked": true,
+    "component_reference_sha256": "3f9356114f8fb2eca03eea163a30003d493133ae6a673b07d070a0c8451fedea",
+    "native_or_audio_execution": false
+  },
+  "prepared_at": "2026-11-23T04:52:37.270039+00:00",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "next": "Wait for existing core job; dispatch this scenario once only if every required core gate passes",
+  "source_checks_observed_at": "2026-11-23T04:54:21.364058+00:00"
+}
