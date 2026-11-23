@@ -45,7 +45,8 @@ struct Instance final {
 
   bool open(const m3::PersistentConfig& config,
             const m3::StringCalibrationBank& calibration, double sample_rate,
-            int sample_bits, std::uint32_t frames, bool stable_note_identity) {
+            int sample_bits, std::uint32_t frames, bool stable_note_identity,
+            bool batch_cell_update) {
     factory = GetPluginFactory();
     if (factory == nullptr) return false;
     const auto& words = m3::vst3::kProbeClassIdWords;
@@ -77,6 +78,8 @@ struct Instance final {
     setup.sampleRate = sample_rate;
     return processor->setupProcessing(setup) == Steinberg::kResultOk &&
         component->setActive(Steinberg::TBool{1}) == Steinberg::kResultOk &&
+        (!batch_cell_update || static_cast<m3::vst3::M3Component*>(processor)->
+            enable_corpus_batch_cell_update()) &&
         processor->setProcessing(Steinberg::TBool{1}) == Steinberg::kResultOk;
   }
 };
@@ -288,7 +291,8 @@ int replay_recovery(Instance& instance, const m3::offline::WaveData& wave,
 template <typename Sample>
 int replay(Instance& instance, const m3::offline::WaveData& wave,
            const m3::StringCalibrationBank& calibration, std::uint32_t block_size,
-           bool trial, bool completion_midi_retention, bool stable_note_identity, bool measure_process, const char* events_path) {
+           bool trial, bool completion_midi_retention, bool stable_note_identity,
+           bool batch_cell_update, bool measure_process, const char* events_path) {
   auto* component = static_cast<m3::vst3::M3Component*>(instance.processor);
   component->enable_corpus_ownership_trial(trial);
   component->enable_corpus_completion_midi_retention(completion_midi_retention);
@@ -415,6 +419,7 @@ int replay(Instance& instance, const m3::offline::WaveData& wave,
       write_failed || close_failed ? "true" : "false");
   if (first_blocked == std::numeric_limits<std::uint64_t>::max()) std::printf("null");
   else std::printf("%llu", static_cast<unsigned long long>(first_blocked));
+  if (batch_cell_update) std::printf(",\"batch_cell_update\":true");
   std::printf(",\"process_measurement\":");
   if (!measure_process) std::printf("null");
   else {
@@ -450,6 +455,7 @@ int main(int argc, char** argv) {
   bool trial = false, trial_given = false;
   bool completion_midi_retention = false;
   bool stable_note_identity = false;
+  bool batch_cell_update = false;
   bool recovery = false;
   std::uint32_t block_size = 512U;
   bool measure_process = false;
@@ -474,6 +480,8 @@ int main(int argc, char** argv) {
     } else if (std::strcmp(argv[index], "--stable-note-identity") == 0 &&
                (std::strcmp(value, "0") == 0 || std::strcmp(value, "1") == 0)) {
       stable_note_identity = std::strcmp(value, "1") == 0;
+    } else if (std::strcmp(argv[index], "--batch-cell-update") == 0 && std::strcmp(value, "1") == 0) {
+      batch_cell_update = true;
     } else if (std::strcmp(argv[index], "--scenario") == 0 && std::strcmp(value, "reject-off-panic") == 0) {
       recovery = true;
     } else return 2;
@@ -484,6 +492,7 @@ int main(int argc, char** argv) {
   if ((recovery || stable_note_identity) && !trial) return 2;
   if (stable_note_identity && completion_midi_retention) return 2;
   if (completion_midi_retention && (!trial || recovery)) return 2;
+  if (batch_cell_update && (recovery || !trial || completion_midi_retention)) return 2;
   std::vector<std::uint8_t> bytes;
   m3::offline::WaveData wave;
   m3::offline::ReplayError wave_error{};
@@ -514,7 +523,8 @@ int main(int argc, char** argv) {
   config.max_fret = 24;
   config.dry_passthrough = true;
   Instance instance;
-  if (!instance.open(config, calibration, wave.sample_rate, sample_bits, block_size, stable_note_identity)) {
+  if (!instance.open(config, calibration, wave.sample_rate, sample_bits, block_size,
+                     stable_note_identity, batch_cell_update)) {
     std::fprintf(stderr, "VST3 component initialization or state restore failed.\n");
     return 2;
   }
@@ -523,7 +533,9 @@ int main(int argc, char** argv) {
                             : replay_recovery<double>(instance, wave, calibration, block_size, stable_note_identity, events_path);
   }
   return sample_bits == 32 ? replay<float>(instance, wave, calibration, block_size,
-                                         trial, completion_midi_retention, stable_note_identity, measure_process, events_path)
+                                         trial, completion_midi_retention, stable_note_identity,
+                                         batch_cell_update, measure_process, events_path)
                            : replay<double>(instance, wave, calibration, block_size,
-                                          trial, completion_midi_retention, stable_note_identity, measure_process, events_path);
+                                          trial, completion_midi_retention, stable_note_identity,
+                                          batch_cell_update, measure_process, events_path);
 }

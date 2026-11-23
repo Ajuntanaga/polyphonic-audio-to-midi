@@ -1,0 +1,893 @@
+{
+  "schema": "m3_batch_cell_vst3_references_v1",
+  "source": {
+    "repository": "Ajuntanaga/polyphonic-audio-to-midi",
+    "commit": "3837130f692871808b17b73a8fb25d279905ce50",
+    "provider": "github-actions",
+    "worker_repository": "Ajuntanaga/m3-offload",
+    "run_id": "44245557161",
+    "run_attempt": "1",
+    "input_release": "corpus-20261108",
+    "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+    "original_input_manifest_sha256": "0d78b2e03ba9c14ee391bd5b1b70b45b93cafc8d3d9e2591e3eac58e6aa0bb2c"
+  },
+  "source_report_sha256": "a4bf4ff24e2b927524624c53276e73916adb93325dee9a561f6d90ae24e129a7",
+  "settings": {
+    "a4": 440,
+    "input-trim": -9,
+    "sensitivity": 60,
+    "response": 75,
+    "max-polyphony": 5,
+    "max-fret": 24
+  },
+  "datasets": {
+    "ordinary": {
+      "clock": {
+        "sample_count": 10689600,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 10689600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 10689600,
+            "detector_samples": 10689600,
+            "detector_transitions": 11851,
+            "queue_rejections": 0,
+            "event_add_attempts": 11851,
+            "accepted_events": 11851,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "5bd5b27233131beff78398f0d5dc671d372674015d62ab56ea85f5a0afbc952d"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 10689600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 1614,
+            "processed_samples": 10689600,
+            "detector_samples": 10689600,
+            "detector_transitions": 11851,
+            "queue_rejections": 0,
+            "event_add_attempts": 8623,
+            "accepted_events": 8623,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "fc40b9913517402fd7f88607c45f91d93603c0f8bdbb645996d7fb864bfcde2b"
+        }
+      }
+    },
+    "constructed": {
+      "clock": {
+        "sample_count": 29491200,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 29491200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 29491200,
+            "detector_samples": 29491200,
+            "detector_transitions": 5118,
+            "queue_rejections": 0,
+            "event_add_attempts": 5118,
+            "accepted_events": 5118,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "25e898932fc6f0314c57dae47045d8ed224994a8530af0cdc98bf0bb222dd6e4"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 29491200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 1032,
+            "processed_samples": 29491200,
+            "detector_samples": 29491200,
+            "detector_transitions": 5118,
+            "queue_rejections": 0,
+            "event_add_attempts": 3054,
+            "accepted_events": 3054,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "8dde495398a00a7e2f1c8599887e84240c7ef279e121085e26cbe6d77d6e27cc"
+        }
+      }
+    },
+    "isolated-08": {
+      "clock": {
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2227200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 2227200,
+            "detector_samples": 2227200,
+            "detector_transitions": 170,
+            "queue_rejections": 0,
+            "event_add_attempts": 170,
+            "accepted_events": 170,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "511a9d219e6aa3271c39e9f5d7b8636636a3971b3856350609663487ac9b7bf0"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2227200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 39,
+            "processed_samples": 2227200,
+            "detector_samples": 2227200,
+            "detector_transitions": 170,
+            "queue_rejections": 0,
+            "event_add_attempts": 92,
+            "accepted_events": 92,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "90b48b84b253cb69ef262d7ecc5111024f630d10737793ea0e9d7ecadac8c7fe"
+        }
+      }
+    },
+    "isolated-05": {
+      "clock": {
+        "sample_count": 2227200,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2227200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 2227200,
+            "detector_samples": 2227200,
+            "detector_transitions": 114,
+            "queue_rejections": 0,
+            "event_add_attempts": 114,
+            "accepted_events": 114,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "07e7558b4e72787293e92d1079103820ffa4927f52d04a5ee04c821448183b94"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2227200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 8,
+            "processed_samples": 2227200,
+            "detector_samples": 2227200,
+            "detector_transitions": 114,
+            "queue_rejections": 0,
+            "event_add_attempts": 98,
+            "accepted_events": 98,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "23f195a5ef95c80130d275797029f050233f561c76ce1385f5f34295ba06d111"
+        }
+      }
+    },
+    "isolated-02": {
+      "clock": {
+        "sample_count": 2515200,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2515200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 2515200,
+            "detector_samples": 2515200,
+            "detector_transitions": 44,
+            "queue_rejections": 0,
+            "event_add_attempts": 44,
+            "accepted_events": 44,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "279ab4c209714d8c4776930498116e8a4703a3b454ed74ed7d9e39c745c9c407"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2515200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 5,
+            "processed_samples": 2515200,
+            "detector_samples": 2515200,
+            "detector_transitions": 44,
+            "queue_rejections": 0,
+            "event_add_attempts": 34,
+            "accepted_events": 34,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "0351935368fb956abe0e791cfb591a9b8d048654a300538c370ac5423e7107ef"
+        }
+      }
+    },
+    "physical-long": {
+      "clock": {
+        "sample_count": 5646848,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 5646848,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 5646848,
+            "detector_samples": 5646848,
+            "detector_transitions": 1510,
+            "queue_rejections": 0,
+            "event_add_attempts": 1510,
+            "accepted_events": 1510,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "0fa85dc9cf148cc882baf278f690d241f5d8db766d854286495d090f7a8d7ab8"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 5646848,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 190,
+            "processed_samples": 5646848,
+            "detector_samples": 5646848,
+            "detector_transitions": 1510,
+            "queue_rejections": 0,
+            "event_add_attempts": 1130,
+            "accepted_events": 1130,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "02dc6d9c0c4f9a27738150a7282e33dcce6c5e43d40a3be7601e98244936e9d5"
+        }
+      }
+    },
+    "physical-middle": {
+      "clock": {
+        "sample_count": 6198016,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 6198016,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 6198016,
+            "detector_samples": 6198016,
+            "detector_transitions": 570,
+            "queue_rejections": 0,
+            "event_add_attempts": 570,
+            "accepted_events": 570,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "1084705f143ea598142fb7a5fb70f886269d9248d958f8848835a95f9d530f97"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 6198016,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 103,
+            "processed_samples": 6198016,
+            "detector_samples": 6198016,
+            "detector_transitions": 570,
+            "queue_rejections": 0,
+            "event_add_attempts": 364,
+            "accepted_events": 364,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "f62f42f1c0f9c3e92f6053ea41c0dca3854dd8dfda430325d1a4dae9a8d7453c"
+        }
+      }
+    },
+    "physical-highmid": {
+      "clock": {
+        "sample_count": 5819136,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 5819136,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 5819136,
+            "detector_samples": 5819136,
+            "detector_transitions": 328,
+            "queue_rejections": 0,
+            "event_add_attempts": 328,
+            "accepted_events": 328,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "76348703c51ce399824d0300b68b4383d861580b46dc052d80478802dba0fb02"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 5819136,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 63,
+            "processed_samples": 5819136,
+            "detector_samples": 5819136,
+            "detector_transitions": 328,
+            "queue_rejections": 0,
+            "event_add_attempts": 202,
+            "accepted_events": 202,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "133d75999b0e490e0d8add91d1dcb9339184a858804576763e8a688ad593458c"
+        }
+      }
+    },
+    "physical-high": {
+      "clock": {
+        "sample_count": 4933632,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 4933632,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 4933632,
+            "detector_samples": 4933632,
+            "detector_transitions": 342,
+            "queue_rejections": 0,
+            "event_add_attempts": 342,
+            "accepted_events": 342,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "27244b81eb3af6754a38c0eb6a80ccd126c7a531f6d203e972b5710f65ea4625"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 4933632,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 65,
+            "processed_samples": 4933632,
+            "detector_samples": 4933632,
+            "detector_transitions": 342,
+            "queue_rejections": 0,
+            "event_add_attempts": 212,
+            "accepted_events": 212,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "982834dd41dbcf51743e5ec59a8a5f6da62c5b6fade6f5182690dba9e27a2b41"
+        }
+      }
+    },
+    "extended-middle": {
+      "clock": {
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2241600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 2241600,
+            "detector_samples": 2241600,
+            "detector_transitions": 906,
+            "queue_rejections": 0,
+            "event_add_attempts": 906,
+            "accepted_events": 906,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "b925c6b8892d71079620e7694c95d8894f88895277129f60c2a487227c7ad63e"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2241600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 61,
+            "processed_samples": 2241600,
+            "detector_samples": 2241600,
+            "detector_transitions": 906,
+            "queue_rejections": 0,
+            "event_add_attempts": 784,
+            "accepted_events": 784,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "ff0dcad3ff7440a25855feaaa7c46ca818891b773597e476ad5ede41ac80c4fe"
+        }
+      }
+    },
+    "extended-highmid": {
+      "clock": {
+        "sample_count": 2241600,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2241600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 2241600,
+            "detector_samples": 2241600,
+            "detector_transitions": 106,
+            "queue_rejections": 0,
+            "event_add_attempts": 106,
+            "accepted_events": 106,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "25302d5fa438135ae22449485e2e1c0b81001c02ce4523884f99cc22e89cf22c"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2241600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 19,
+            "processed_samples": 2241600,
+            "detector_samples": 2241600,
+            "detector_transitions": 106,
+            "queue_rejections": 0,
+            "event_add_attempts": 68,
+            "accepted_events": 68,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "6549a1c2a9ca6a7412b9f7cd7cfe4d663d6568e7f3b5ed19bc01e81717a1303a"
+        }
+      }
+    },
+    "extended-high": {
+      "clock": {
+        "sample_count": 2611200,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2611200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 2611200,
+            "detector_samples": 2611200,
+            "detector_transitions": 344,
+            "queue_rejections": 0,
+            "event_add_attempts": 344,
+            "accepted_events": 344,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "306de529be65ed79ed541f218e2da6df03f235a3163ec898c8e922d71c5fee57"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 2611200,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 46,
+            "processed_samples": 2611200,
+            "detector_samples": 2611200,
+            "detector_transitions": 344,
+            "queue_rejections": 0,
+            "event_add_attempts": 252,
+            "accepted_events": 252,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "2b54865096dd44e3124ef03a82a4e2a54cbf34dbd28547cd0ae15600b05d2c3a"
+        }
+      }
+    },
+    "physical-four": {
+      "clock": {
+        "sample_count": 12066797,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 12066797,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 12066797,
+            "detector_samples": 12066797,
+            "detector_transitions": 932,
+            "queue_rejections": 0,
+            "event_add_attempts": 932,
+            "accepted_events": 932,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "e9a30ae677de68a398853777cce33c8bf437139ba75f9c7b3cc28a8dcfe3d398"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 12066797,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 202,
+            "processed_samples": 12066797,
+            "detector_samples": 12066797,
+            "detector_transitions": 932,
+            "queue_rejections": 0,
+            "event_add_attempts": 528,
+            "accepted_events": 528,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "a72867fe80636c3f0f0b63a06b1466a5a1b34a729cbd7b14e5d597116baaabd9"
+        }
+      }
+    },
+    "synthetic-four": {
+      "clock": {
+        "sample_count": 5529600,
+        "sample_rate": 96000
+      },
+      "modes": {
+        "per_voice": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 5529600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": false,
+            "transferred_pairs": 0,
+            "processed_samples": 5529600,
+            "detector_samples": 5529600,
+            "detector_transitions": 928,
+            "queue_rejections": 0,
+            "event_add_attempts": 928,
+            "accepted_events": 928,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "93226f4125a4b08e5833c44de566a25e590ce4bca906b21eaa2dda749da0f0c1"
+        },
+        "stable_note": {
+          "state": {
+            "schema": "m3_vst3_corpus_native_v1",
+            "sample_count": 5529600,
+            "sample_rate": 96000,
+            "trial": true,
+            "routing": "per_voice",
+            "completion_midi_retention": false,
+            "stable_note_identity": true,
+            "transferred_pairs": 180,
+            "processed_samples": 5529600,
+            "detector_samples": 5529600,
+            "detector_transitions": 928,
+            "queue_rejections": 0,
+            "event_add_attempts": 568,
+            "accepted_events": 568,
+            "output_blocked_blocks": 0,
+            "dry_audio_mismatches": 0,
+            "process_failures": 0,
+            "output_blocked_at_eof": false,
+            "calibration_merge_matches": true,
+            "invalid_event": false,
+            "trace_write_failed": false,
+            "first_blocked_sample": null
+          },
+          "callbacks_sha256": "ab073c2255971838021acc97bf041f8ec4648723c56c7bf0d8e84446ac212eae"
+        }
+      }
+    }
+  }
+}

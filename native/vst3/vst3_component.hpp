@@ -99,6 +99,12 @@ class M3Component : public Steinberg::Vst::SingleComponentEffect {
   void enable_corpus_completion_midi_retention(bool enabled) noexcept {
     detector_.set_completion_midi_retention_for_diagnostics(enabled);
   }
+  bool enable_corpus_batch_cell_update() noexcept {
+    // Activation configures the detector. Set this before processing starts;
+    // setProcessing's transient reset preserves and initializes the batch bank.
+    if (!active_ || processing_ || processing_started_once_) return false;
+    return detector_.set_batch_cell_update_for_diagnostics(true);
+  }
   [[nodiscard]] std::uint64_t corpus_detector_samples() const noexcept {
     return corpus_detector_samples_;
   }

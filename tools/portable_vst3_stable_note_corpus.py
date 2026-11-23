@@ -5,6 +5,7 @@ from datetime import datetime, timezone
 import gzip
 import json
 from pathlib import Path
+import re
 import shutil
 import subprocess
 
@@ -14,6 +15,68 @@ from tools.portable_vst3_corpus_replay import SETTINGS, assess, read_callbacks
 from tools.portable_vst3_process_timing import assess_measurement
 from tools.replay_corpus import DATASETS
 from tools.vst3_stable_note_corpus_gate import compare_component_pitch
+
+
+COMPONENT_SCHEMA = 'm3_batch_cell_vst3_references_v1'
+INPUT_IDENTITY = ('input_release', 'input_bundle_sha256', 'original_input_manifest_sha256')
+MODES = ('per_voice', 'stable_note')
+PASSES = ((512, False), (32, False), (32, True), (1024, False))
+
+
+def component_state(native):
+    # assess() independently checks format, block size and exact block count.
+    # Timing and the new execution switch are the only other differing fields.
+    omitted = {'sample_bits', 'block_samples', 'blocks', 'process_measurement', 'batch_cell_update'}
+    return {key: value for key, value in native.items() if key not in omitted}
+
+
+def component_reference_from_report(report, report_sha256):
+    if (report.get('schema') != 'm3_vst3_stable_note_corpus_v1'
+            or report.get('state') != 'completed' or report.get('final') is not True
+            or report.get('scope', 'full corpus') != 'full corpus' or report.get('settings') != SETTINGS
+            or set(report['datasets']) != set(DATASETS)
+            or not re.fullmatch('[0-9a-f]{64}', report_sha256)):
+        raise ValueError('Incomplete saved component report')
+    expected_names = {f'{mode}-{bits}-{block}-' + ('timed' if timed else 'plain')
+                      for mode in MODES for bits in (32, 64) for block, timed in PASSES}
+    reference = dict(schema=COMPONENT_SCHEMA, source=report['source'],
+        source_report_sha256=report_sha256, settings=SETTINGS, datasets={})
+    for dataset, row in report['datasets'].items():
+        if set(row['runs']) != expected_names:
+            raise ValueError('Incomplete saved component matrix')
+        modes = {}
+        for mode in MODES:
+            saved = row['runs'][f'{mode}-32-512-plain']
+            state = component_state(saved['native'])
+            sha = saved['trace']['raw_sha256']
+            for name, item in row['runs'].items():
+                if not name.startswith(mode + '-'):
+                    continue
+                if (item['native'].get('batch_cell_update', False) is not False
+                        or component_state(item['native']) != state
+                        or item['trace']['raw_sha256'] != sha):
+                    raise ValueError('Saved component outcomes differ across the matrix')
+            modes[mode] = dict(state=state, callbacks_sha256=sha)
+        reference['datasets'][dataset] = dict(clock=row['clock'], modes=modes)
+    return reference
+
+
+def verify_component_reference(reference, manifest, replay_reference):
+    if (reference.get('schema') != COMPONENT_SCHEMA or reference.get('settings') != SETTINGS
+            or set(reference['datasets']) != set(DATASETS)
+            or any(reference['source'][key] != manifest['source'][key] for key in INPUT_IDENTITY)
+            or not re.fullmatch('[0-9a-f]{64}', reference['source_report_sha256'])):
+        raise ValueError('Component reference provenance differs')
+    for dataset, row in reference['datasets'].items():
+        clock = {key: replay_reference['datasets'][dataset]['current-on'][key]
+                 for key in ('sample_count', 'sample_rate')}
+        if row['clock'] != clock or set(row['modes']) != set(MODES):
+            raise ValueError('Component reference clock or modes differ')
+        for mode, item in row['modes'].items():
+            if (not re.fullmatch('[0-9a-f]{64}', item['callbacks_sha256'])
+                    or any(item['state'][key] != value for key, value in clock.items())
+                    or item['state']['stable_note_identity'] is not (mode == 'stable_note')):
+                raise ValueError('Invalid component reference outcome')
 
 
 def read_labels(path, samples):
@@ -33,6 +96,10 @@ def read_labels(path, samples):
 
 
 def run(args):
+    batch = getattr(args, 'batch_cell_update', False)
+    component_path = getattr(args, 'component_reference', None)
+    if batch != (component_path is not None):
+        raise ValueError('Batch execution requires the saved component reference and vice versa')
     requested = getattr(args, 'datasets', None)
     selected = list(DATASETS) if requested is None else list(requested)
     if not selected or len(set(selected)) != len(selected) or any(name not in DATASETS for name in selected):
@@ -46,6 +113,10 @@ def run(args):
         raise ValueError('Manifest source differs')
     reference = json.loads(args.reference.read_text())
     verified_count = verify_references(reference, manifest, args.corpus)
+    component_reference = None
+    if component_path is not None:
+        component_reference = json.loads(component_path.read_text())
+        verify_component_reference(component_reference, manifest, reference)
     args.output.mkdir(parents=True, exist_ok=False)
     report = dict(schema='m3_vst3_stable_note_corpus_v1', state='running', final=False,
         source=manifest['source'], settings=SETTINGS, datasets={},
@@ -56,6 +127,11 @@ def run(args):
         acoustic_repluck_preservation='not measured', live_readiness='not measured',
         frozen_off_replay_identity='not measured', physical_string_assignment='not measured',
         interpretation=__doc__)
+    if batch:
+        report.update(schema='m3_vst3_batch_cell_corpus_v1', batch_cell_update=True,
+            component_reference_sha256=digest(component_path),
+            component_reference_source=component_reference['source'],
+            component_reference_report_sha256=component_reference['source_report_sha256'])
 
     def save():
         report['observed_at'] = datetime.now(timezone.utc).isoformat()
@@ -84,7 +160,7 @@ def run(args):
             for bits in (32, 64):
                 for stable in (False, True):
                     mode = 'stable_note' if stable else 'per_voice'
-                    for block, timed in ((512, False), (32, False), (32, True), (1024, False)):
+                    for block, timed in PASSES:
                         name = f'{mode}-{bits}-{block}-' + ('timed' if timed else 'plain')
                         report['stage'] = dataset + '/' + name
                         directory = args.output / dataset / name
@@ -96,6 +172,8 @@ def run(args):
                             '--stable-note-identity', str(int(stable)), '--block', str(block)]
                         if timed:
                             command += ['--measure-process', '1']
+                        if batch:
+                            command += ['--batch-cell-update', '1']
                         save()
                         with (directory / 'native.json').open('x') as out, (directory / 'native.stderr').open('x') as err:
                             result = subprocess.run(command, stdout=out, stderr=err, timeout=900, check=False)
@@ -108,6 +186,13 @@ def run(args):
                         assessment = assess(native, callbacks, clock=clock, sample_bits=bits,
                             trial=True, stable_note_identity=stable, block_samples=block)
                         raw_sha = digest(trace)
+                        saved_identity = {}
+                        if batch:
+                            saved = component_reference['datasets'][dataset]['modes'][mode]
+                            saved_identity = dict(batch_execution_enabled=native.get('batch_cell_update') is True,
+                                saved_component_callbacks_identical=raw_sha == saved['callbacks_sha256'],
+                                saved_component_outcome_identical=component_state(native) == saved['state'])
+                            assessment['gates'].update(saved_identity)
                         if mode not in canonical:
                             canonical[mode] = dict(events=events, sha256=raw_sha,
                                 transitions=native['detector_transitions'], transfers=native['transferred_pairs'])
@@ -134,6 +219,8 @@ def run(args):
                             trace=dict(raw_sha256=raw_sha, sha256=digest(compressed),
                                 file=str(compressed.relative_to(args.output)), bytes=compressed.stat().st_size))
                         save()
+                        if not all(saved_identity.values()):
+                            raise ValueError(f'{dataset}/{name}: saved component identity failed: {saved_identity}')
             row['comparisons'] = compare_component_pitch(canonical['per_voice']['events'],
                 canonical['stable_note']['events'], labels, clock['sample_count'])
             row['detector_transition_count_identical'] = canonical['per_voice']['transitions'] == canonical['stable_note']['transitions']
@@ -158,6 +245,9 @@ def main():
     for name in ('binary', 'corpus', 'manifest', 'reference', 'output'):
         parser.add_argument('--' + name, type=Path, required=True)
     parser.add_argument('--source-sha', required=True)
+    parser.add_argument('--batch-cell-update', action='store_true',
+                        help='Test-only batched arithmetic; requires a pinned component reference')
+    parser.add_argument('--component-reference', type=Path)
     parser.add_argument('--datasets', nargs='+', choices=tuple(DATASETS),
                         help='Bounded diagnostic only; never produces a full-corpus verdict')
     report = run(parser.parse_args())
