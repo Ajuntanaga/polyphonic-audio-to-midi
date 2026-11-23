@@ -1,3 +1,19 @@
+## Active M3 checkpoint — Soundshed support combination rejected, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-SOUNDSHED-SUPPORT-RESULT-20261123.md` and
+`docs/recovery/m3-soundshed-support-20261123.json` first. One frozen saved-span
+screen, committed before event collection, is **REJECTED**. Ordinary coverage
+39.9932->39.8569% (-0.13634pp against <=0.10pp); wrong-pitch output falls
+23.30%, gap output falls 294,607 voice-samples, but labels 150/229/306/364
+exceed the 25ms AND 5% loss budget. Extended-middle passes strictly with no
+label loss, wrong-pitch -26.00% and gap -21,374. All identity checks pass;
+six synthetic contracts pass. Source-event artifact 14838928396 collected
+once with verified digest (0.93MB), only two event TSVs extracted. No audio,
+model, native or new remote execution. Fixed combination closed, no tuning
+or integration. Prior Soundshed timing failures stand. Installed/default
+output and scoreboard unchanged. Claude ordinary58 acoustic work remains
+separate; no duplicate job or claim of a fresh peer response.
+
 ## Active M3 checkpoint — period cancellation rejected, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-PERIOD-CANCELLATION-RESULT-20261123.md` and
