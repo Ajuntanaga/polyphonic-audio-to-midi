@@ -1,0 +1,180 @@
+{
+ "schema": "m3_carry_over_loss_position_posthoc_v1",
+ "post_hoc": true,
+ "labels": 17,
+ "lost_total": 4350,
+ "lost_inside_carried": 4350,
+ "labels_not_inside_carried": [],
+ "max_carried_spans_per_label": 1,
+ "matches_census_join": true,
+ "census_m0_loss_total": 4350,
+ "by_class": {
+  "carried_only": {
+   "labels": 14,
+   "lost": 4133,
+   "lost_inside_carried": 4133
+  },
+  "mixed": {
+   "labels": 3,
+   "lost": 217,
+   "lost_inside_carried": 217
+  }
+ },
+ "rows": [
+  {
+   "label": 19,
+   "cls": "carried_only",
+   "lost": 48,
+   "first_offset": 0,
+   "last_offset": 48,
+   "carried_tail": 71792,
+   "inside_carried": true
+  },
+  {
+   "label": 31,
+   "cls": "carried_only",
+   "lost": 679,
+   "first_offset": 0,
+   "last_offset": 679,
+   "carried_tail": 9510,
+   "inside_carried": true
+  },
+  {
+   "label": 42,
+   "cls": "carried_only",
+   "lost": 282,
+   "first_offset": 0,
+   "last_offset": 282,
+   "carried_tail": 45785,
+   "inside_carried": true
+  },
+  {
+   "label": 70,
+   "cls": "carried_only",
+   "lost": 959,
+   "first_offset": 1511,
+   "last_offset": 3494,
+   "carried_tail": 3494,
+   "inside_carried": true
+  },
+  {
+   "label": 91,
+   "cls": "mixed",
+   "lost": 26,
+   "first_offset": 0,
+   "last_offset": 26,
+   "carried_tail": 27033,
+   "inside_carried": true
+  },
+  {
+   "label": 123,
+   "cls": "carried_only",
+   "lost": 231,
+   "first_offset": 0,
+   "last_offset": 231,
+   "carried_tail": 71783,
+   "inside_carried": true
+  },
+  {
+   "label": 128,
+   "cls": "mixed",
+   "lost": 48,
+   "first_offset": 0,
+   "last_offset": 48,
+   "carried_tail": 34415,
+   "inside_carried": true
+  },
+  {
+   "label": 159,
+   "cls": "carried_only",
+   "lost": 218,
+   "first_offset": 0,
+   "last_offset": 218,
+   "carried_tail": 38276,
+   "inside_carried": true
+  },
+  {
+   "label": 174,
+   "cls": "carried_only",
+   "lost": 154,
+   "first_offset": 0,
+   "last_offset": 154,
+   "carried_tail": 71770,
+   "inside_carried": true
+  },
+  {
+   "label": 200,
+   "cls": "carried_only",
+   "lost": 26,
+   "first_offset": 0,
+   "last_offset": 26,
+   "carried_tail": 27801,
+   "inside_carried": true
+  },
+  {
+   "label": 225,
+   "cls": "mixed",
+   "lost": 143,
+   "first_offset": 0,
+   "last_offset": 143,
+   "carried_tail": 3150,
+   "inside_carried": true
+  },
+  {
+   "label": 245,
+   "cls": "carried_only",
+   "lost": 198,
+   "first_offset": 0,
+   "last_offset": 198,
+   "carried_tail": 71814,
+   "inside_carried": true
+  },
+  {
+   "label": 302,
+   "cls": "carried_only",
+   "lost": 119,
+   "first_offset": 0,
+   "last_offset": 119,
+   "carried_tail": 52800,
+   "inside_carried": true
+  },
+  {
+   "label": 306,
+   "cls": "carried_only",
+   "lost": 359,
+   "first_offset": 0,
+   "last_offset": 359,
+   "carried_tail": 71783,
+   "inside_carried": true
+  },
+  {
+   "label": 355,
+   "cls": "carried_only",
+   "lost": 249,
+   "first_offset": 0,
+   "last_offset": 249,
+   "carried_tail": 71801,
+   "inside_carried": true
+  },
+  {
+   "label": 364,
+   "cls": "carried_only",
+   "lost": 247,
+   "first_offset": 0,
+   "last_offset": 247,
+   "carried_tail": 71863,
+   "inside_carried": true
+  },
+  {
+   "label": 459,
+   "cls": "carried_only",
+   "lost": 364,
+   "first_offset": 0,
+   "last_offset": 364,
+   "carried_tail": 71916,
+   "inside_carried": true
+  }
+ ],
+ "census_json_sha256": "24391e8f9ddd85a83517876ea3e70cb9c4940c66735e5bd47ad97c9b8df29efa",
+ "anatomy_json_sha256": "185f1db63edc579a4593f1313b1d4cd10e30bd598ade898af31ebb890b770aa9"
+}

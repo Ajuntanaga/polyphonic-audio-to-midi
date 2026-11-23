@@ -1,0 +1,865 @@
+{
+ "schema": "m3_carry_over_credit_census_v1",
+ "post_hoc": true,
+ "tol_primary": 2400,
+ "hold_max_samples": 21120,
+ "identity": {
+  "ordinary": {
+   "labels_equal": true,
+   "runs_equal": true,
+   "partition_exact": true
+  },
+  "extended-middle": {
+   "labels_equal": true,
+   "runs_equal": true,
+   "partition_exact": true
+  }
+ },
+ "datasets": {
+  "ordinary": {
+   "rate": 96000,
+   "horizon": 10681922,
+   "current_present_scorer": 13525345,
+   "tol_2400": {
+    "labels": 499,
+    "label_classes": {
+     "missed": 265,
+     "fresh_only": 210,
+     "carried_only": 19,
+     "mixed": 5
+    },
+    "present": 13525345,
+    "annotated": 33819101,
+    "fresh": 12419115,
+    "bridged": 841672,
+    "head": 264558,
+    "carried_share_of_present": 0.08179,
+    "carried_pct_of_annotated": 3.271,
+    "coverage_pct": 39.9932,
+    "fresh_coverage_pct": 36.7222,
+    "carried_spans": 24,
+    "bridged_spans": 19,
+    "head_spans": 5,
+    "bridge_gap_ms": {
+     "median": 102.4,
+     "p10": 101.43,
+     "p90": 275.83
+    },
+    "bridge_gap_median_samples": 9830,
+    "bridge_gap_over_hold": 2,
+    "carry_in_ms": {
+     "median": 782.01,
+     "p10": 733.85,
+     "p90": 1622.27
+    },
+    "carried_only_tail_in_label_ms": {
+     "median": 747.51,
+     "p10": 99.06,
+     "p90": 748.57
+    },
+    "bridged_gap_total": 300291,
+    "bridged_present_total": 841672
+   },
+   "labels_not_fresh_only": [
+    {
+     "label": 19,
+     "midi": 54,
+     "cls": "carried_only",
+     "present": 71792,
+     "fresh": 0,
+     "bridged": 71792,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 71185,
+       "tail_in_label": 71792,
+       "gap": 9808
+      }
+     ]
+    },
+    {
+     "label": 31,
+     "midi": 55,
+     "cls": "carried_only",
+     "present": 9510,
+     "fresh": 0,
+     "bridged": 9510,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 74970,
+       "tail_in_label": 9510,
+       "gap": 9817
+      }
+     ]
+    },
+    {
+     "label": 42,
+     "midi": 60,
+     "cls": "carried_only",
+     "present": 45785,
+     "fresh": 0,
+     "bridged": 0,
+     "head": 45785,
+     "spans": [
+      {
+       "kind": "head",
+       "carry_in": 74791,
+       "tail_in_label": 45785,
+       "gap": null
+      }
+     ]
+    },
+    {
+     "label": 70,
+     "midi": 48,
+     "cls": "carried_only",
+     "present": 3494,
+     "fresh": 0,
+     "bridged": 3494,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 155738,
+       "tail_in_label": 3494,
+       "gap": 91417
+      }
+     ]
+    },
+    {
+     "label": 91,
+     "midi": 44,
+     "cls": "mixed",
+     "present": 71706,
+     "fresh": 44673,
+     "bridged": 27033,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 54503,
+       "tail_in_label": 27033,
+       "gap": 9830
+      }
+     ]
+    },
+    {
+     "label": 123,
+     "midi": 37,
+     "cls": "carried_only",
+     "present": 71783,
+     "fresh": 0,
+     "bridged": 0,
+     "head": 71783,
+     "spans": [
+      {
+       "kind": "head",
+       "carry_in": 77594,
+       "tail_in_label": 71783,
+       "gap": null
+      }
+     ]
+    },
+    {
+     "label": 128,
+     "midi": 45,
+     "cls": "mixed",
+     "present": 42096,
+     "fresh": 7681,
+     "bridged": 34415,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 75537,
+       "tail_in_label": 34415,
+       "gap": 9808
+      }
+     ]
+    },
+    {
+     "label": 159,
+     "midi": 47,
+     "cls": "carried_only",
+     "present": 38276,
+     "fresh": 0,
+     "bridged": 38276,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 71783,
+       "tail_in_label": 38276,
+       "gap": 9830
+      }
+     ]
+    },
+    {
+     "label": 174,
+     "midi": 44,
+     "cls": "carried_only",
+     "present": 71770,
+     "fresh": 0,
+     "bridged": 71770,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 74407,
+       "tail_in_label": 71770,
+       "gap": 9830
+      }
+     ]
+    },
+    {
+     "label": 178,
+     "midi": 44,
+     "cls": "mixed",
+     "present": 65511,
+     "fresh": 59009,
+     "bridged": 6502,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 155994,
+       "tail_in_label": 6502,
+       "gap": 9817
+      }
+     ]
+    },
+    {
+     "label": 200,
+     "midi": 50,
+     "cls": "carried_only",
+     "present": 27801,
+     "fresh": 0,
+     "bridged": 27801,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 75175,
+       "tail_in_label": 27801,
+       "gap": 19826
+      }
+     ]
+    },
+    {
+     "label": 225,
+     "midi": 46,
+     "cls": "mixed",
+     "present": 71695,
+     "fresh": 68545,
+     "bridged": 3150,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 70450,
+       "tail_in_label": 3150,
+       "gap": 9777
+      }
+     ]
+    },
+    {
+     "label": 239,
+     "midi": 48,
+     "cls": "carried_only",
+     "present": 55107,
+     "fresh": 0,
+     "bridged": 55107,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 75784,
+       "tail_in_label": 55107,
+       "gap": 15506
+      }
+     ]
+    },
+    {
+     "label": 245,
+     "midi": 48,
+     "cls": "carried_only",
+     "present": 71814,
+     "fresh": 0,
+     "bridged": 71814,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 157371,
+       "tail_in_label": 71814,
+       "gap": 26480
+      }
+     ]
+    },
+    {
+     "label": 263,
+     "midi": 33,
+     "cls": "mixed",
+     "present": 32838,
+     "fresh": 29494,
+     "bridged": 0,
+     "head": 3344,
+     "spans": [
+      {
+       "kind": "head",
+       "carry_in": 103088,
+       "tail_in_label": 3344,
+       "gap": null
+      }
+     ]
+    },
+    {
+     "label": 302,
+     "midi": 43,
+     "cls": "carried_only",
+     "present": 52800,
+     "fresh": 0,
+     "bridged": 52800,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 72202,
+       "tail_in_label": 52800,
+       "gap": 9737
+      }
+     ]
+    },
+    {
+     "label": 306,
+     "midi": 42,
+     "cls": "carried_only",
+     "present": 71783,
+     "fresh": 0,
+     "bridged": 0,
+     "head": 71783,
+     "spans": [
+      {
+       "kind": "head",
+       "carry_in": 76634,
+       "tail_in_label": 71783,
+       "gap": null
+      }
+     ]
+    },
+    {
+     "label": 341,
+     "midi": 57,
+     "cls": "carried_only",
+     "present": 28240,
+     "fresh": 0,
+     "bridged": 28240,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 75504,
+       "tail_in_label": 28240,
+       "gap": 9839
+      }
+     ]
+    },
+    {
+     "label": 349,
+     "midi": 54,
+     "cls": "carried_only",
+     "present": 71761,
+     "fresh": 0,
+     "bridged": 71761,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 73968,
+       "tail_in_label": 71761,
+       "gap": 9839
+      }
+     ]
+    },
+    {
+     "label": 355,
+     "midi": 39,
+     "cls": "carried_only",
+     "present": 71801,
+     "fresh": 0,
+     "bridged": 71801,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 73544,
+       "tail_in_label": 71801,
+       "gap": 9799
+      }
+     ]
+    },
+    {
+     "label": 364,
+     "midi": 42,
+     "cls": "carried_only",
+     "present": 71863,
+     "fresh": 0,
+     "bridged": 0,
+     "head": 71863,
+     "spans": [
+      {
+       "kind": "head",
+       "carry_in": 46090,
+       "tail_in_label": 71863,
+       "gap": null
+      }
+     ]
+    },
+    {
+     "label": 456,
+     "midi": 47,
+     "cls": "carried_only",
+     "present": 71783,
+     "fresh": 0,
+     "bridged": 71783,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 71834,
+       "tail_in_label": 71783,
+       "gap": 9817
+      }
+     ]
+    },
+    {
+     "label": 459,
+     "midi": 45,
+     "cls": "carried_only",
+     "present": 71916,
+     "fresh": 0,
+     "bridged": 71916,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 76629,
+       "tail_in_label": 71916,
+       "gap": 9684
+      }
+     ]
+    },
+    {
+     "label": 470,
+     "midi": 44,
+     "cls": "carried_only",
+     "present": 52707,
+     "fresh": 0,
+     "bridged": 52707,
+     "head": 0,
+     "spans": [
+      {
+       "kind": "bridged",
+       "carry_in": 76327,
+       "tail_in_label": 52707,
+       "gap": 9830
+      }
+     ]
+    }
+   ],
+   "tol_0": {
+    "labels": 499,
+    "label_classes": {
+     "missed": 265,
+     "fresh_only": 210,
+     "carried_only": 19,
+     "mixed": 5
+    },
+    "present": 13525345,
+    "annotated": 33819101,
+    "fresh": 12419115,
+    "bridged": 841672,
+    "head": 264558,
+    "carried_share_of_present": 0.08179,
+    "carried_pct_of_annotated": 3.271,
+    "coverage_pct": 39.9932,
+    "fresh_coverage_pct": 36.7222,
+    "carried_spans": 24,
+    "bridged_spans": 19,
+    "head_spans": 5,
+    "bridge_gap_ms": {
+     "median": 102.4,
+     "p10": 101.43,
+     "p90": 275.83
+    },
+    "bridge_gap_median_samples": 9830,
+    "bridge_gap_over_hold": 2,
+    "carry_in_ms": {
+     "median": 782.01,
+     "p10": 733.85,
+     "p90": 1622.27
+    },
+    "carried_only_tail_in_label_ms": {
+     "median": 747.51,
+     "p10": 99.06,
+     "p90": 748.57
+    },
+    "bridged_gap_total": 300291,
+    "bridged_present_total": 841672
+   }
+  },
+  "extended-middle": {
+   "rate": 96000,
+   "horizon": 2233574,
+   "current_present_scorer": 2021510,
+   "tol_2400": {
+    "labels": 6,
+    "label_classes": {
+     "missed": 0,
+     "fresh_only": 6,
+     "carried_only": 0,
+     "mixed": 0
+    },
+    "present": 2021510,
+    "annotated": 2073600,
+    "fresh": 2021510,
+    "bridged": 0,
+    "head": 0,
+    "carried_share_of_present": 0.0,
+    "carried_pct_of_annotated": 0.0,
+    "coverage_pct": 97.4879,
+    "fresh_coverage_pct": 97.4879,
+    "carried_spans": 0,
+    "bridged_spans": 0,
+    "head_spans": 0,
+    "bridge_gap_ms": null,
+    "bridge_gap_median_samples": null,
+    "bridge_gap_over_hold": 0,
+    "carry_in_ms": null,
+    "carried_only_tail_in_label_ms": null,
+    "bridged_gap_total": 0,
+    "bridged_present_total": 0
+   },
+   "labels_not_fresh_only": [],
+   "tol_0": {
+    "labels": 6,
+    "label_classes": {
+     "missed": 0,
+     "fresh_only": 6,
+     "carried_only": 0,
+     "mixed": 0
+    },
+    "present": 2021510,
+    "annotated": 2073600,
+    "fresh": 2021510,
+    "bridged": 0,
+    "head": 0,
+    "carried_share_of_present": 0.0,
+    "carried_pct_of_annotated": 0.0,
+    "coverage_pct": 97.4879,
+    "fresh_coverage_pct": 97.4879,
+    "carried_spans": 0,
+    "bridged_spans": 0,
+    "head_spans": 0,
+    "bridge_gap_ms": null,
+    "bridge_gap_median_samples": null,
+    "bridge_gap_over_hold": 0,
+    "carry_in_ms": null,
+    "carried_only_tail_in_label_ms": null,
+    "bridged_gap_total": 0,
+    "bridged_present_total": 0
+   }
+  }
+ },
+ "joins": {
+  "m0_presence_loss_by_class": {
+   "missed": 0,
+   "fresh_only": 0,
+   "carried_only": 4133,
+   "mixed": 217
+  },
+  "m1_presence_loss_by_class": {
+   "missed": 0,
+   "fresh_only": 0,
+   "carried_only": 703,
+   "mixed": 0
+  },
+  "m0_loss_total": 4350,
+  "m1_loss_total": 703,
+  "labels_with_m0_loss": [
+   {
+    "label": 19,
+    "cls": "carried_only",
+    "present": 71792,
+    "loss_M0": 48,
+    "loss_M1": 0,
+    "carry_in": [
+     71185
+    ]
+   },
+   {
+    "label": 31,
+    "cls": "carried_only",
+    "present": 9510,
+    "loss_M0": 679,
+    "loss_M1": 64,
+    "carry_in": [
+     74970
+    ]
+   },
+   {
+    "label": 42,
+    "cls": "carried_only",
+    "present": 45785,
+    "loss_M0": 282,
+    "loss_M1": 0,
+    "carry_in": [
+     74791
+    ]
+   },
+   {
+    "label": 70,
+    "cls": "carried_only",
+    "present": 3494,
+    "loss_M0": 959,
+    "loss_M1": 575,
+    "carry_in": [
+     155738
+    ]
+   },
+   {
+    "label": 91,
+    "cls": "mixed",
+    "present": 71706,
+    "loss_M0": 26,
+    "loss_M1": 0,
+    "carry_in": [
+     54503
+    ]
+   },
+   {
+    "label": 123,
+    "cls": "carried_only",
+    "present": 71783,
+    "loss_M0": 231,
+    "loss_M1": 64,
+    "carry_in": [
+     77594
+    ]
+   },
+   {
+    "label": 128,
+    "cls": "mixed",
+    "present": 42096,
+    "loss_M0": 48,
+    "loss_M1": 0,
+    "carry_in": [
+     75537
+    ]
+   },
+   {
+    "label": 159,
+    "cls": "carried_only",
+    "present": 38276,
+    "loss_M0": 218,
+    "loss_M1": 0,
+    "carry_in": [
+     71783
+    ]
+   },
+   {
+    "label": 174,
+    "cls": "carried_only",
+    "present": 71770,
+    "loss_M0": 154,
+    "loss_M1": 0,
+    "carry_in": [
+     74407
+    ]
+   },
+   {
+    "label": 200,
+    "cls": "carried_only",
+    "present": 27801,
+    "loss_M0": 26,
+    "loss_M1": 0,
+    "carry_in": [
+     75175
+    ]
+   },
+   {
+    "label": 225,
+    "cls": "mixed",
+    "present": 71695,
+    "loss_M0": 143,
+    "loss_M1": 0,
+    "carry_in": [
+     70450
+    ]
+   },
+   {
+    "label": 245,
+    "cls": "carried_only",
+    "present": 71814,
+    "loss_M0": 198,
+    "loss_M1": 0,
+    "carry_in": [
+     157371
+    ]
+   },
+   {
+    "label": 302,
+    "cls": "carried_only",
+    "present": 52800,
+    "loss_M0": 119,
+    "loss_M1": 0,
+    "carry_in": [
+     72202
+    ]
+   },
+   {
+    "label": 306,
+    "cls": "carried_only",
+    "present": 71783,
+    "loss_M0": 359,
+    "loss_M1": 0,
+    "carry_in": [
+     76634
+    ]
+   },
+   {
+    "label": 355,
+    "cls": "carried_only",
+    "present": 71801,
+    "loss_M0": 249,
+    "loss_M1": 0,
+    "carry_in": [
+     73544
+    ]
+   },
+   {
+    "label": 364,
+    "cls": "carried_only",
+    "present": 71863,
+    "loss_M0": 247,
+    "loss_M1": 0,
+    "carry_in": [
+     46090
+    ]
+   },
+   {
+    "label": 459,
+    "cls": "carried_only",
+    "present": 71916,
+    "loss_M0": 364,
+    "loss_M1": 0,
+    "carry_in": [
+     76629
+    ]
+   }
+  ],
+  "whole_lost": [
+   {
+    "label": 42,
+    "cls": "carried_only",
+    "present": 45785,
+    "carry_in": [
+     74791
+    ]
+   },
+   {
+    "label": 70,
+    "cls": "carried_only",
+    "present": 3494,
+    "carry_in": [
+     155738
+    ]
+   },
+   {
+    "label": 200,
+    "cls": "carried_only",
+    "present": 27801,
+    "carry_in": [
+     75175
+    ]
+   },
+   {
+    "label": 306,
+    "cls": "carried_only",
+    "present": 71783,
+    "carry_in": [
+     76634
+    ]
+   },
+   {
+    "label": 364,
+    "cls": "carried_only",
+    "present": 71863,
+    "carry_in": [
+     46090
+    ]
+   }
+  ],
+  "positives": {
+   "count": 23,
+   "classes": {
+    "missed": 0,
+    "fresh_only": 0,
+    "carried_only": 18,
+    "mixed": 5
+   }
+  }
+ },
+ "predictions": {
+  "P1": {
+   "odds": 0.97,
+   "outcome": true,
+   "brier": 0.0009
+  },
+  "P2": {
+   "odds": 0.55,
+   "outcome": false,
+   "brier": 0.3025
+  },
+  "P3": {
+   "odds": 0.5,
+   "outcome": true,
+   "brier": 0.25
+  },
+  "P4": {
+   "odds": 0.65,
+   "outcome": true,
+   "brier": 0.1225
+  },
+  "P5": {
+   "odds": 0.55,
+   "outcome": true,
+   "brier": 0.2025
+  },
+  "P6": {
+   "odds": 0.5,
+   "outcome": true,
+   "brier": 0.25
+  },
+  "P7": {
+   "odds": 0.4,
+   "outcome": true,
+   "brier": 0.36
+  },
+  "P8": {
+   "odds": 0.7,
+   "outcome": false,
+   "brier": 0.49
+  }
+ },
+ "brier_sum": 1.9784,
+ "hits": 3,
+ "inputs": {
+  "codex_json_sha256": "c2008b8956223340d29aa0961f16cc0eba0e73dd648ac9c1894952a6f2c38369",
+  "decision_grain_json_sha256": "3d06d9179a8e0baa9415292cd8d94c40a829998bb646f1b8ce263d50862e1dca",
+  "boundary_census_json_sha256": "8ab2ca37a5e43d85158a46ab552ee02b94603c6400ad761b4e31ee161e15c47f"
+ }
+}
