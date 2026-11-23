@@ -1,7 +1,9 @@
 """Small synthetic contracts; these tests do not open audio or run native code."""
 import copy
+from pathlib import Path
 import unittest
 
+from tools.portable_stable_onset_freshness import timing_command
 from tools.stable_onset_freshness import compare_fixture, summarize, snapshot_identity
 
 
@@ -12,6 +14,17 @@ def event(sample, kind='on', *, ledger=False, channel=0, velocity=100):
 
 
 class FreshnessComparisons(unittest.TestCase):
+    def test_timing_keeps_guard_and_ownership_without_trace_io(self):
+        command = timing_command(Path('replay'), Path('fixture.wav'),
+                                 Path('calibration.m3cb'), Path('timing.json'))
+        for flag in ('--diagnostic-stable-note-identity', '--diagnostic-spectral-lane-collision',
+                     '--diagnostic-batch-cell-update'):
+            self.assertIn(flag, command)
+        self.assertEqual(command[command.index('--diagnostic-core-timing')+1], 'timing.json')
+        self.assertEqual(command[command.index('--block')+1], '32')
+        for flag in ('--midi-event-trace', '--outcome-trace', '--diagnostic-thread-cpu'):
+            self.assertNotIn(flag, command)
+
     def test_buffer_metadata_is_only_snapshot_exception(self):
         left = dict(block='512', fingerprint='abc', transitions='8')
         right = dict(block='32', fingerprint='abc', transitions='8')

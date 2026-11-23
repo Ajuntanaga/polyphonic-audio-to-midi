@@ -3067,16 +3067,20 @@ bool run_detector_replay(const WaveData& wave,
                          bool diagnostic_exact_cell_sharing,
                          bool diagnostic_packed_cell_update,
                          bool diagnostic_elide_narrow_clears,
-                         bool diagnostic_batch_cell_update) {
+                         bool diagnostic_batch_cell_update,
+                         bool diagnostic_stable_note_identity) {
   output = {};
   error = ReplayError::invalid_config;
+  if (diagnostic_stable_note_identity &&
+      (!diagnostic_spectral_lane_collision || config.midi_routing != MidiRouting::per_voice))
+    return false;
   if (diagnostic_packed_cell_update && diagnostic_exact_cell_sharing)
     return false;
   if (diagnostic_batch_cell_update &&
       (diagnostic_packed_cell_update || diagnostic_exact_cell_sharing)) return false;
 #if !defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
   if (diagnostic_packed_cell_update || diagnostic_elide_narrow_clears ||
-      diagnostic_batch_cell_update) return false;
+      diagnostic_batch_cell_update || diagnostic_stable_note_identity) return false;
   if (diagnostic_exact_cell_sharing || diagnostic_joint_release_support != nullptr || diagnostic_upper_fretted_relief || diagnostic_common_assignment_confidence || diagnostic_contradicted_retention || diagnostic_persistent_candidate_admission || diagnostic_supported_sustain_renewal || diagnostic_common_detuning_support || diagnostic_energy_weighted_descriptor || diagnostic_pending_string_posterior || diagnostic_joint_rescue_eligibility || diagnostic_calibrated_assignment_prior ||
       diagnostic_skip_empty_fine_reset || diagnostic_retained_spectral_assignment ||
       diagnostic_spectral_lane_collision || diagnostic_pending_string_reservation ||
@@ -3466,7 +3470,8 @@ bool run_detector_replay(const WaveData& wave,
   detector.set_spectral_lane_collision_for_diagnostics(
       diagnostic_spectral_lane_collision);
   detector.set_stable_note_identity_for_diagnostics(
-      midi_event_trace != nullptr && midi_event_trace->continuation_tags);
+      diagnostic_stable_note_identity ||
+      (midi_event_trace != nullptr && midi_event_trace->continuation_tags));
   detector.set_pending_string_reservation_for_diagnostics(
       diagnostic_pending_string_reservation);
   detector.set_forced_pending_string_reservation_for_diagnostics(

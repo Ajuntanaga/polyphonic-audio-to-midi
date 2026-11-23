@@ -1,3 +1,15 @@
+## Active M3 checkpoint — fixed guard timing recovery prepared, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-STABLE-ONSET-TIMING-RECOVERY-20261123.md` and
+`docs/recovery/github-stable-onset-timing-recovery-20261123.json` first.
+Initial run **45179941790** is final/failure, report collected once: both native
+suites passed, but trace-free timing was rejected by a MIDI-trace-only flag
+check. No scientific verdict. The recovery fixes offline flag plumbing only;
+the guard, six fixtures, spec and gates stay frozen. Fourteen pure contracts
+pass; native/audio/timing execution remains GHA-only. No installed change.
+One technical recovery is being pinned. No repeat of the failed run.
+Pass permits full-corpus comparison; scientific failure closes this rule.
+
 ## Active M3 checkpoint — dedicated attack baseline rejected, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-COMPLEX-ATTACK-RESULT-20261123.md` and

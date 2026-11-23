@@ -1135,9 +1135,10 @@ int main(int argc, char** argv) {
   config.max_polyphony = static_cast<std::uint8_t>(max_polyphony);
   config.max_fret = static_cast<std::uint8_t>(max_fret);
   if (midi_event_trace.continuation_tags &&
-      (midi_event_trace_path == nullptr || !diagnostic_spectral_lane_collision ||
+      ((midi_event_trace_path == nullptr && diagnostic_core_timing_path == nullptr) ||
+       !diagnostic_spectral_lane_collision ||
        config.midi_routing != m3::MidiRouting::per_voice)) {
-    std::fprintf(stderr, "m3_replay: stable identity tags require MIDI trace, independent ownership and per_voice routing\n");
+    std::fprintf(stderr, "m3_replay: stable identity requires MIDI trace or core timing, independent ownership and per_voice routing\n");
     return 2;
   }
   if (calibration_string >= 0) {
@@ -1406,7 +1407,8 @@ int main(int argc, char** argv) {
           diagnostic_upper_fretted_relief,
           diagnostic_joint_release_path != nullptr ? &diagnostic_joint_release_support : nullptr,
           diagnostic_exact_cell_sharing, diagnostic_packed_cell_update,
-          diagnostic_elide_narrow_clears, diagnostic_batch_cell_update)) {
+          diagnostic_elide_narrow_clears, diagnostic_batch_cell_update,
+          midi_event_trace.continuation_tags)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
@@ -1421,12 +1423,14 @@ int main(int argc, char** argv) {
     bool failed = std::fprintf(stream,
         "{\"schema\":\"m3_replay_core_timing_v1\",\"sample_rate\":%u,\"block_samples\":%zu,"
         "\"measurement_scope\":\"detector_and_optional_cues_without_offline_frequency_reporting\","
+        "\"stable_note_identity_enabled\":%s,"
         "\"fingerprint\":\"%016llx\",\"fingerprint_identical\":%s,"
         "\"blocks\":%llu,\"total_ns\":%llu,\"p99_ns\":%llu,\"maximum_ns\":%llu,"
         "\"half_budget_overruns\":%llu,\"deadline_overruns\":%llu,"
         "\"allocation_guard\":%s,\"cpp_allocations\":%llu,\"cpp_frees\":%llu,"
         "\"c_allocations\":%llu,\"c_frees\":%llu",
-        wave.sample_rate, block_size, number(core_timing.fingerprint),
+        wave.sample_rate, block_size, midi_event_trace.continuation_tags ? "true" : "false",
+        number(core_timing.fingerprint),
         core_timing.fingerprint_identical ? "true" : "false", number(core_timing.blocks),
         number(core_timing.total_ns), number(core_timing.p99_ns), number(core_timing.maximum_ns),
         number(core_timing.half_budget_overruns), number(core_timing.deadline_overruns),

@@ -19,6 +19,15 @@ from tools.repluck_onset_analysis import (read_tagged, require_callback_identity
 from tools.stable_onset_freshness import compare_fixture, summarize, snapshot_identity
 
 
+def timing_command(binary, fixture, calibration, timing_path):
+    """Keep the diagnostic enabled while excluding all trace I/O from timing."""
+    command = replay_command(binary, fixture, calibration, timing_path.with_suffix('.unused'))
+    at = command.index('--midi-event-trace')
+    del command[at:at+2]
+    command[command.index('--block')+1] = '32'
+    return command + ['--diagnostic-core-timing', str(timing_path)]
+
+
 def run(args):
     if os.environ.get('GITHUB_ACTIONS') != 'true':
         raise RuntimeError('Native/audio execution is restricted to GitHub Actions')
@@ -146,14 +155,11 @@ def run(args):
                 completed[dataset][layout] = dict(callbacks=delivered['stable_note'], references=references)
 
                 # Timed detector run carries no event/outcome/stage/CPU trace.
-                command = replay_command(binary, fixture, calibration, output/'unused.tsv')
-                at = command.index('--midi-event-trace')
-                del command[at:at+2]
-                command[command.index('--block')+1] = '32'
-                command += ['--diagnostic-core-timing', str(output/'timing.json')]
+                command = timing_command(binary, fixture, calibration, output/'timing.json')
                 execute(command, output/'timed-snapshot.tsv', output/'timed.stderr')
                 timed = read_snapshot(output/'timed-snapshot.tsv', samples, rate)
                 timing = json.loads((output/'timing.json').read_text())
+                entry['gates']['timed_stable_identity_enabled'] = timing.get('stable_note_identity_enabled') is True
                 entry['gates']['timed_snapshot_identity'] = timed == entry['runs']['block32']['snapshot']
                 entry['gates'].update(timing_gates(timing, {'output': {'fingerprint': snapshot['fingerprint']}}, 32))
                 entry['timing'] = timing
