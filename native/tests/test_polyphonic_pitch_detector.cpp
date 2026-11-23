@@ -7,6 +7,7 @@
 #include <cstring>
 #include <limits>
 #include <memory>
+#include <tuple>
 
 #include "m3/generated_note_ledger.hpp"
 #include "m3/polyphonic_pitch_detector.hpp"
@@ -119,13 +120,17 @@ struct PolyphonicPitchDetectorTestAccess final {
     }
   }
 
-  static void packed_cell_update_probe() {
+  static void cell_update_probe(bool batch) {
     PolyphonicPitchDetector detector;
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
+    const auto set_enabled = [&](bool enabled) {
+      return batch ? detector.set_batch_cell_update_for_diagnostics(enabled) :
+          detector.set_packed_cell_update_for_diagnostics(enabled);
+    };
     if (!PolyphonicPitchDetector::packed_cell_update_supported()) {
-      M3_EXPECT_FALSE(detector.set_packed_cell_update_for_diagnostics(true));
-      M3_EXPECT_TRUE(detector.set_packed_cell_update_for_diagnostics(false));
+      M3_EXPECT_FALSE(set_enabled(true));
+      M3_EXPECT_TRUE(set_enabled(false));
       return;
     }
     constexpr std::array<double, 5U> rates{44100.0, 48000.0, 96000.0, 4000.0, 100.0};
@@ -139,9 +144,20 @@ struct PolyphonicPitchDetectorTestAccess final {
         config.highest_note = 84U;
         M3_EXPECT_TRUE(detector.configure(rate, config));
         M3_EXPECT_FALSE(detector.diagnostic_packed_cell_update_);
+        M3_EXPECT_FALSE(detector.diagnostic_batch_cell_update_);
         detector.set_exact_cell_sharing_for_diagnostics(true);
-        M3_EXPECT_FALSE(detector.set_packed_cell_update_for_diagnostics(true));
+        M3_EXPECT_FALSE(set_enabled(true));
         detector.set_exact_cell_sharing_for_diagnostics(false);
+        if (batch) {
+          M3_EXPECT_TRUE(detector.set_packed_cell_update_for_diagnostics(true));
+          M3_EXPECT_FALSE(set_enabled(true));
+          M3_EXPECT_TRUE(detector.set_packed_cell_update_for_diagnostics(false));
+          M3_EXPECT_TRUE(set_enabled(true));
+          M3_EXPECT_FALSE(detector.set_packed_cell_update_for_diagnostics(true));
+          detector.set_exact_cell_sharing_for_diagnostics(true);
+          M3_EXPECT_FALSE(detector.diagnostic_exact_cell_sharing_);
+          M3_EXPECT_TRUE(set_enabled(false));
+        }
         for (const bool selection : {false, true}) {
           detector.reset();
           M3_EXPECT_TRUE(detector.set_correlation_window_for_diagnostics(0.08, selection, false));
@@ -152,8 +168,7 @@ struct PolyphonicPitchDetectorTestAccess final {
           for (std::size_t sample = 0U; sample < 512U; ++sample) {
             // Both paths inherit an existing state; signed zero and tiny finite
             // inputs are included, along with normal positive/negative audio.
-            M3_EXPECT_TRUE(detector.set_packed_cell_update_for_diagnostics(
-                (sample / 128U) % 2U != 0U));
+            M3_EXPECT_TRUE(set_enabled((sample / 128U) % 2U != 0U));
             const double value = input[sample % input.size()];
             const double mixed = (1.0 - detector.correlation_decay) * value;
             const double selection_mixed = (1.0 - detector.diagnostic_selection_decay_) * value;
@@ -178,6 +193,32 @@ struct PolyphonicPitchDetectorTestAccess final {
             update_scalar(lower);
             update_scalar(upper);
             detector.update_cells(value);
+            if (batch) {
+              // First exercise every-sample reads, then leave the bank dirty
+              // across many samples. Each public reader must see current cells.
+              if (sample >= 256U && sample % 67U != 0U && sample != 511U) continue;
+              std::array<double, 6U> frequencies{};
+              std::array<std::complex<double>, 6U> correlations{};
+              double energy{}, decay{}, ratio{};
+              switch (sample % 4U) {
+                case 0U:
+                  (void)detector.corrected_harmonic_energies_for_diagnostics(config.lowest_note);
+                  break;
+                case 1U:
+                  (void)detector.correlation_window_energy_ratio_for_diagnostics(
+                      config.lowest_note, true, ratio);
+                  break;
+                case 2U:
+                  (void)detector.demodulated_harmonic_tracks_for_diagnostics(
+                      config.lowest_note, frequencies, correlations, energy, decay);
+                  break;
+                default:
+                  (void)detector.harmonic_correlations_for_diagnostics(
+                      config.lowest_note, frequencies, correlations, energy, decay);
+                  break;
+              }
+              M3_EXPECT_FALSE(detector.diagnostic_batch_cells_->dirty);
+            }
             const auto check = [](const auto& actual, const auto& reference) {
               for (std::size_t index = 0U; index < actual.size(); ++index) {
                 for (auto member : {&PolyphonicPitchDetector::Cell::cosine,
@@ -197,9 +238,90 @@ struct PolyphonicPitchDetectorTestAccess final {
           }
           M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
           detector.reset();
-          M3_EXPECT_TRUE(detector.diagnostic_packed_cell_update_);
+          M3_EXPECT_EQ(detector.diagnostic_packed_cell_update_, !batch);
+          M3_EXPECT_EQ(detector.diagnostic_batch_cell_update_, batch);
         }
       }
+    }
+  }
+
+  static void batch_cell_process_probe() {
+    if (!PolyphonicPitchDetector::packed_cell_update_supported()) return;
+    auto reference = std::make_unique<PolyphonicPitchDetector>();
+    auto candidate = std::make_unique<PolyphonicPitchDetector>();
+    PersistentConfig config;
+    const auto compare_decisions = [](const DetectorDecision& a, const DetectorDecision& b) {
+      M3_EXPECT_EQ(a.transitions.size(), b.transitions.size());
+      for (std::size_t i = 0U; i < std::min(a.transitions.size(), b.transitions.size()); ++i) {
+        const auto& x = a.transitions[i];
+        const auto& y = b.transitions[i];
+        M3_EXPECT_TRUE(std::tie(x.sample_offset, x.kind, x.note, x.velocity, x.sequence,
+            x.voice_id, x.continuation_voice_id) ==
+            std::tie(y.sample_offset, y.kind, y.note, y.velocity, y.sequence,
+            y.voice_id, y.continuation_voice_id));
+      }
+      M3_EXPECT_EQ(a.tuner_snapshot_ready, b.tuner_snapshot_ready);
+      M3_EXPECT_TRUE(std::tie(a.tuner.updated, a.tuner.signal, a.tuner.note) ==
+          std::tie(b.tuner.updated, b.tuner.signal, b.tuner.note));
+      M3_EXPECT_EQ(std::memcmp(&a.tuner.cents, &b.tuner.cents, sizeof(double)), 0);
+      const auto& x = a.tuner_snapshot;
+      const auto& y = b.tuner_snapshot;
+      M3_EXPECT_TRUE(std::tie(x.generation, x.state, x.voice_count, x.max_polyphony,
+          x.input_peak_q15) == std::tie(y.generation, y.state, y.voice_count,
+          y.max_polyphony, y.input_peak_q15));
+      for (std::size_t i = 0U; i < x.voices.size(); ++i) {
+        const auto& p = x.voices[i];
+        const auto& q = y.voices[i];
+        M3_EXPECT_TRUE(std::tie(p.midi_note, p.cents_q8, p.confidence_q15, p.age_ticks,
+            p.state, p.cents_valid, p.string_index, p.pitch_evidence_group_id,
+            p.pitch_evidence_member_mask, p.beat_hz_q8, p.detected_midi_note,
+            p.detected_cents_q8, p.detected_cents_valid) ==
+            std::tie(q.midi_note, q.cents_q8, q.confidence_q15, q.age_ticks,
+            q.state, q.cents_valid, q.string_index, q.pitch_evidence_group_id,
+            q.pitch_evidence_member_mask, q.beat_hz_q8, q.detected_midi_note,
+            q.detected_cents_q8, q.detected_cents_valid));
+      }
+    };
+    for (const double rate : {44100.0, 48000.0, 96000.0}) {
+      config.profile_mode = ProfileMode::m3;
+      config.max_fret = 24U;
+      M3_EXPECT_TRUE(reference->configure(rate, config));
+      M3_EXPECT_TRUE(candidate->configure(rate, config));
+      M3_EXPECT_TRUE(candidate->set_batch_cell_update_for_diagnostics(true));
+      const auto allocations = m3::test::allocation_count();
+      const auto frees = m3::test::deallocation_count();
+      for (std::size_t i = 0U; i < 8192U; ++i) {
+        if (i == 2048U || i == 4096U) {
+          config.max_fret = i == 2048U ? 2U : 24U;
+          config.profile_mode = i == 2048U ? ProfileMode::m3 : ProfileMode::general;
+          reference->set_runtime_config(config);
+          candidate->set_runtime_config(config);
+        }
+        // Switch off/on with pending cell writes, then reset with the flag on.
+        if (i == 5003U || i == 5011U)
+          M3_EXPECT_TRUE(candidate->set_batch_cell_update_for_diagnostics(i == 5011U));
+        if (i == 6007U) {
+          reference->reset();
+          candidate->reset();
+          M3_EXPECT_TRUE(candidate->diagnostic_batch_cell_update_);
+        }
+        const double phase = static_cast<double>(i) / rate;
+        const double sample = i > 7100U ? 0.0 :
+            0.2 * std::sin(6.283185307179586 * 164.813778 * phase) +
+            0.1 * std::sin(6.283185307179586 * 246.941651 * phase);
+        compare_decisions(reference->process_sample(sample), candidate->process_sample(sample));
+        M3_EXPECT_EQ(std::memcmp(reference->narrow_fundamental_real_.data(),
+            candidate->narrow_fundamental_real_.data(),
+            sizeof(reference->narrow_fundamental_real_)), 0);
+        M3_EXPECT_EQ(std::memcmp(reference->narrow_fundamental_imaginary_.data(),
+            candidate->narrow_fundamental_imaginary_.data(),
+            sizeof(reference->narrow_fundamental_imaginary_)), 0);
+        M3_EXPECT_EQ(reference->narrow_signal_samples_, candidate->narrow_signal_samples_);
+      }
+      M3_EXPECT_EQ(m3::test::allocation_count(), allocations);
+      M3_EXPECT_EQ(m3::test::deallocation_count(), frees);
+      M3_EXPECT_TRUE(candidate->configure(rate, config));
+      M3_EXPECT_FALSE(candidate->diagnostic_batch_cell_update_);
     }
   }
 
@@ -7217,7 +7339,15 @@ M3_TEST(native_exact_cell_sharing_preserves_every_sample_bitwise) {
 }
 
 M3_TEST(native_packed_cells_preserve_every_sample_and_guard_bitwise) {
-  m3::PolyphonicPitchDetectorTestAccess::packed_cell_update_probe();
+  m3::PolyphonicPitchDetectorTestAccess::cell_update_probe(false);
+}
+
+M3_TEST(native_batch_cells_preserve_state_and_public_readers_bitwise) {
+  m3::PolyphonicPitchDetectorTestAccess::cell_update_probe(true);
+}
+
+M3_TEST(native_batch_cells_preserve_processing_modes_and_reset) {
+  m3::PolyphonicPitchDetectorTestAccess::batch_cell_process_probe();
 }
 
 M3_TEST(native_narrow_clear_preserves_state_across_modes_flags_and_reset) {

@@ -791,6 +791,7 @@ class PolyphonicPitchDetector final {
     unsupported_sustain_ticks_ = {};
   }
   void set_exact_cell_sharing_for_diagnostics(bool enabled) noexcept {
+    if (enabled && diagnostic_batch_cell_update_) return;
     diagnostic_exact_cell_sharing_ = enabled;
   }
   struct NarrowClearStats final {
@@ -810,11 +811,13 @@ class PolyphonicPitchDetector final {
 #endif
   }
   [[nodiscard]] bool set_packed_cell_update_for_diagnostics(bool enabled) noexcept {
-    if (enabled && (!packed_cell_update_supported() || diagnostic_exact_cell_sharing_))
+    if (enabled && (!packed_cell_update_supported() || diagnostic_exact_cell_sharing_ ||
+                    diagnostic_batch_cell_update_))
       return false;
     diagnostic_packed_cell_update_ = enabled;
     return true;
   }
+  [[nodiscard]] bool set_batch_cell_update_for_diagnostics(bool enabled) noexcept;
   [[nodiscard]] std::uint16_t packed_cell_count() const noexcept {
     return enabled_cell_count_;
   }
@@ -1012,7 +1015,7 @@ class PolyphonicPitchDetector final {
       std::array<std::complex<double>, 6U>& correlations,
       double& signal_energy, double& decay) const noexcept;
   // Measured baseband mixture tracks, without the carrier rotation used by
-  // the residual solver. Reading them does not refresh or mutate any state.
+  // the residual solver. Reading them does not advance detector state.
   [[nodiscard]] bool demodulated_harmonic_tracks_for_diagnostics(
       std::uint8_t midi_note, std::array<double, 6U>& frequencies,
       std::array<std::complex<double>, 6U>& tracks,
@@ -1793,6 +1796,9 @@ class PolyphonicPitchDetector final {
     return candidate * kHarmonicCount + harmonic;
   }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  mutable
+#endif
   std::array<Cell, kCellCount> cells_{};
   std::array<std::uint16_t, kCellCount> enabled_cell_indices_{};
   std::uint16_t enabled_cell_count_{};
@@ -1806,13 +1812,38 @@ class PolyphonicPitchDetector final {
   std::uint16_t diagnostic_duplicate_cell_count_{};
   bool diagnostic_exact_cell_sharing_{};
   bool diagnostic_packed_cell_update_{};
+  // Vector lanes are independent cells. Fixed storage is allocated before
+  // audio calls; Cell mirrors are refreshed only when a consumer needs them.
+  static constexpr std::size_t kBatchCellCapacity =
+      (kCellCount + 2U * kHarmonicCount + 1U) & ~std::size_t{1U};
+  struct BatchCellBank final {
+    alignas(16) std::array<double, kBatchCellCapacity> cosine{}, sine{};
+    alignas(16) std::array<double, kBatchCellCapacity> cosine_step{}, sine_step{};
+    alignas(16) std::array<double, kBatchCellCapacity> fast_real{}, fast_imaginary{};
+    alignas(16) std::array<double, kBatchCellCapacity> selection_real{}, selection_imaginary{};
+    // Identify original cells without storing pointers into the detector.
+    std::array<std::uint16_t, kBatchCellCapacity> destinations{};
+    std::size_t count{}, padded_count{};
+    bool dirty{};
+  };
+  std::unique_ptr<BatchCellBank> diagnostic_batch_cells_{
+      new (std::nothrow) BatchCellBank{}};
+  bool diagnostic_batch_cell_update_{};
+  void initialize_batch_cells() noexcept;
+  void synchronize_batch_cells() const noexcept;
   bool diagnostic_elide_narrow_clears_{};
   bool diagnostic_narrow_state_dirty_{};
   NarrowClearStats diagnostic_narrow_clear_stats_{};
 #endif
   // Boundary-only analysis cells make the configured lowest/highest notes
   // tunable without adding selectable candidates to the pitch set.
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  mutable
+#endif
   std::array<Cell, kHarmonicCount> lower_cents_guard_cells_{};
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  mutable
+#endif
   std::array<Cell, kHarmonicCount> upper_cents_guard_cells_{};
   std::array<std::uint8_t, kHarmonicCount> lower_cents_guard_indices_{};
   std::array<std::uint8_t, kHarmonicCount> upper_cents_guard_indices_{};

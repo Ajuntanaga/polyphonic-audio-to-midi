@@ -225,6 +225,7 @@ void usage(const char* program) {
       "[--diagnostic-thread-cpu] "
       "[--diagnostic-exact-cell-sharing] "
       "[--diagnostic-packed-cell-update] "
+      "[--diagnostic-batch-cell-update] "
       "[--diagnostic-stage-end-sample N (repeat up to 16, ascending block ends)] "
       "[--diagnostic-skip-empty-fine-reset] "
       "[--diagnostic-provisional-open-retention-guard] "
@@ -338,6 +339,7 @@ int main(int argc, char** argv) {
   bool diagnostic_thread_cpu = false;
   bool diagnostic_exact_cell_sharing = false;
   bool diagnostic_packed_cell_update = false;
+  bool diagnostic_batch_cell_update = false;
   bool diagnostic_elide_narrow_clears = false;
   std::vector<std::uint64_t> diagnostic_stage_end_samples;
   bool diagnostic_skip_empty_fine_reset = false;
@@ -711,6 +713,8 @@ int main(int argc, char** argv) {
       diagnostic_exact_cell_sharing = true;
     } else if (std::strcmp(argv[index], "--diagnostic-packed-cell-update") == 0) {
       diagnostic_packed_cell_update = true;
+    } else if (std::strcmp(argv[index], "--diagnostic-batch-cell-update") == 0) {
+      diagnostic_batch_cell_update = true;
     } else if (std::strcmp(argv[index], "--diagnostic-elide-narrow-clears") == 0) {
       diagnostic_elide_narrow_clears = true;
     } else if (std::strcmp(argv[index], "--diagnostic-thread-cpu") == 0) {
@@ -1402,7 +1406,7 @@ int main(int argc, char** argv) {
           diagnostic_upper_fretted_relief,
           diagnostic_joint_release_path != nullptr ? &diagnostic_joint_release_support : nullptr,
           diagnostic_exact_cell_sharing, diagnostic_packed_cell_update,
-          diagnostic_elide_narrow_clears)) {
+          diagnostic_elide_narrow_clears, diagnostic_batch_cell_update)) {
     std::fprintf(stderr, "m3_replay: %s\n",
                  m3::offline::replay_error_name(error));
     return 1;
