@@ -3408,7 +3408,9 @@ struct PolyphonicPitchDetectorTestAccess final {
   static void stable_identity_provenance(PolyphonicPitchDetector& detector,
                                          bool enabled, bool continuous, bool unison,
                                          double onset = 0.0, bool observed = true,
-                                         bool pending_attack = false) {
+                                         bool pending_attack = false,
+                                         double prior_onset = 0.0,
+                                         bool prior_observed = true) {
     PersistentConfig config;
     config.profile_mode = ProfileMode::m3;
     config.midi_routing = MidiRouting::per_voice;
@@ -3422,6 +3424,9 @@ struct PolyphonicPitchDetectorTestAccess final {
     state.evidence_ticks = 59U;
     state.attack_ticks = pending_attack ? 1U : 0U;
     auto& articulation = detector.candidate_admission_diagnostics_[0U];
+    articulation.string_fret_onset_strength = prior_onset;
+    articulation.string_fret_onset_observed = prior_observed;
+    detector.advance_stable_note_onset_history();
     articulation.string_fret_onset_strength = onset;
     articulation.string_fret_onset_observed = observed;
     state.midi_voice_mask = unison ? 5U : 1U;
@@ -3445,12 +3450,48 @@ struct PolyphonicPitchDetectorTestAccess final {
     M3_EXPECT_EQ(move.transitions[1].kind, TransitionKind::note_on);
     M3_EXPECT_EQ(move.transitions[1].voice_id, 1U);
     const bool tagged = enabled && continuous && !unison && observed &&
-        onset == 0.0 && !pending_attack;
+        onset == 0.0 && !pending_attack && prior_observed && prior_onset == 0.0;
     M3_EXPECT_EQ(move.transitions[0].continuation_voice_id, tagged ? 1U : 255U);
     M3_EXPECT_EQ(move.transitions[1].continuation_voice_id, tagged ? 0U : 255U);
     M3_EXPECT_EQ(state.assigned_string_mask, unison ? 6U : 2U);
     M3_EXPECT_EQ(state.midi_voice_mask, unison ? 6U : 2U);
     M3_EXPECT_EQ(state.evidence_ticks, 59U);
+    M3_EXPECT_EQ(test::allocation_count(), allocations);
+  }
+
+  static void stable_identity_history_freshness(PolyphonicPitchDetector& detector) {
+    PersistentConfig config;
+    config.profile_mode = ProfileMode::m3;
+    config.lowest_note = config.highest_note = 37U;
+    M3_EXPECT_TRUE(detector.configure(48000.0, config));
+    detector.set_stable_note_identity_for_diagnostics(true);
+    auto& observation = detector.candidate_admission_diagnostics_[0U];
+    const auto allocations = test::allocation_count();
+    observation.string_fret_onset_strength = 0.0;
+    observation.string_fret_onset_observed = true;
+    // A real quiet decision captures the prior observation then invalidates
+    // the current one, even when trace capture is disabled.
+    (void)detector.make_decision();
+    M3_EXPECT_TRUE(detector.stable_note_previous_onset_clean_[0U]);
+    M3_EXPECT_FALSE(observation.string_fret_onset_observed);
+    (void)detector.make_decision();
+    M3_EXPECT_FALSE(detector.stable_note_previous_onset_clean_[0U]);
+    observation.string_fret_onset_observed = true;
+    detector.advance_stable_note_onset_history();
+    M3_EXPECT_TRUE(detector.stable_note_previous_onset_clean_[0U]);
+    detector.reset();
+    M3_EXPECT_FALSE(detector.stable_note_previous_onset_clean_[0U]);
+    M3_EXPECT_FALSE(observation.string_fret_onset_observed);
+    observation.string_fret_onset_observed = true;
+    detector.set_stable_note_identity_for_diagnostics(false);
+    M3_EXPECT_FALSE(observation.string_fret_onset_observed);
+    observation.string_fret_onset_observed = true;
+    detector.advance_stable_note_onset_history();
+    M3_EXPECT_FALSE(detector.stable_note_previous_onset_clean_[0U]);
+    detector.set_stable_note_identity_for_diagnostics(true);
+    M3_EXPECT_FALSE(observation.string_fret_onset_observed);
+    detector.advance_stable_note_onset_history();
+    M3_EXPECT_FALSE(detector.stable_note_previous_onset_clean_[0U]);
     M3_EXPECT_EQ(test::allocation_count(), allocations);
   }
 
@@ -15952,6 +15993,13 @@ M3_TEST(native_detector_stable_identity_tags_only_continuous_singleton_moves) {
   Access::stable_identity_provenance(detector, true, true, false, 0.0, true, true);
   Access::stable_identity_provenance(detector, true, true, false,
       std::numeric_limits<double>::quiet_NaN());
+  Access::stable_identity_provenance(detector, true, true, false,
+      0.0, true, false, 0.25);
+  Access::stable_identity_provenance(detector, true, true, false,
+      0.0, true, false, 0.0, false);
+  Access::stable_identity_provenance(detector, true, true, false,
+      0.0, true, false, std::numeric_limits<double>::quiet_NaN());
+  Access::stable_identity_history_freshness(detector);
 #endif
 }
 

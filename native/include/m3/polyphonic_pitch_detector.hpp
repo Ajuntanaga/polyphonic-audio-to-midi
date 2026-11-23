@@ -868,6 +868,10 @@ class PolyphonicPitchDetector final {
   }
   void set_stable_note_identity_for_diagnostics(bool enabled) noexcept {
     diagnostic_stable_note_identity_ = enabled;
+    stable_note_previous_onset_clean_ = {};
+    for (auto& observation : candidate_admission_diagnostics_) {
+      observation.string_fret_onset_observed = false;
+    }
   }
   void set_spectral_lane_collision_for_diagnostics(bool enabled) noexcept {
     diagnostic_spectral_lane_collision_ = enabled;
@@ -1995,6 +1999,9 @@ class PolyphonicPitchDetector final {
       tier_completion_dispositions_{};
   std::array<CandidateAdmissionDiagnostics, kMaxCandidates>
       candidate_admission_diagnostics_{};
+  // Immediately previous decision only; unavailable/quiet is never clean.
+  std::array<bool, kMaxCandidates> stable_note_previous_onset_clean_{};
+  void advance_stable_note_onset_history() noexcept;
   bool calibrated_output_diagnostics_enabled_{};
   std::array<CalibratedOutputDiagnostics, kMaxCandidates>
       calibrated_output_diagnostics_{};

@@ -1692,6 +1692,10 @@ void PolyphonicPitchDetector::reset() noexcept {
   diagnostic_odd_partial_cue_mask_ = {};
   diagnostic_midi_owners_ = {};
   diagnostic_midi_sequence_ = 0U;
+  stable_note_previous_onset_clean_ = {};
+  for (auto& observation : candidate_admission_diagnostics_) {
+    observation.string_fret_onset_observed = false;
+  }
   diagnostic_suppressed_adjacent_ticks_ = {};
   diagnostic_suppressed_adjacent_last_tick_ = 0U;
 #endif
@@ -3969,6 +3973,7 @@ bool PolyphonicPitchDetector::reconcile_selected_midi_output(
   // A rising or unavailable causal onset measurement may be a re-pick.
   // Keep that Off/On pair intact. No new onset threshold is tuned here.
   const bool no_observed_attack = state.attack_ticks == 0U &&
+      stable_note_previous_onset_clean_[candidate] &&
       articulation.string_fret_onset_observed &&
       articulation.string_fret_onset_strength == 0.0;
   bool assignment_only = diagnostic_stable_note_identity_ && continuous_selection &&
@@ -12945,6 +12950,23 @@ void PolyphonicPitchDetector::write_snapshot(
 #endif
 }
 
+#if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+void PolyphonicPitchDetector::advance_stable_note_onset_history() noexcept {
+  if (!diagnostic_stable_note_identity_) {
+    return;
+  }
+  for (std::size_t candidate = 0U; candidate < candidate_count_; ++candidate) {
+    auto& observation = candidate_admission_diagnostics_[candidate];
+    stable_note_previous_onset_clean_[candidate] =
+        observation.string_fret_onset_observed &&
+        observation.string_fret_onset_strength == 0.0;
+    // Clear even without trace capture, including on a quiet decision. A later
+    // observation must explicitly repopulate this decision's validity.
+    observation.string_fret_onset_observed = false;
+  }
+}
+#endif
+
 DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS) || defined(M3_BATCH_CELL_LAB)
   synchronize_batch_cells();
@@ -12954,6 +12976,7 @@ DetectorDecision PolyphonicPitchDetector::make_decision() noexcept {
 #endif
   DetectorDecision decision;
 #if defined(M3_OFFLINE_REPLAY_DIAGNOSTICS)
+  advance_stable_note_onset_history();
   // Also clear on quiet decisions and with trace collection disabled.
   diagnostic_calibrated_harmonic_reassignment_candidates_.fill(false);
   selection_dispositions_.fill(SelectionDisposition::quiet);
