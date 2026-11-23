@@ -1,0 +1,254 @@
+{
+  "schema": "m3_fixture_attack_anatomy_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "m3-fixture-attack-anatomy.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "18a5806029bd84e9489b1b0c33d19eba55e88c19",
+  "worker_sha": "65cd3018b14bd71f385438a1e090e36794522038",
+  "source_ref": "work/tuner-stability-20261027",
+  "spec_path": "docs/recovery/fixture-attack-anatomy-20261123.json",
+  "spec_sha256": "5f4146a160ace729b9a1db24562f66fa1de64506745222377b9cc9d362eb2660",
+  "plan_path": "docs/recovery/CODEX-M3-FIXTURE-ATTACK-ANATOMY-PLAN-20261123.md",
+  "state": "completed",
+  "final": true,
+  "prepared_at": "2026-11-23T13:52:10.550284+00:00",
+  "dispatch_count": 1,
+  "run_id": 45188221519,
+  "collection_state": "small_report_and_figures_collected_once",
+  "local_output_directory": "build/github-results/fixture-attack-anatomy-45188221519",
+  "small_artifact_name": "m3-fixture-attack-anatomy-report-45188221519-1",
+  "bulk_artifact_name": "m3-fixture-attack-anatomy-curves-45188221519-1",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "acoustic_repluck_preservation": "not measured",
+  "interpretation": "Small late changes span multiple bands but do not distinguish a quiet additional excitation from overlapping-string evolution. One acoustic attack per excerpt is not established; stop this observation. Earlier fixed screen verdicts unchanged.",
+  "dispatched_at": "2026-11-23T13:52:18.452013+00:00",
+  "dispatch_directory": "build/github-results/fixture-attack-anatomy-dispatch-20261123",
+  "dispatch_returncode": 0,
+  "conclusion": "success",
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45188221519",
+  "last_observed": {
+    "conclusion": "success",
+    "createdAt": "2026-11-23T13:52:19Z",
+    "databaseId": 45188221519,
+    "headSha": "65cd3018b14bd71f385438a1e090e36794522038",
+    "jobs": [
+      {
+        "completedAt": "2026-11-23T13:52:50Z",
+        "conclusion": "success",
+        "databaseId": 137739338680,
+        "name": "compare",
+        "startedAt": "2026-11-23T13:52:23Z",
+        "status": "completed",
+        "steps": [
+          {
+            "completedAt": "2026-11-23T13:52:26Z",
+            "conclusion": "success",
+            "name": "Set up job",
+            "number": 1,
+            "startedAt": "2026-11-23T13:52:24Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:26Z",
+            "conclusion": "success",
+            "name": "Check destination and source selection",
+            "number": 2,
+            "startedAt": "2026-11-23T13:52:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:29Z",
+            "conclusion": "success",
+            "name": "Run actions/checkout@v7",
+            "number": 3,
+            "startedAt": "2026-11-23T13:52:26Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:30Z",
+            "conclusion": "success",
+            "name": "Run actions/setup-python@v7",
+            "number": 4,
+            "startedAt": "2026-11-23T13:52:29Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:40Z",
+            "conclusion": "success",
+            "name": "Prepare the pinned numerical runtime",
+            "number": 5,
+            "startedAt": "2026-11-23T13:52:30Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:43Z",
+            "conclusion": "success",
+            "name": "Fetch existing copied-note fixtures",
+            "number": 6,
+            "startedAt": "2026-11-23T13:52:40Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:44Z",
+            "conclusion": "success",
+            "name": "Test centered observation contracts",
+            "number": 7,
+            "startedAt": "2026-11-23T13:52:43Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:47Z",
+            "conclusion": "success",
+            "name": "Observe the two pinned copied excerpts once",
+            "number": 8,
+            "startedAt": "2026-11-23T13:52:44Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:47Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 9,
+            "startedAt": "2026-11-23T13:52:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:48Z",
+            "conclusion": "success",
+            "name": "Run actions/upload-artifact@v4",
+            "number": 10,
+            "startedAt": "2026-11-23T13:52:47Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/setup-python@v7",
+            "number": 19,
+            "startedAt": "2026-11-23T13:52:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:48Z",
+            "conclusion": "success",
+            "name": "Post Run actions/checkout@v7",
+            "number": 20,
+            "startedAt": "2026-11-23T13:52:48Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T13:52:49Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 21,
+            "startedAt": "2026-11-23T13:52:48Z",
+            "status": "completed"
+          }
+        ],
+        "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45188221519/job/137739338680"
+      }
+    ],
+    "status": "completed",
+    "updatedAt": "2026-11-23T13:52:50Z",
+    "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45188221519"
+  },
+  "last_checked_at": "2026-11-23T13:52:53.019978+00:00",
+  "collection_receipt": "build/github-results/fixture-attack-anatomy-45188221519/collection.json",
+  "collected_at": "2026-11-23T13:53:26.836118+00:00",
+  "report_artifact": {
+    "id": 14823639512,
+    "node_id": "MDg6QXJ0aWZhY3QxNDgyMzYzOTUxMg==",
+    "name": "m3-fixture-attack-anatomy-report-45188221519-1",
+    "size_in_bytes": 370814,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14823639512",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14823639512/zip",
+    "expired": false,
+    "digest": "sha256:3de4256c3737a90ccfc30bc5e84892efee5a3fd03ec2ba8dbab4ffd2a8b3b777",
+    "created_at": "2026-11-23T13:52:47Z",
+    "updated_at": "2026-11-23T13:52:47Z",
+    "expires_at": "2026-12-07T13:52:47Z",
+    "workflow_run": {
+      "id": 45188221519,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "65cd3018b14bd71f385438a1e090e36794522038"
+    }
+  },
+  "bulk_artifact": {
+    "id": 14824657133,
+    "node_id": "MDg6QXJ0aWZhY3QxNDgyNDY1NzEzMw==",
+    "name": "m3-fixture-attack-anatomy-curves-45188221519-1",
+    "size_in_bytes": 54302,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14824657133",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14824657133/zip",
+    "expired": false,
+    "digest": "sha256:abe99fa004d0847eb58098dda40782a38c68a23a12e27bafae9f916d3f939106",
+    "created_at": "2026-11-23T13:52:48Z",
+    "updated_at": "2026-11-23T13:52:48Z",
+    "expires_at": "2026-11-30T13:52:48Z",
+    "workflow_run": {
+      "id": 45188221519,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "65cd3018b14bd71f385438a1e090e36794522038"
+    }
+  },
+  "scientific_verdict": "AMBIGUOUS_ACOUSTIC_ATTACK_COUNT",
+  "observation_closed": true,
+  "result_note": "docs/recovery/CODEX-M3-FIXTURE-ATTACK-ANATOMY-RESULT-20261123.md",
+  "report_path": "build/github-results/fixture-attack-anatomy-45188221519/report/fixture-attack-anatomy/report.json",
+  "report_sha256": "31f3ec5cecd954f8963a5a20e75c17ce955ae1808847cf34e8b9f6cf78f789ce",
+  "integrity_checks": {
+    "passed": 5,
+    "total": 5
+  },
+  "contract_tests": {
+    "passed": 6,
+    "failed": 0,
+    "execution": "GitHub Actions"
+  },
+  "bulk_collection_state": "remote_not_collected",
+  "interpreted_at": "2026-11-23T13:56:10.513305+00:00",
+  "next": "Close these excerpt-based attack screens. Require independently distinguished physical attacks before another articulation policy trial; Claude ordinary58 lane already separate, no duplicate job.",
+  "cue_rise_db": {
+    "physical-highmid": {
+      "first_saved_cue": {
+        "broad_rms": 30.38760497634084,
+        "nominal_envelope": 13.608598031113644,
+        "band_0_500": 29.70487464405039,
+        "band_500_2000": 42.43636490010766,
+        "band_2000_8000": 30.853650262099354,
+        "band_8000_20000": 8.020984279506624
+      },
+      "late_saved_cue": {
+        "broad_rms": 1.4952446301025792,
+        "nominal_envelope": 0.7783662065811026,
+        "band_0_500": 1.7802656874768528,
+        "band_500_2000": 1.9740160699772737,
+        "band_2000_8000": 4.002364000830822,
+        "band_8000_20000": 1.6752633235284506
+      }
+    },
+    "physical-high": {
+      "first_saved_cue": {
+        "broad_rms": 36.89446095987923,
+        "nominal_envelope": 15.695281991909296,
+        "band_0_500": 35.686639843815016,
+        "band_500_2000": 51.51581624611677,
+        "band_2000_8000": 40.51333270091584,
+        "band_8000_20000": 24.20391260632757
+      },
+      "late_saved_cue": {
+        "broad_rms": 0.9925997942607939,
+        "nominal_envelope": 0.37213862842641177,
+        "band_0_500": 0.9864076229297227,
+        "band_500_2000": 0.7668929528488622,
+        "band_2000_8000": 4.459195548512857,
+        "band_8000_20000": 7.678320228551209
+      }
+    }
+  }
+}

@@ -1,3 +1,18 @@
+## Active M3 checkpoint — copied-excerpt attack observation closed, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-FIXTURE-ATTACK-ANATOMY-RESULT-20261123.md` and
+`docs/recovery/github-fixture-attack-anatomy-20261123.json` first.
+Run **45188221519**, source **18a5806**, worker **65cd301**, is final/success,
+collected once with digest verified. Five integrity checks and six contracts
+pass. Acoustic attack count is **AMBIGUOUS**: small late changes span multiple
+bands; one physical attack per copied unison excerpt is not established.
+Stop this observation; no retuning, duplicate job or follow-up feature survey.
+Earlier fixed screen verdicts remain closed, with extras relative to copy
+markers rather than proven false acoustic attacks. Claude's ordinary58 lane
+remains separate; use independently distinguished attacks before another
+articulation policy trial. Acoustic re-pluck preservation stays not measured.
+Audio/curves remain remote; installed output, defaults and scores unchanged.
+
 ## Active M3 checkpoint — fixed positive-spectral attack baseline rejected, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-POSITIVE-SPECTRAL-RESULT-20261123.md` and
