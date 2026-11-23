@@ -1,0 +1,164 @@
+{
+  "schema": "m3_native_candidate_temporal_spec_v1",
+  "worker_repository": "Ajuntanaga/m3-offload",
+  "baseline": {
+    "path": "docs/recovery/basic-pitch-baseline-20261121.json",
+    "sha256": "da173e1940fb99a0057b7406ea4b8453df10bc4ee571d5e7d1708b25222172f1"
+  },
+  "feature_names": [
+    "selection",
+    "active",
+    "score_ratio",
+    "fund_ratio",
+    "band_score",
+    "band_fund",
+    "direct",
+    "local",
+    "evidence",
+    "cal_direct",
+    "best_cal",
+    "second_cal",
+    "phase_valid",
+    "phase_updates",
+    "age",
+    "attack",
+    "release",
+    "evidence_ticks",
+    "evidence_gap",
+    "fine_valid",
+    "shadow_interval",
+    "shadow_kind",
+    "selector_pool_member",
+    "selector_raw_score",
+    "selector_best_adjusted_score",
+    "selector_voice_count",
+    "selector_open_count",
+    "onset_observed",
+    "playable_mask_count",
+    "cal_mask_count",
+    "fine_mask_count",
+    "committed_mask_count",
+    "selector_option_mask_count",
+    "selector_positive_mask_count",
+    "selector_used_mask_count",
+    "cal_margin",
+    "onset",
+    "phase_abs_cents",
+    "log_score_energy",
+    "log_fund_energy",
+    "log_input_power",
+    "active_lag1",
+    "score_ratio_lag1",
+    "fund_ratio_lag1",
+    "band_score_lag1",
+    "band_fund_lag1",
+    "onset_lag1",
+    "phase_abs_cents_lag1",
+    "selector_best_adjusted_score_lag1",
+    "log_score_energy_lag1",
+    "log_fund_energy_lag1",
+    "active_lag4",
+    "score_ratio_lag4",
+    "fund_ratio_lag4",
+    "band_score_lag4",
+    "band_fund_lag4",
+    "onset_lag4",
+    "phase_abs_cents_lag4",
+    "selector_best_adjusted_score_lag4",
+    "log_score_energy_lag4",
+    "log_fund_energy_lag4",
+    "active_lag16",
+    "score_ratio_lag16",
+    "fund_ratio_lag16",
+    "band_score_lag16",
+    "band_fund_lag16",
+    "onset_lag16",
+    "phase_abs_cents_lag16",
+    "selector_best_adjusted_score_lag16",
+    "log_score_energy_lag16",
+    "log_fund_energy_lag16",
+    "active_lag64",
+    "score_ratio_lag64",
+    "fund_ratio_lag64",
+    "band_score_lag64",
+    "band_fund_lag64",
+    "onset_lag64",
+    "phase_abs_cents_lag64",
+    "selector_best_adjusted_score_lag64",
+    "log_score_energy_lag64",
+    "log_fund_energy_lag64"
+  ],
+  "model_parameters": {
+    "max_iter": 100,
+    "max_depth": 3,
+    "max_leaf_nodes": 8,
+    "learning_rate": 0.05,
+    "min_samples_leaf": 128,
+    "l2_regularization": 0.1,
+    "max_bins": 64,
+    "early_stopping": false,
+    "random_state": 0
+  },
+  "split": {
+    "train_passages": 79,
+    "calibration_end": 105,
+    "purge_seconds": 3
+  },
+  "eligibility": "quiet == 0 and energy_observed == 1 and score_ratio >= 0.20 and direct and (local or evidence)",
+  "cutoff": "nextafter(max negative calibration probability,+inf)",
+  "prediction_interval": "[decision sample+1, min(decision sample+65, EOF))",
+  "advance_gates": {
+    "ordinary_test_gain_pp_min": 1,
+    "ordinary_test_gaining_labels_min": 5,
+    "calibration_test_and_middle_no_pitch_safety_regression": true
+  },
+  "datasets": {
+    "ordinary": {
+      "sample_count": 10689600,
+      "sample_rate": 96000,
+      "source_run_id": 44835727027,
+      "source_commit": "0b3fcbad7ab349c25a8ec1705f2216ce0d1271b0",
+      "trace_name": "ordinary-current-on-512-outcome-v5.tsv.gz",
+      "uncompressed_sha256": "b664c7ff0ce80bd4e544b647ce48688ecf181918cb7e36643370bab2eccfbd93",
+      "artifact": {
+        "id": 14678158496,
+        "name": "m3-evidence-44835727027-1",
+        "bytes": 165347321,
+        "sha256": "3266e84c98e3a0647424fe329b11cd6519557b1cf0606a7f5143c158f10be782",
+        "files": {
+          "ordinary-current-on-512-outcome-v5.tsv.gz": {
+            "bytes": 108904522,
+            "sha256": "cd905b2f5c2d9e9ff0d898c87c893fe3f79ca6b388c685dd052256d421879541"
+          }
+        }
+      }
+    },
+    "extended-middle": {
+      "sample_count": 2241600,
+      "sample_rate": 96000,
+      "source_run_id": 45062999189,
+      "source_commit": "15da527509b8defd9581480a08928f893ea66e8c",
+      "trace_name": "extended-middle-current-on-512-outcome-v5.tsv.gz",
+      "uncompressed_sha256": "78929974b9cc914f71ef3fa58759728dda93f4a53fea16af17f3217adb6ac267",
+      "artifact": {
+        "id": 14769684640,
+        "name": "m3-evidence-45062999189-1",
+        "bytes": 17847485,
+        "sha256": "057667821a96542c583eb9e280dc0c522de7ddde3a0ac8e0cb5355f39b44fd60",
+        "files": {
+          "extended-middle-current-on-512-outcome-v5.tsv.gz": {
+            "bytes": 11109231,
+            "sha256": "de2e2c19d53db5650a8484b2f84c6f9bfc9adf582bf0112c8de057ec8d927b69"
+          }
+        }
+      }
+    }
+  },
+  "limits": [
+    "Internal feasibility on development recordings; source takes recur across passages.",
+    "No audio or native replay; no policy feedback from added occupancy.",
+    "Pitch occupancy only, not string assignments or MIDI.",
+    "Classifier runtime, allocation and deadlines not measured.",
+    "No tuning, repeat of a rejected setting, installation or promotion."
+  ]
+}
