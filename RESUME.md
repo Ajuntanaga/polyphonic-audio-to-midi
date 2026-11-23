@@ -1,15 +1,16 @@
-## Active M3 checkpoint — batched-cell VST3 comparison running, 2026-11-23
+## Active M3 checkpoint — batched-cell core and VST3 gates PASSED, 2026-11-23
 
-Read `docs/recovery/github-batch-cell-vst3-20261122.json` and
-`docs/recovery/CODEX-M3-BATCH-CELL-VST3-PLAN-20261122.md` first.
-One GitHub CPU run **45150026998**, source **89f66c1**, worker **0f32d26**,
-was dispatched once after every core-corpus gate passed. Both source workflows
-and all 27 local contracts passed. Require 224 saved component callback/outcome
-identities and all 56 process allocation/deadline checks across fourteen
-datasets, per-voice/stable-note modes and both sample formats. The component
-build passed and the frozen corpus comparison is running; no final result yet.
-Collect only the small report once under `build/github-results/batch-cell-vst3-45150026998`;
-leave bulk remote. No duplicate dispatch, policy change or installation.
+Read `docs/recovery/CODEX-M3-BATCH-CELL-VST3-RESULT-20261123.md` and
+`docs/recovery/github-batch-cell-vst3-20261122.json` first.
+Run **45150026998**, source **89f66c1**, worker **0f32d26**, is final/success
+and collected once with verified digest. All 224 saved callback/outcome and
+buffer/format identities pass; all 56 process allocation/deadline gates pass.
+Worst p99 **75,892 ns**, worst callback **303,097 ns**, remaining maximum-time
+headroom **30,236 ns**; zero overruns, allocations or frees in 11,804,856 calls.
+All fourteen per-dataset comparisons pass. The core and component offline
+batch-cell checks are complete. Installed output/scores are unchanged;
+known acoustic re-pluck preservation and external DAW/device acceptance remain
+open. No repoll, rerun, redownload or automatic promotion; bulk stays remote.
 
 Core run **45112657375** is final/PASSED and collected once, digest verified.
 Read `docs/recovery/CODEX-M3-BATCH-CELL-CORPUS-RESULT-20261123.md` and

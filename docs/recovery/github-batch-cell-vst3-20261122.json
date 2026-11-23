@@ -9,8 +9,8 @@
   "native_implementation_commit": "5c2d999acf6cc2bc9966b6fec6ba27f74cf06b2f",
   "plan": "docs/recovery/CODEX-M3-BATCH-CELL-VST3-PLAN-20261122.md",
   "reference": "docs/recovery/batch-cell-vst3-corpus-references-20261122.json",
-  "state": "in_progress",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "run_id": 45150026998,
   "dispatch_count": 1,
   "prerequisite": {
@@ -73,7 +73,7 @@
   "prepared_at": "2026-11-23T04:52:37.270039+00:00",
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "next": "Monitor this existing run; collect small report once; leave bulk remote",
+  "next": "Core and component batch-cell gates complete. Preserve installed output; next acceptance work is known acoustic re-pluck preservation and external DAW/device validation. No repeat of completed jobs.",
   "source_checks_observed_at": "2026-11-23T04:55:21.865400+00:00",
   "dispatch_request_attempts": 1,
   "dispatch_attempt_at": "2026-11-23T09:46:17.309725+00:00",
@@ -82,16 +82,16 @@
   "dispatch_returncode": 0,
   "dispatch_returned_at": "2026-11-23T09:46:20.296003+00:00",
   "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45150026998",
-  "conclusion": "",
-  "last_observed_at": "2026-11-23T09:49:52Z",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-23T10:07:20.522628+00:00",
   "run_created_at": "2026-11-23T09:46:19Z",
   "output_directory": "build/github-results/batch-cell-vst3-45150026998",
-  "collection_state": "pending; no artifact downloaded",
+  "collection_state": "small report collected once; digest verified; bulk remote",
   "artifact_names": {
     "report": "m3-vst3-report-45150026998-1",
     "evidence": "m3-vst3-evidence-45150026998-1"
   },
-  "current_stage": "Check batched cells against every saved component outcome and deadline",
+  "current_stage": "corpus complete",
   "completed_stages": [
     "Set up job",
     "Verify public destination and source selection",
@@ -103,5 +103,184 @@
     "Install VSTGUI build dependencies",
     "Build the instrumented VST3 processor on GitHub"
   ],
-  "component_build_completed_at": "2026-11-23T09:48:15Z"
+  "component_build_completed_at": "2026-11-23T09:48:15Z",
+  "artifacts_observed_at": "2026-11-23T10:07:20.522628+00:00",
+  "available_artifacts": 2,
+  "report_observed_at": "2026-11-23T10:06:16.339782+00:00",
+  "collection_receipt": "build/github-results/batch-cell-vst3-45150026998/collection.json",
+  "collected_at": "2026-11-23T10:07:41.026146+00:00",
+  "artifacts": [
+    {
+      "id": 14807466382,
+      "node_id": "MDg6QXJ0aWZhY3QxNDgwNzQ2NjM4Mg==",
+      "name": "m3-vst3-evidence-45150026998-1",
+      "size_in_bytes": 15458410,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14807466382",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14807466382/zip",
+      "expired": false,
+      "digest": "sha256:763dd5aad719aaa2f72d9dc2376ccaff5447ad3159b8aa2bd8cb756c1f4c9cce",
+      "created_at": "2026-11-23T10:06:19Z",
+      "updated_at": "2026-11-23T10:06:19Z",
+      "expires_at": "2026-11-30T10:06:17Z",
+      "workflow_run": {
+        "id": 45150026998,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "0f32d2613f58386e8f9f4a52dd039d4356372ae3"
+      }
+    },
+    {
+      "id": 14805974877,
+      "node_id": "MDg6QXJ0aWZhY3QxNDgwNTk3NDg3Nw==",
+      "name": "m3-vst3-report-45150026998-1",
+      "size_in_bytes": 260199,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14805974877",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14805974877/zip",
+      "expired": false,
+      "digest": "sha256:a48aa05c16c5332c7d152240da03ada173a741e2c245d01e744ea21f0f811021",
+      "created_at": "2026-11-23T10:06:17Z",
+      "updated_at": "2026-11-23T10:06:17Z",
+      "expires_at": "2026-12-07T10:06:16Z",
+      "workflow_run": {
+        "id": 45150026998,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "0f32d2613f58386e8f9f4a52dd039d4356372ae3"
+      }
+    }
+  ],
+  "report_path": "build/github-results/batch-cell-vst3-45150026998/report/vst3-batch-cell-corpus/report.json",
+  "report_sha256": "67db281569c6b6a58a6d306c2b4f99513dd7bffb3bf8d557abdbb1cb8b465194",
+  "report_archive_sha256": "a48aa05c16c5332c7d152240da03ada173a741e2c245d01e744ea21f0f811021",
+  "report_digest_verified": true,
+  "screen_gate_pass": true,
+  "corpus_gate_pass": true,
+  "decision": "eligible for further validation",
+  "result_note": "docs/recovery/CODEX-M3-BATCH-CELL-VST3-RESULT-20261123.md",
+  "verified_summary": {
+    "datasets_passed": 14,
+    "datasets_total": 14,
+    "run_gate_counts": {
+      "full_audio_processed": {
+        "passed": 224,
+        "total": 224
+      },
+      "full_detector_coverage": {
+        "passed": 224,
+        "total": 224
+      },
+      "no_output_faults": {
+        "passed": 224,
+        "total": 224
+      },
+      "all_transitions_delivered": {
+        "passed": 224,
+        "total": 224
+      },
+      "accepting_event_list": {
+        "passed": 224,
+        "total": 224
+      },
+      "calibration_restored": {
+        "passed": 224,
+        "total": 224
+      },
+      "dry_audio_preserved": {
+        "passed": 224,
+        "total": 224
+      },
+      "valid_capture": {
+        "passed": 224,
+        "total": 224
+      },
+      "legal_callback_ownership": {
+        "passed": 224,
+        "total": 224
+      },
+      "batch_execution_enabled": {
+        "passed": 224,
+        "total": 224
+      },
+      "saved_component_callbacks_identical": {
+        "passed": 224,
+        "total": 224
+      },
+      "saved_component_outcome_identical": {
+        "passed": 224,
+        "total": 224
+      },
+      "buffer_and_format_callbacks_identical": {
+        "passed": 224,
+        "total": 224
+      },
+      "buffer_and_format_transfers_identical": {
+        "passed": 224,
+        "total": 224
+      },
+      "buffer_and_format_detector_count_identical": {
+        "passed": 224,
+        "total": 224
+      },
+      "completion_retention_disabled": {
+        "passed": 224,
+        "total": 224
+      },
+      "timed_output_identical": {
+        "passed": 56,
+        "total": 56
+      },
+      "timed_state_identical": {
+        "passed": 56,
+        "total": 56
+      },
+      "p99_within_half_budget": {
+        "passed": 56,
+        "total": 56
+      },
+      "maximum_within_deadline": {
+        "passed": 56,
+        "total": 56
+      },
+      "no_deadline_overruns": {
+        "passed": 56,
+        "total": 56
+      },
+      "no_processing_allocations": {
+        "passed": 56,
+        "total": 56
+      }
+    },
+    "timed_runs": 56,
+    "timed_process_calls": 11804856,
+    "worst_p99_ns": 75892,
+    "worst_p99_case": [
+      "physical-long",
+      "per_voice-64-32-timed"
+    ],
+    "worst_max_ns": 303097,
+    "worst_max_case": [
+      "extended-middle",
+      "stable_note-32-32-timed"
+    ],
+    "max_deadline_headroom_ns": 30236,
+    "totals": {
+      "deadline_overruns": 0,
+      "cpp_allocations": 0,
+      "cpp_frees": 0,
+      "c_allocations": 0,
+      "c_frees": 0
+    },
+    "cold_and_final_partial_blocks_included": true,
+    "paired_cpu_savings_reference_run": 45109184192,
+    "paired_cpu_savings_range_percent": [
+      16.679,
+      18.387
+    ],
+    "new_cpu_speedup_measured": false,
+    "acoustic_repluck_preservation": "not measured",
+    "external_daw_device_acceptance": "not measured"
+  },
+  "updated_at": "2026-11-23T10:10:23.413561+00:00"
 }
