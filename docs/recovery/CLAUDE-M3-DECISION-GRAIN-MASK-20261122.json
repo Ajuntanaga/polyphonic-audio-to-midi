@@ -1,0 +1,442 @@
+{
+ "schema": "m3_decision_grain_mask_v1",
+ "post_hoc": true,
+ "decision_samples": 64,
+ "datasets": {
+  "ordinary": {
+   "horizon": 10681922,
+   "rate": 96000,
+   "geometry": {
+    "ticks": 167025,
+    "code5_ticks": 10949,
+    "code5_inside_m0": 10303,
+    "code5_outside_m0": 646,
+    "nonzero_non5_inside_m0": 569,
+    "m0_runs": 127,
+    "m1_runs": 149,
+    "m0_samples": 695808,
+    "m1_samples": 696640,
+    "only_m0_samples": 28288,
+    "only_m1_samples": 29120,
+    "m1_single_decision_runs": 19,
+    "m1_longest_run": 6976
+   },
+   "current": {
+    "present": 13525345,
+    "wrong": 7808309,
+    "gap": 3621485
+   },
+   "M0": {
+    "present": 13520995,
+    "wrong": 7777329,
+    "gap": 2102448,
+    "precision_pct": 57.78,
+    "coverage_pct": 39.98035015774074,
+    "runs": 806,
+    "removed": {
+     "present": 4350,
+     "wrong": 30980,
+     "gap": 1519037
+    },
+    "removed_wrong_pct": 0.397,
+    "removed_gap_pct": 41.945,
+    "affected_false_pct": 99.72,
+    "labels_losing_presence": 17,
+    "labels_losing_longest_hold": 15,
+    "over_budget_labels": [
+     31,
+     70
+    ],
+    "newly_missed_labels": [],
+    "aggregate_pitch_safety": true,
+    "budget_passes": false
+   },
+   "M1": {
+    "present": 13524642,
+    "wrong": 7804290,
+    "gap": 2070240,
+    "precision_pct": 57.8,
+    "coverage_pct": 39.99113400441957,
+    "runs": 862,
+    "removed": {
+     "present": 703,
+     "wrong": 4019,
+     "gap": 1551245
+    },
+    "removed_wrong_pct": 0.051,
+    "removed_gap_pct": 42.835,
+    "affected_false_pct": 99.955,
+    "labels_losing_presence": 3,
+    "labels_losing_longest_hold": 3,
+    "over_budget_labels": [
+     70
+    ],
+    "newly_missed_labels": [],
+    "aggregate_pitch_safety": true,
+    "budget_passes": false
+   },
+   "removed_by_region": {
+    "both": {
+     "samples": 667520,
+     "present": 447,
+     "wrong": 1075,
+     "gap": 1490061
+    },
+    "only_M0": {
+     "samples": 28288,
+     "present": 3903,
+     "wrong": 29905,
+     "gap": 28976
+    },
+    "only_M1": {
+     "samples": 29120,
+     "present": 256,
+     "wrong": 2944,
+     "gap": 61184
+    }
+   },
+   "labels": [
+    {
+     "label": 19,
+     "midi": 54,
+     "current_present": 71792,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 48,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 48,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 31,
+     "midi": 55,
+     "current_present": 9510,
+     "allowance_samples": 475,
+     "presence_loss_M0": 679,
+     "presence_loss_M1": 64,
+     "hold_loss_M0": 679,
+     "hold_loss_M1": 231
+    },
+    {
+     "label": 42,
+     "midi": 60,
+     "current_present": 45785,
+     "allowance_samples": 2289,
+     "presence_loss_M0": 282,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 282,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 70,
+     "midi": 48,
+     "current_present": 3494,
+     "allowance_samples": 174,
+     "presence_loss_M0": 959,
+     "presence_loss_M1": 575,
+     "hold_loss_M0": 1983,
+     "hold_loss_M1": 2790
+    },
+    {
+     "label": 91,
+     "midi": 44,
+     "current_present": 71706,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 26,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 0,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 123,
+     "midi": 37,
+     "current_present": 71783,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 231,
+     "presence_loss_M1": 64,
+     "hold_loss_M0": 231,
+     "hold_loss_M1": 231
+    },
+    {
+     "label": 128,
+     "midi": 45,
+     "current_present": 42096,
+     "allowance_samples": 2104,
+     "presence_loss_M0": 48,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 48,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 159,
+     "midi": 47,
+     "current_present": 38276,
+     "allowance_samples": 1913,
+     "presence_loss_M0": 218,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 218,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 174,
+     "midi": 44,
+     "current_present": 71770,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 154,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 154,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 200,
+     "midi": 50,
+     "current_present": 27801,
+     "allowance_samples": 1390,
+     "presence_loss_M0": 26,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 26,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 225,
+     "midi": 46,
+     "current_present": 71695,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 143,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 0,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 245,
+     "midi": 48,
+     "current_present": 71814,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 198,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 198,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 302,
+     "midi": 43,
+     "current_present": 52800,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 119,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 119,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 306,
+     "midi": 42,
+     "current_present": 71783,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 359,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 359,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 355,
+     "midi": 39,
+     "current_present": 71801,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 249,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 249,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 364,
+     "midi": 42,
+     "current_present": 71863,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 247,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 247,
+     "hold_loss_M1": 0
+    },
+    {
+     "label": 459,
+     "midi": 45,
+     "current_present": 71916,
+     "allowance_samples": 2400,
+     "presence_loss_M0": 364,
+     "presence_loss_M1": 0,
+     "hold_loss_M0": 364,
+     "hold_loss_M1": 0
+    }
+   ]
+  },
+  "extended-middle": {
+   "horizon": 2233574,
+   "rate": 96000,
+   "geometry": {
+    "ticks": 35025,
+    "code5_ticks": 888,
+    "code5_inside_m0": 808,
+    "code5_outside_m0": 80,
+    "nonzero_non5_inside_m0": 27,
+    "m0_runs": 6,
+    "m1_runs": 6,
+    "m0_samples": 53478,
+    "m1_samples": 53606,
+    "only_m0_samples": 1408,
+    "only_m1_samples": 1536,
+    "m1_single_decision_runs": 0,
+    "m1_longest_run": 11136
+   },
+   "current": {
+    "present": 2021510,
+    "wrong": 528259,
+    "gap": 183006
+   },
+   "M0": {
+    "present": 2021510,
+    "wrong": 528259,
+    "gap": 103928,
+    "precision_pct": 76.177,
+    "coverage_pct": 97.4879436728395,
+    "runs": 22,
+    "removed": {
+     "present": 0,
+     "wrong": 0,
+     "gap": 79078
+    },
+    "removed_wrong_pct": 0.0,
+    "removed_gap_pct": 43.211,
+    "affected_false_pct": 100.0,
+    "labels_losing_presence": 0,
+    "labels_losing_longest_hold": 0,
+    "over_budget_labels": [],
+    "newly_missed_labels": [],
+    "aggregate_pitch_safety": true,
+    "budget_passes": true
+   },
+   "M1": {
+    "present": 2021510,
+    "wrong": 528259,
+    "gap": 103736,
+    "precision_pct": 76.183,
+    "coverage_pct": 97.4879436728395,
+    "runs": 22,
+    "removed": {
+     "present": 0,
+     "wrong": 0,
+     "gap": 79270
+    },
+    "removed_wrong_pct": 0.0,
+    "removed_gap_pct": 43.316,
+    "affected_false_pct": 100.0,
+    "labels_losing_presence": 0,
+    "labels_losing_longest_hold": 0,
+    "over_budget_labels": [],
+    "newly_missed_labels": [],
+    "aggregate_pitch_safety": true,
+    "budget_passes": true
+   },
+   "removed_by_region": {
+    "both": {
+     "samples": 52070,
+     "present": 0,
+     "wrong": 0,
+     "gap": 76902
+    },
+    "only_M0": {
+     "samples": 1408,
+     "present": 0,
+     "wrong": 0,
+     "gap": 2176
+    },
+    "only_M1": {
+     "samples": 1536,
+     "present": 0,
+     "wrong": 0,
+     "gap": 2368
+    }
+   }
+  }
+ },
+ "identity": {
+  "ordinary": {
+   "current_totals_equal": true,
+   "masked_totals_equal": true,
+   "comparison_equal": true,
+   "budget_equal": true,
+   "runs_equal": true
+  },
+  "extended-middle": {
+   "current_totals_equal": true,
+   "masked_totals_equal": true,
+   "comparison_equal": true,
+   "budget_equal": true,
+   "runs_equal": true
+  }
+ },
+ "predictions": {
+  "P1": {
+   "text": "identity gate: M0 reproduces every Codex number on both recordings",
+   "odds": 0.97,
+   "outcome": true,
+   "brier": 0.0009
+  },
+  "P2": {
+   "text": "ordinary: M1 removes at least as large a share of CURRENT gap extra as M0 (41.945%)",
+   "odds": 0.5,
+   "outcome": true,
+   "brier": 0.25
+  },
+  "P3": {
+   "text": "ordinary: M1 loses fewer present samples than M0 (4,350)",
+   "odds": 0.55,
+   "outcome": true,
+   "brier": 0.2025
+  },
+  "P4": {
+   "text": "ordinary: at least 17 labels lose presence under M1 (M0: 17)",
+   "odds": 0.6,
+   "outcome": false,
+   "brier": 0.36
+  },
+  "P5": {
+   "text": "ordinary: label 31 is within the frozen budget under M1",
+   "odds": 0.35,
+   "outcome": true,
+   "brier": 0.4225
+  },
+  "P6": {
+   "text": "ordinary: label 70 is within the frozen budget under M1",
+   "odds": 0.01,
+   "outcome": false,
+   "brier": 0.0001
+  },
+  "P7": {
+   "text": "ordinary: M1 passes the frozen budget (no label over, none newly missed, aggregate pitch safety)",
+   "odds": 0.01,
+   "outcome": false,
+   "brier": 0.0001
+  },
+  "P8": {
+   "text": "ordinary: at least one label within budget under M0 is over budget under M1",
+   "odds": 0.6,
+   "outcome": false,
+   "brier": 0.36
+  },
+  "P9": {
+   "text": "extended-middle: M1 passes the frozen budget",
+   "odds": 0.85,
+   "outcome": true,
+   "brier": 0.0225
+  },
+  "P10": {
+   "text": "ordinary: at least 99% of the CURRENT output M1 affects is false",
+   "odds": 0.7,
+   "outcome": true,
+   "brier": 0.09
+  }
+ },
+ "brier_sum": 1.7086,
+ "hits": 6,
+ "reading": "CLOSED: M1 fails the frozen budget on at least one recording; the callback-grain rejection stands at the detector's own decision grain; no further variant is run",
+ "codex_json_sha256": "c2008b8956223340d29aa0961f16cc0eba0e73dd648ac9c1894952a6f2c38369"
+}
