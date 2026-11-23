@@ -1,3 +1,19 @@
+## Active M3 checkpoint — period cancellation rejected, 2026-11-23
+
+Read `docs/recovery/CODEX-M3-PERIOD-CANCELLATION-RESULT-20261123.md` and
+`docs/recovery/github-period-cancellation-20261123.json` first.
+Run **45212865375**, source **a181cde**, worker **de4b8ce**, is final/success;
+small report collected once with verified digest. Scientific result:
+**REJECTED_FIXED_MECHANISM_SCREEN**. Quiet upper-pitch queries found 3->44/407
+(0.7371->10.8108%), but all matched-negative false responses grow 27->55/2585,
+and only 276/407 targets retain at least -6 dB power (67.81% vs 75% required).
+Oracle-period arm also fails safety. All six integrity gates, 13 worker tests
+and source CI pass. All 555 takes retained, 1024 mixtures per reused role;
+these are mechanism queries, not tuner frames, external validation or live MIDI.
+Fixed setting closed: no retuning, rerun, expansion or integration. Bulk 1.59MB
+stays remote. Installed output, defaults and scoreboard unchanged. Claude's
+ordinary58 acoustic lane remains independent; do not duplicate it.
+
 ## Active M3 checkpoint — original-teacher preservation rejected, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-TEACHER-PRESERVATION-RESULT-20261123.md` and

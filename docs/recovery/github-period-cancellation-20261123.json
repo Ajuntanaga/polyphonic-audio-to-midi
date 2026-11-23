@@ -1,0 +1,524 @@
+{
+  "schema": "m3_period_cancellation_checkpoint_v1",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "period-cancellation.yml",
+  "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
+  "source_sha": "a181cde9605d41d6e7c89aa14ed8d1d2bc2d757c",
+  "worker_sha": "de4b8ce90ed54ff235cc52347f7103ade86ea644",
+  "source_ref": "work/tuner-stability-20261027",
+  "state": "completed",
+  "final": true,
+  "spec_path": "docs/recovery/period-cancellation-20261123.json",
+  "spec_sha256": "cd2abd3038a6276c7a0da7d27b532f27858fc19a96be3dc716339d6a39deb606",
+  "plan_path": "docs/recovery/CODEX-M3-PERIOD-CANCELLATION-20261123.md",
+  "dispatch_count": 1,
+  "collection_state": "small_report_collected_digest_verified",
+  "prepared_at": "2026-11-23T16:06:51.721117+00:00",
+  "scope": "One fixed CPU-only period-cancellation mechanism screen; 1024 mixtures per source-pass role; all 555 intended source takes retained. No fit, threshold sweep, recorded audio local, native change, or promotion.",
+  "authorization": "Verified standing authorization for bounded M3 CPU jobs and scoped commits/pushes.",
+  "local_checks": {
+    "pure_tests_passed": 13,
+    "worker_yaml_pin_verified": true,
+    "audio_or_model_run_locally": false,
+    "independent_static_review": "No arithmetic/counterfactual/calibration/dependency blocker; literal source pin added to worker before dispatch."
+  },
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "promotion_accepted": false,
+  "next": "Fixed cancellation screen closed. Do not retune, rerun, expand or integrate it. Preserve installed behavior; choose a distinct design before any next processing. Claude ordinary58 acoustic analysis remains independent.",
+  "dispatched_at": "2026-11-23T16:07:07.978784+00:00",
+  "dispatch_directory": "build/recovery/period-cancellation-20261123",
+  "dispatch_returncode": 0,
+  "dispatch_capture": "build/recovery/period-cancellation-20261123/dispatch.stdout",
+  "run_id": 45212865375,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45212865375",
+  "local_output_directory": "build/github-results/period-cancellation-45212865375",
+  "small_artifact_name": "m3-period-cancellation-report-45212865375-1",
+  "bulk_artifact_name": "m3-period-cancellation-evidence-45212865375-1",
+  "conclusion": "success",
+  "observed_at": "2026-11-23T16:13:29.428624+00:00",
+  "source_verification_runs": [
+    {
+      "databaseId": 45212800208,
+      "headSha": "a181cde9605d41d6e7c89aa14ed8d1d2bc2d757c",
+      "status": "completed",
+      "conclusion": "success",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45212800208"
+    }
+  ],
+  "completed_at": "2026-11-23T16:08:09Z",
+  "collection_receipt": "build/github-results/period-cancellation-45212865375/collection.json",
+  "report_path": "build/github-results/period-cancellation-45212865375/report/period-cancellation-result/report/report.json",
+  "report_sha256": "1693934fd068b22fce36aaa6b877911eb7c65b8b8657c4a003fbf16f924a5991",
+  "result_note": "docs/recovery/CODEX-M3-PERIOD-CANCELLATION-RESULT-20261123.md",
+  "scientific_verdict": "REJECTED_FIXED_MECHANISM_SCREEN",
+  "primary_decision": {
+    "arm": "mixture_period",
+    "primary_gain_pp": 10.073710073710073,
+    "gates": {
+      "integrity": true,
+      "enough_primary_queries": true,
+      "primary_gain": true,
+      "all_false_noninferior": false,
+      "primary_false_noninferior": true,
+      "silence_clean": true,
+      "median_sir_gain": true,
+      "target_power_retained": false
+    },
+    "pass_all": false,
+    "verdict": "REJECTED_FIXED_MECHANISM_SCREEN"
+  },
+  "oracle_diagnostic_decision": {
+    "arm": "component_period_oracle",
+    "primary_gain_pp": 12.530712530712531,
+    "gates": {
+      "integrity": true,
+      "enough_primary_queries": true,
+      "primary_gain": true,
+      "all_false_noninferior": false,
+      "primary_false_noninferior": false,
+      "silence_clean": true,
+      "median_sir_gain": true,
+      "target_power_retained": true
+    },
+    "pass_all": false,
+    "verdict": "REJECTED_FIXED_MECHANISM_SCREEN"
+  },
+  "integrity": {
+    "source_counts": true,
+    "pinned_input_identity": true,
+    "fixed_settings": true,
+    "calibration_before_test": true,
+    "all_role_integrity": true,
+    "calibration_false_cap": true
+  },
+  "test_summary": {
+    "all": {
+      "queries": 2585,
+      "arms": {
+        "raw": {
+          "found": 610,
+          "false_responses": 27,
+          "recall_percent": 23.597678916827853,
+          "false_percent": 1.0444874274661509,
+          "median_sir_gain_db": 0.0,
+          "target_retention_fraction": 1.0
+        },
+        "mixture_period": {
+          "found": 370,
+          "false_responses": 55,
+          "recall_percent": 14.313346228239846,
+          "false_percent": 2.127659574468085,
+          "median_sir_gain_db": 0.7189945125254225,
+          "target_retention_fraction": 0.43249516441005803
+        },
+        "component_period_oracle": {
+          "found": 456,
+          "false_responses": 35,
+          "recall_percent": 17.640232108317214,
+          "false_percent": 1.3539651837524178,
+          "median_sir_gain_db": 3.149976741328989,
+          "target_retention_fraction": 0.5570599613152805
+        }
+      }
+    },
+    "primary": {
+      "queries": 407,
+      "arms": {
+        "raw": {
+          "found": 3,
+          "false_responses": 2,
+          "recall_percent": 0.7371007371007371,
+          "false_percent": 0.4914004914004914,
+          "median_sir_gain_db": 0.0,
+          "target_retention_fraction": 1.0
+        },
+        "mixture_period": {
+          "found": 44,
+          "false_responses": 2,
+          "recall_percent": 10.81081081081081,
+          "false_percent": 0.4914004914004914,
+          "median_sir_gain_db": 8.794009884022062,
+          "target_retention_fraction": 0.6781326781326781
+        },
+        "component_period_oracle": {
+          "found": 54,
+          "false_responses": 6,
+          "recall_percent": 13.267813267813267,
+          "false_percent": 1.4742014742014742,
+          "median_sir_gain_db": 7.043808897717448,
+          "target_retention_fraction": 0.7862407862407862
+        }
+      }
+    },
+    "by_band": {
+      "below48": {
+        "queries": 547,
+        "arms": {
+          "raw": {
+            "found": 102,
+            "false_responses": 2,
+            "recall_percent": 18.647166361974406,
+            "false_percent": 0.3656307129798903,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 123,
+            "false_responses": 20,
+            "recall_percent": 22.486288848263253,
+            "false_percent": 3.656307129798903,
+            "median_sir_gain_db": 4.284528520112378,
+            "target_retention_fraction": 0.5173674588665448
+          },
+          "component_period_oracle": {
+            "found": 98,
+            "false_responses": 5,
+            "recall_percent": 17.915904936014627,
+            "false_percent": 0.9140767824497258,
+            "median_sir_gain_db": 4.097364742144803,
+            "target_retention_fraction": 0.6160877513711152
+          }
+        }
+      },
+      "48-59": {
+        "queries": 753,
+        "arms": {
+          "raw": {
+            "found": 227,
+            "false_responses": 18,
+            "recall_percent": 30.1460823373174,
+            "false_percent": 2.3904382470119523,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 143,
+            "false_responses": 26,
+            "recall_percent": 18.99070385126162,
+            "false_percent": 3.452855245683931,
+            "median_sir_gain_db": 0.8926373173490315,
+            "target_retention_fraction": 0.4807436918990704
+          },
+          "component_period_oracle": {
+            "found": 151,
+            "false_responses": 17,
+            "recall_percent": 20.0531208499336,
+            "false_percent": 2.257636122177955,
+            "median_sir_gain_db": 2.9533848361013177,
+            "target_retention_fraction": 0.5590969455511288
+          }
+        }
+      },
+      "60-71": {
+        "queries": 762,
+        "arms": {
+          "raw": {
+            "found": 171,
+            "false_responses": 3,
+            "recall_percent": 22.440944881889763,
+            "false_percent": 0.3937007874015748,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 75,
+            "false_responses": 9,
+            "recall_percent": 9.84251968503937,
+            "false_percent": 1.1811023622047243,
+            "median_sir_gain_db": -0.3755941201284565,
+            "target_retention_fraction": 0.38713910761154857
+          },
+          "component_period_oracle": {
+            "found": 132,
+            "false_responses": 7,
+            "recall_percent": 17.322834645669293,
+            "false_percent": 0.9186351706036745,
+            "median_sir_gain_db": 2.879986352099416,
+            "target_retention_fraction": 0.5354330708661418
+          }
+        }
+      },
+      "72+": {
+        "queries": 523,
+        "arms": {
+          "raw": {
+            "found": 110,
+            "false_responses": 4,
+            "recall_percent": 21.032504780114724,
+            "false_percent": 0.7648183556405354,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 29,
+            "false_responses": 0,
+            "recall_percent": 5.544933078393881,
+            "false_percent": 0.0,
+            "median_sir_gain_db": -0.6180310832091997,
+            "target_retention_fraction": 0.3403441682600382
+          },
+          "component_period_oracle": {
+            "found": 75,
+            "false_responses": 6,
+            "recall_percent": 14.340344168260039,
+            "false_percent": 1.147227533460803,
+            "median_sir_gain_db": 3.0729537944707586,
+            "target_retention_fraction": 0.5239005736137667
+          }
+        }
+      }
+    },
+    "by_polyphony": {
+      "1": {
+        "queries": 220,
+        "arms": {
+          "raw": {
+            "found": 164,
+            "false_responses": 0,
+            "recall_percent": 74.54545454545455,
+            "false_percent": 0.0,
+            "median_sir_gain_db": null,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 17,
+            "false_responses": 0,
+            "recall_percent": 7.7272727272727275,
+            "false_percent": 0.0,
+            "median_sir_gain_db": null,
+            "target_retention_fraction": 0.11363636363636363
+          },
+          "component_period_oracle": {
+            "found": 15,
+            "false_responses": 0,
+            "recall_percent": 6.818181818181818,
+            "false_percent": 0.0,
+            "median_sir_gain_db": null,
+            "target_retention_fraction": 0.12272727272727273
+          }
+        }
+      },
+      "2": {
+        "queries": 494,
+        "arms": {
+          "raw": {
+            "found": 163,
+            "false_responses": 8,
+            "recall_percent": 32.99595141700405,
+            "false_percent": 1.6194331983805668,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 120,
+            "false_responses": 14,
+            "recall_percent": 24.291497975708502,
+            "false_percent": 2.834008097165992,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 0.36639676113360325
+          },
+          "component_period_oracle": {
+            "found": 150,
+            "false_responses": 11,
+            "recall_percent": 30.364372469635626,
+            "false_percent": 2.2267206477732793,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 0.47368421052631576
+          }
+        }
+      },
+      "3": {
+        "queries": 693,
+        "arms": {
+          "raw": {
+            "found": 155,
+            "false_responses": 8,
+            "recall_percent": 22.366522366522368,
+            "false_percent": 1.1544011544011543,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 106,
+            "false_responses": 17,
+            "recall_percent": 15.295815295815295,
+            "false_percent": 2.4531024531024532,
+            "median_sir_gain_db": 0.36570659330222455,
+            "target_retention_fraction": 0.4126984126984127
+          },
+          "component_period_oracle": {
+            "found": 137,
+            "false_responses": 10,
+            "recall_percent": 19.76911976911977,
+            "false_percent": 1.443001443001443,
+            "median_sir_gain_db": 3.278493336451616,
+            "target_retention_fraction": 0.5858585858585859
+          }
+        }
+      },
+      "4": {
+        "queries": 768,
+        "arms": {
+          "raw": {
+            "found": 95,
+            "false_responses": 9,
+            "recall_percent": 12.369791666666666,
+            "false_percent": 1.171875,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 95,
+            "false_responses": 23,
+            "recall_percent": 12.369791666666666,
+            "false_percent": 2.9947916666666665,
+            "median_sir_gain_db": 0.7026491249748403,
+            "target_retention_fraction": 0.5143229166666666
+          },
+          "component_period_oracle": {
+            "found": 113,
+            "false_responses": 12,
+            "recall_percent": 14.713541666666666,
+            "false_percent": 1.5625,
+            "median_sir_gain_db": 3.3115519790348973,
+            "target_retention_fraction": 0.6419270833333334
+          }
+        }
+      },
+      "5": {
+        "queries": 410,
+        "arms": {
+          "raw": {
+            "found": 33,
+            "false_responses": 2,
+            "recall_percent": 8.048780487804878,
+            "false_percent": 0.4878048780487805,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 32,
+            "false_responses": 1,
+            "recall_percent": 7.804878048780488,
+            "false_percent": 0.24390243902439024,
+            "median_sir_gain_db": 2.1630770161487423,
+            "target_retention_fraction": 0.5634146341463414
+          },
+          "component_period_oracle": {
+            "found": 41,
+            "false_responses": 2,
+            "recall_percent": 10.0,
+            "false_percent": 0.4878048780487805,
+            "median_sir_gain_db": 3.2278412453786944,
+            "target_retention_fraction": 0.6829268292682927
+          }
+        }
+      }
+    },
+    "primary_by_harmonic_relation": {
+      "False": {
+        "queries": 276,
+        "arms": {
+          "raw": {
+            "found": 1,
+            "false_responses": 1,
+            "recall_percent": 0.36231884057971014,
+            "false_percent": 0.36231884057971014,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 39,
+            "false_responses": 2,
+            "recall_percent": 14.130434782608695,
+            "false_percent": 0.7246376811594203,
+            "median_sir_gain_db": 10.670858372111587,
+            "target_retention_fraction": 0.7934782608695652
+          },
+          "component_period_oracle": {
+            "found": 45,
+            "false_responses": 5,
+            "recall_percent": 16.304347826086957,
+            "false_percent": 1.8115942028985508,
+            "median_sir_gain_db": 8.671292571593566,
+            "target_retention_fraction": 0.9384057971014492
+          }
+        }
+      },
+      "True": {
+        "queries": 131,
+        "arms": {
+          "raw": {
+            "found": 2,
+            "false_responses": 1,
+            "recall_percent": 1.5267175572519085,
+            "false_percent": 0.7633587786259542,
+            "median_sir_gain_db": 0.0,
+            "target_retention_fraction": 1.0
+          },
+          "mixture_period": {
+            "found": 5,
+            "false_responses": 0,
+            "recall_percent": 3.816793893129771,
+            "false_percent": 0.0,
+            "median_sir_gain_db": 4.253036575214017,
+            "target_retention_fraction": 0.4351145038167939
+          },
+          "component_period_oracle": {
+            "found": 9,
+            "false_responses": 1,
+            "recall_percent": 6.870229007633588,
+            "false_percent": 0.7633587786259542,
+            "median_sir_gain_db": 1.5178389123672442,
+            "target_retention_fraction": 0.46564885496183206
+          }
+        }
+      }
+    }
+  },
+  "worker_tests_passed": 13,
+  "artifacts": [
+    {
+      "id": 14837485861,
+      "node_id": "MDg6QXJ0aWZhY3QxNDgzNzQ4NTg2MQ==",
+      "name": "m3-period-cancellation-report-45212865375-1",
+      "size_in_bytes": 13620,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14837485861",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14837485861/zip",
+      "expired": false,
+      "digest": "sha256:3cc9544f57dd812cdc7b495f6c4fb84241404b68f2f0cbc7edc7b1fac229aeda",
+      "created_at": "2026-11-23T16:08:04Z",
+      "updated_at": "2026-11-23T16:08:04Z",
+      "expires_at": "2026-12-07T16:08:03Z",
+      "workflow_run": {
+        "id": 45212865375,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "de4b8ce90ed54ff235cc52347f7103ade86ea644"
+      }
+    },
+    {
+      "id": 14837236784,
+      "node_id": "MDg6QXJ0aWZhY3QxNDgzNzIzNjc4NA==",
+      "name": "m3-period-cancellation-evidence-45212865375-1",
+      "size_in_bytes": 1589965,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14837236784",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14837236784/zip",
+      "expired": false,
+      "digest": "sha256:1af528af4e8ed163408de5f5af33b7d581f2b381fc0e935d7508ca235725ac88",
+      "created_at": "2026-11-23T16:08:06Z",
+      "updated_at": "2026-11-23T16:08:06Z",
+      "expires_at": "2026-12-07T16:08:05Z",
+      "workflow_run": {
+        "id": 45212865375,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "de4b8ce90ed54ff235cc52347f7103ade86ea644"
+      }
+    }
+  ],
+  "bulk_collected": false
+}
