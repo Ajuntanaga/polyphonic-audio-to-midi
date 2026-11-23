@@ -3,7 +3,7 @@
 Claude, 2026-11-22. Corrects item 7 of `CLAUDE-M3-RESTART-EVIDENCE-CENSUS-RESULT-20261122.md` (commit `7aa79a1`); that item now carries a pointer here. Saved data only: the two pinned v5 traces, no
 audio, model run, job, native edit or promotion. Script `CLAUDE-M3-EVIDENCE-AVAILABILITY-TALLY-20261122.py` (sha256 prefix `c89e1d7899d9`) and its output `CLAUDE-M3-EVIDENCE-AVAILABILITY-TALLY-20261122.json`
 (`f578f1c5b601`). The tally has no labels and no class: it counts fields by the decision's quiet code. It was written and run after the census result was published; the first look at these counts came from
-a scratch copy without the pin check, and the committed form reproduces every count exactly.
+a scratch copy without the pin check, and the committed form reproduces every count exactly. **A later refinement of Answers 2 and 4 is at the end of this note** (the last callback of every ordinary run is evaluated).
 
 ## Answer
 
@@ -44,3 +44,18 @@ could be checked next from saved data, and who would have to change something to
 
 Traces: ordinary `b664c7ff0ce8...` and extended-middle `78929974b9cc...` (SHA-256 of the decompressed pinned v5 traces, the rapid-mute check's pins, verified by the script after each pass). Detector reading is of the
 committed source at `7aa79a1`. Both recordings remain seen design data.
+
+## Refinement (same day, later): the last callback of every ordinary run is evaluated
+
+Answers 2 and 4 are exact for decisions of quiet code 5 but too broad as a statement about marked runs. `rm.read_quiet` returns the quiet code of the last decision of each 512-sample callback, and
+`rm.marked_runs` marks the callback that FOLLOWS a code-5 decision, so a run starts one callback after the decision that gated it. Class-blind counts, ordinary recording (127 runs):
+
+- The gating decision at run start − 1 is code 5 in all 127 runs.
+- The last decision of a run (run end − 1) is never code 5, by construction; it is code 0 in 101 runs and code 2 in 26. Code 0 carries energy and onset evidence, code 2 carries energy only.
+- Decisions inside runs by quiet code: 0: 447, 2: 122, 5: 10,303. So 569 evaluated decisions lie inside runs, 564 of them in the last 512 samples of their run.
+- Run length: minimum 512, median 5,632, maximum 7,168 samples.
+
+Extended-middle (6 runs): in-run codes {2: 10, 4: 17, 5: 808}; the runs end on code 2 (2), code 4 (3, not evaluated) and the horizon (1).
+
+What this changes: the first evaluated decisions after a code-5 episode sit inside the marked interval, in its last callback, not after it. The census result is unaffected (its restart machine required support at or after the run end and outside every run, so it could not read them);
+what changes is that a per-pitch evidence check at the run boundary is possible from saved data, which is what `CLAUDE-M3-BOUNDARY-EVIDENCE-CENSUS-PREREGISTRATION-20261122.md` registers. The in-run attack itself is still not saved: the code-5 decisions carry no evidence, and 16 of the 23 positive labels begin 0.27 to 7.07 ms before their run ends.
