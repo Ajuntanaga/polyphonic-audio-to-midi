@@ -4,11 +4,11 @@
   "repository": "Ajuntanaga/m3-offload",
   "workflow": "packed-cell-update.yml",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
-  "source_sha": null,
-  "worker_sha": null,
-  "state": "prepared",
-  "final": false,
-  "dispatch_count": 0,
+  "source_sha": "1c64f1f886eb92d105bbc8298e0d586a6b20f3ae",
+  "worker_sha": "816c3be5b75fcef9d0b1a6a221de74eb039be9e5",
+  "state": "completed",
+  "final": true,
+  "dispatch_count": 1,
   "plan": "docs/recovery/CODEX-M3-PACKED-CELL-UPDATE-20261122.md",
   "timing_reference": "docs/recovery/completion-midi-retention-timing-references-20261115.json",
   "companion_reference": "docs/recovery/exact-cell-sharing-companion-references-20261122.json",
@@ -35,7 +35,7 @@
     "scoped_diff_check": "passed",
     "native_execution": false
   },
-  "review": "One read-only native review found no material blocker. Real compiler/codegen, native state identity and corpus results await GHA.",
+  "review": "One static native review found no material blocker; native state/lifecycle tests and 20 runner tests subsequently passed on GHA.",
   "required": {
     "cpu_total_reduction_percent_each_pair": 2,
     "cpu_p99_growth_ns": 0,
@@ -47,7 +47,339 @@
   "policy_change": false,
   "installed_output_changed": false,
   "promotion_accepted": false,
-  "collection_state": "not dispatched",
+  "collection_state": "small report collected once; digest verified; bulk remains remote",
   "peer_lane": "Claude independently checks saved stable-note ledger result",
-  "next": "Commit/push the scoped source and worker; dispatch exactly once; collect only the small report, preserve frozen gates, no tuning or repeat."
+  "next": "Closed: no tuning, repeat dispatch, full-corpus continuation or promotion. Select a distinct supported mechanism before further work.",
+  "dispatch_attempt_at": "2026-11-23T02:13:31.269052+00:00",
+  "dispatch_returncode": 0,
+  "dispatch_returned_at": "2026-11-23T02:14:25.915337+00:00",
+  "dispatch_output": "build/recovery/packed-cell-update-20261122/dispatch-recovery.stdout",
+  "dispatch_error": "build/recovery/packed-cell-update-20261122/dispatch-recovery.stderr",
+  "dispatch_attempts": [
+    {
+      "attempt": 1,
+      "returncode": 1,
+      "stdout": "build/recovery/packed-cell-update-20261122/dispatch.stdout",
+      "stderr": "build/recovery/packed-cell-update-20261122/dispatch.stderr",
+      "result": "connection failure; two subsequent successful workflow run listings empty"
+    }
+  ],
+  "dispatch_request_attempts": 2,
+  "transport_recovery_reason": "No workflow was created: two successful read-only listings after the connection failure were empty. Retry transport for the one frozen job; no run rerun.",
+  "run_id": 45099048166,
+  "run_attempt": 1,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45099048166",
+  "conclusion": "success",
+  "last_observed_at": "2026-11-23T02:32:28.089342+00:00",
+  "output_directory": "build/github-results/packed-cell-update-45099048166",
+  "report_artifact": "m3-packed-cell-update-report-45099048166-1",
+  "evidence_artifact": "m3-packed-cell-update-evidence-45099048166-1",
+  "source_checks": [
+    {
+      "conclusion": "success",
+      "databaseId": 45098921592,
+      "headSha": "1c64f1f886eb92d105bbc8298e0d586a6b20f3ae",
+      "name": "CI",
+      "status": "completed",
+      "updatedAt": "2026-11-23T02:17:05Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45098921592"
+    },
+    {
+      "conclusion": "success",
+      "databaseId": 45098921591,
+      "headSha": "1c64f1f886eb92d105bbc8298e0d586a6b20f3ae",
+      "name": "Portable offline replay",
+      "status": "completed",
+      "updatedAt": "2026-11-23T02:14:22Z",
+      "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45098921591"
+    }
+  ],
+  "last_observation": "build/github-results/packed-cell-update-45099048166/run.json",
+  "stage": "six timing runs and six MIDI companions collected",
+  "native_tests": "passed on GHA; state identity and lifecycle",
+  "result_note": "docs/recovery/CODEX-M3-PACKED-CELL-UPDATE-RESULT-20261122.md",
+  "report": "build/github-results/packed-cell-update-45099048166/report/packed-cell-update/report/report.json",
+  "report_sha256": "2aaa576792093db9a59e7b9a0320794a3194deafa69744032f1f5e2d38d7d032",
+  "collection_receipt": "build/github-results/packed-cell-update-45099048166/collection.json",
+  "collection_pass": true,
+  "usefulness_screen_pass": false,
+  "native_gate_pass": false,
+  "scientific_verdict": "rejected",
+  "collection": {
+    "artifact_id": 14785835233,
+    "name": "m3-packed-cell-update-report-45099048166-1",
+    "archive": "build/github-results/packed-cell-update-45099048166/report.zip",
+    "archive_sha256": "02e0d81c85a0401ce3b74c5ef6b749fd73df51837fc516f659c642afdfee8178",
+    "server_digest": "sha256:02e0d81c85a0401ce3b74c5ef6b749fd73df51837fc516f659c642afdfee8178",
+    "digest_verified": true,
+    "bytes": 39645,
+    "collected_at": "2026-11-23T02:33:41.709262+00:00"
+  },
+  "bulk_remote": {
+    "id": 14784938600,
+    "name": "m3-packed-cell-update-evidence-45099048166-1",
+    "size_in_bytes": 13730996,
+    "digest": "sha256:3cca74f579886da9a0145d4d5d2d344ca2b7cb637f9910cbf31f7dce6b752de2",
+    "expires_at": "2026-11-30T02:32:29Z"
+  },
+  "pairs": [
+    {
+      "dataset": "ordinary",
+      "mode": "current-on",
+      "cpu_total_reduction_percent": -3.5110674754453077,
+      "cpu_p99_delta_ns": 1012,
+      "cpu_useful": false,
+      "raw_midi_bit_identical": true,
+      "timing": {
+        "off": {
+          "cpu": {
+            "valid": true,
+            "block_resolution_pass": true,
+            "total_ns": 17131651562,
+            "p99_ns": 122388,
+            "maximum_ns": 247161,
+            "deadline_overruns": 0
+          },
+          "wall": {
+            "total_ns": 16881361924,
+            "p99_ns": 121454,
+            "maximum_ns": 245864,
+            "deadline_overruns": 0
+          },
+          "allocations": {
+            "cpp_allocations": 0,
+            "cpp_frees": 0,
+            "c_allocations": 0,
+            "c_frees": 0
+          },
+          "recorded_reference_bit_identical": true,
+          "cell_counts": {
+            "cells": 245,
+            "guards": 9
+          }
+        },
+        "on": {
+          "cpu": {
+            "valid": true,
+            "block_resolution_pass": true,
+            "total_ns": 17733155408,
+            "p99_ns": 123400,
+            "maximum_ns": 239246,
+            "deadline_overruns": 0
+          },
+          "wall": {
+            "total_ns": 17488614763,
+            "p99_ns": 122526,
+            "maximum_ns": 238140,
+            "deadline_overruns": 0
+          },
+          "allocations": {
+            "cpp_allocations": 0,
+            "cpp_frees": 0,
+            "c_allocations": 0,
+            "c_frees": 0
+          },
+          "recorded_reference_bit_identical": true,
+          "cell_counts": {
+            "cells": 245,
+            "guards": 9
+          }
+        }
+      },
+      "companions": {
+        "off": {
+          "recorded_reference_bit_identical": true,
+          "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+          "midi": {
+            "rows": 11851,
+            "cap": 1000000,
+            "truncated": false,
+            "sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a"
+          }
+        },
+        "on": {
+          "recorded_reference_bit_identical": true,
+          "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+          "midi": {
+            "rows": 11851,
+            "cap": 1000000,
+            "truncated": false,
+            "sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a"
+          }
+        }
+      }
+    },
+    {
+      "dataset": "ordinary",
+      "mode": "completion-midi-retention-on",
+      "cpu_total_reduction_percent": -4.152757972121659,
+      "cpu_p99_delta_ns": 5299,
+      "cpu_useful": false,
+      "raw_midi_bit_identical": true,
+      "timing": {
+        "off": {
+          "cpu": {
+            "valid": true,
+            "block_resolution_pass": true,
+            "total_ns": 17137984510,
+            "p99_ns": 121778,
+            "maximum_ns": 254554,
+            "deadline_overruns": 0
+          },
+          "wall": {
+            "total_ns": 16892971810,
+            "p99_ns": 120893,
+            "maximum_ns": 253469,
+            "deadline_overruns": 0
+          },
+          "allocations": {
+            "cpp_allocations": 0,
+            "cpp_frees": 0,
+            "c_allocations": 0,
+            "c_frees": 0
+          },
+          "recorded_reference_bit_identical": true,
+          "cell_counts": {
+            "cells": 245,
+            "guards": 9
+          }
+        },
+        "on": {
+          "cpu": {
+            "valid": true,
+            "block_resolution_pass": true,
+            "total_ns": 17849683528,
+            "p99_ns": 127077,
+            "maximum_ns": 251239,
+            "deadline_overruns": 0
+          },
+          "wall": {
+            "total_ns": 17602668728,
+            "p99_ns": 126153,
+            "maximum_ns": 249842,
+            "deadline_overruns": 0
+          },
+          "allocations": {
+            "cpp_allocations": 0,
+            "cpp_frees": 0,
+            "c_allocations": 0,
+            "c_frees": 0
+          },
+          "recorded_reference_bit_identical": true,
+          "cell_counts": {
+            "cells": 245,
+            "guards": 9
+          }
+        }
+      },
+      "companions": {
+        "off": {
+          "recorded_reference_bit_identical": true,
+          "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+          "midi": {
+            "rows": 11851,
+            "cap": 1000000,
+            "truncated": false,
+            "sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a"
+          }
+        },
+        "on": {
+          "recorded_reference_bit_identical": true,
+          "tsv_sha256": "10fa7dcd0ae44b89f7fb8807ef7bc5f1f56a3abdd00d8d1c6d3ac6ba45791036",
+          "midi": {
+            "rows": 11851,
+            "cap": 1000000,
+            "truncated": false,
+            "sha256": "77e52ee4b498c3c1656edd3c747934efc55b2a71a7e0ee63ba9cbd232feb613a"
+          }
+        }
+      }
+    },
+    {
+      "dataset": "physical-long",
+      "mode": "completion-midi-retention-on",
+      "cpu_total_reduction_percent": -3.342775438865326,
+      "cpu_p99_delta_ns": 1221,
+      "cpu_useful": false,
+      "raw_midi_bit_identical": true,
+      "timing": {
+        "off": {
+          "cpu": {
+            "valid": true,
+            "block_resolution_pass": true,
+            "total_ns": 8487838480,
+            "p99_ns": 124923,
+            "maximum_ns": 280202,
+            "deadline_overruns": 0
+          },
+          "wall": {
+            "total_ns": 8357673332,
+            "p99_ns": 123979,
+            "maximum_ns": 278766,
+            "deadline_overruns": 0
+          },
+          "allocations": {
+            "cpp_allocations": 0,
+            "cpp_frees": 0,
+            "c_allocations": 0,
+            "c_frees": 0
+          },
+          "recorded_reference_bit_identical": true,
+          "cell_counts": {
+            "cells": 245,
+            "guards": 9
+          }
+        },
+        "on": {
+          "cpu": {
+            "valid": true,
+            "block_resolution_pass": true,
+            "total_ns": 8771567860,
+            "p99_ns": 126144,
+            "maximum_ns": 269503,
+            "deadline_overruns": 0
+          },
+          "wall": {
+            "total_ns": 8641743628,
+            "p99_ns": 125192,
+            "maximum_ns": 268226,
+            "deadline_overruns": 0
+          },
+          "allocations": {
+            "cpp_allocations": 0,
+            "cpp_frees": 0,
+            "c_allocations": 0,
+            "c_frees": 0
+          },
+          "recorded_reference_bit_identical": true,
+          "cell_counts": {
+            "cells": 245,
+            "guards": 9
+          }
+        }
+      },
+      "companions": {
+        "off": {
+          "recorded_reference_bit_identical": true,
+          "tsv_sha256": "4297875fe20b2ac64cc5f1fe361c131a95ba236e44b1c72c47d2a16ac7af759e",
+          "midi": {
+            "rows": 1478,
+            "cap": 1000000,
+            "truncated": false,
+            "sha256": "7a5d0981ba645e9dcc3424e16fcc105872136df52c736d7939ce0d33b08d3763"
+          }
+        },
+        "on": {
+          "recorded_reference_bit_identical": true,
+          "tsv_sha256": "4297875fe20b2ac64cc5f1fe361c131a95ba236e44b1c72c47d2a16ac7af759e",
+          "midi": {
+            "rows": 1478,
+            "cap": 1000000,
+            "truncated": false,
+            "sha256": "7a5d0981ba645e9dcc3424e16fcc105872136df52c736d7939ce0d33b08d3763"
+          }
+        }
+      }
+    }
+  ]
 }
