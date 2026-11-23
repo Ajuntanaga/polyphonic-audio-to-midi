@@ -13,3 +13,5 @@ Local verification: YAML parse, shell syntax for every run block, and `git diff 
 Checkpoint: `docs/recovery/github-batch-cell-lab-host-apt-recovery-20261123.json`. The earlier core and component identity/allocation/deadline results remain complete; actual host behavior is still unmeasured. Follow the new run once its identifier is recorded, collect its small report once, and retain bulk remotely.
 
 Claude's acoustic/articulation work remains independent. The seven nominal-band envelope observations support lane flicker in those windows; the remaining 58 ordinary attack-zone suppressions and known delayed controlled re-pluck remain open. The published peer note assigns no approval bottleneck.
+
+Recovery dispatched once at 2026-11-23T12:11:04.405226+00:00: **45171884366**, https://github.com/Ajuntanaga/m3-offload/actions/runs/45171884366. GitHub head SHA equals worker `434be315603bf9a8c9ffb4815927e7ccdf1e3454`. Small report will be collected into `build/github-results/batch-cell-lab-host-45171884366`; no duplicate dispatch.

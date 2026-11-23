@@ -1,6 +1,6 @@
 {
   "schema": "m3_batch_cell_lab_host_apt_recovery_checkpoint_v1",
-  "state": "prepared",
+  "state": "in_progress",
   "final": false,
   "repository": "Ajuntanaga/m3-offload",
   "source_repository": "Ajuntanaga/polyphonic-audio-to-midi",
@@ -33,5 +33,18 @@
   "scoreboard_changed": false,
   "prepared_at": "2026-11-23T12:10:11.784103+00:00",
   "launch_receipts": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123",
-  "next": "Publish scoped worker setup fix, dispatch once at frozen source SHA, record run ID; then observe that run only and collect the small report once."
+  "next": "Observe this recorded recovery run only, collect the small report once when final, keep bulk remote. No duplicate dispatch, installed/default change or promotion.",
+  "dispatch_started_at": "2026-11-23T12:11:04.405226+00:00",
+  "published_note_commit": "d680c99",
+  "dispatch_returncode": 0,
+  "dispatch_capture": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123/20261123T121104Z-dispatch",
+  "run_id": 45171884366,
+  "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45171884366",
+  "conclusion": null,
+  "run_attempt": 1,
+  "observed_at": "2026-11-23T12:11:24.888416+00:00",
+  "run_metadata_capture": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123/20261123T121124Z-run",
+  "output_directory": "build/github-results/batch-cell-lab-host-45171884366",
+  "report_artifact": "m3-batch-cell-host-report-45171884366-1",
+  "evidence_artifact": "m3-batch-cell-host-evidence-45171884366-1"
 }

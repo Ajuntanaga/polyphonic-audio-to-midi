@@ -1,16 +1,17 @@
-## Active M3 checkpoint — host setup recovery prepared, 2026-11-23
+## Active M3 checkpoint — host setup recovery running, 2026-11-23
 
 Read `docs/recovery/CODEX-M3-BATCH-CELL-LAB-HOST-RECOVERY-20261123.md` and
 `docs/recovery/github-batch-cell-lab-host-apt-recovery-20261123.json` first.
-Host run **45164257964** is terminal/cancelled at its 45-minute deadline,
-blocked in Ubuntu package update. Small report collected once and verified;
-seven report tests passed, but no native build or host measurement occurred.
-One distinct setup recovery is prepared at frozen source **8631bac**, with
-worker **434be31** selecting HTTPS Ubuntu and bounded download timeouts.
-No scientific configuration, installed/default output or score changed.
+One recovery run **45171884366** is dispatched at frozen source **8631bac**,
+worker **434be31**. Only runner setup changed: HTTPS Ubuntu mirror and bounded
+download timeouts. Scientific configuration and gates remain identical.
+Prior run **45164257964** is terminal/cancelled at its 45-minute deadline in
+package update; small report collected once, seven report tests passed,
+no native build or host measurement. Do not repoll or redownload that run.
+Follow **45171884366** only; collect its small report once on completion.
 Core/component gates below remain complete; real host acceptance is open.
-Claude's acoustic/articulation lane remains independent. Do not repoll the
-terminal run; follow only the new run once recorded in the recovery checkpoint.
+No installed/default output or score changed. Claude's acoustic lane remains
+independent; remaining ordinary attack-zone work is in the peer note.
 
 ## Active M3 checkpoint — onset observation complete; no safe memory rule established, 2026-11-23
 
