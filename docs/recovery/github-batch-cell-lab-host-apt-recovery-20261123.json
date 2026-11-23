@@ -33,7 +33,7 @@
   "scoreboard_changed": false,
   "prepared_at": "2026-11-23T12:10:11.784103+00:00",
   "launch_receipts": "build/recovery/batch-cell-lab-host-apt-recovery-launch-20261123",
-  "next": "Host optimization observation complete. Retain uninstalled candidate remotely; no repoll/rerun/redownload or automatic promotion. Physical-device/live-guitar acceptance, chord quality and acoustic re-pluck preservation remain open; peer acoustic work is independent.",
+  "next": "Final report and lab bundle collected once. See m3-batch-cell-lab-delivery-20261123.json for the exact tested, uninstalled local bundle. Do not repoll, rerun or redownload. Physical-device/live-guitar, tracking quality and acoustic re-pluck gates remain open.",
   "dispatch_started_at": "2026-11-23T12:11:04.405226+00:00",
   "published_note_commit": "d680c99",
   "dispatch_returncode": 0,
@@ -116,7 +116,7 @@
   "report_archive_sha256": "fb9141f137d53b6adb7e3c355c8f6d2669a2fdc96f7d26c86e1087d227cb82bb",
   "server_digest_verified": true,
   "report_downloads": 1,
-  "bulk_downloaded": false,
+  "bulk_downloaded": true,
   "evidence_artifact_metadata": {
     "id": 14816993329,
     "node_id": "MDg6QXJ0aWZhY3QxNDgxNjk5MzMyOQ==",
@@ -217,5 +217,7 @@
     "new_note_quality_measurement": false,
     "hardware_tested": false,
     "installed_output_changed": false
-  }
+  },
+  "bulk_collection_receipt": "build/github-results/batch-cell-lab-host-45171884366/bulk-collection.json",
+  "local_delivery_checkpoint": "docs/recovery/m3-batch-cell-lab-delivery-20261123.json"
 }

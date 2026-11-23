@@ -54,7 +54,9 @@ equals the server digest. Report SHA-256:
 Receipt: `build/github-results/batch-cell-lab-host-45171884366/collection.json`.
 Report: `build/github-results/batch-cell-lab-host-45171884366/report/batch-host-result/report/report.json`.
 Bulk artifact **14816993329** (2,603,755 bytes), including the two uninstalled
-bundles and event tables, remains remote. Do not repoll, rerun or redownload.
+bundles and event tables, was subsequently collected once for local lab-build
+delivery. See `CODEX-M3-BATCH-CELL-LAB-DELIVERY-20261123.md`; only the lab
+bundle was extracted. Do not repoll, rerun or redownload.
 
 This completes the planned production-shaped host comparison for the CPU
 optimization. It establishes delivery through REAPER on dummy audio. Physical

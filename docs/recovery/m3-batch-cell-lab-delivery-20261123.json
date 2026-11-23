@@ -1,0 +1,54 @@
+{
+  "schema": "m3_batch_cell_lab_delivery_v1",
+  "created_at": "2026-11-23T16:58:06.604615+00:00",
+  "platform": "Linux x86_64 VST3",
+  "source_commit": "8631bacf2ca9c8ef1fc6d11d1f93634d9bcccd86",
+  "worker_commit": "434be315603bf9a8c9ffb4815927e7ccdf1e3454",
+  "run_id": 45171884366,
+  "artifact_id": 14816993329,
+  "artifact_sha256": "4f7f258acb5b2c340509b9a4943a1b2a1e3fadb4e804ced77c5c0449e481d6a0",
+  "package_file": "M3_Batch_Cell_Lab.vst3.tar.gz",
+  "package_bytes": 1313437,
+  "package_sha256": "ee812f162babdeebe6ec7a754ae820c115933983cb65a01d7dcef818e9cbc49a",
+  "binary_file": "M3_Batch_Cell_Lab.vst3/Contents/x86_64-linux/M3_Batch_Cell_Lab.so",
+  "binary_sha256": "b55357fd1d737b7d7db2ecd18a9848ffe832076c614fd1d4e064567ad471bc7f",
+  "matches_tested_binary": true,
+  "distinct_from_scalar_class_ids": true,
+  "vst3_class_ids": [
+    "12F2F7A911C34C54A8448E6771CB862D"
+  ],
+  "files": [
+    {
+      "path": "M3_Batch_Cell_Lab.vst3/Contents/Resources/moduleinfo.json",
+      "bytes": 664,
+      "sha256": "03e6e7fd7890cad9cf731101f2bc55cd2b86ea5aa1ab4ee7d76cd2df5246b3fd"
+    },
+    {
+      "path": "M3_Batch_Cell_Lab.vst3/Contents/x86_64-linux/M3_Batch_Cell_Lab.so",
+      "bytes": 3590864,
+      "sha256": "b55357fd1d737b7d7db2ecd18a9848ffe832076c614fd1d4e064567ad471bc7f"
+    }
+  ],
+  "host_checks_passed": 22,
+  "host_checks_total": 22,
+  "recording_midi_events_equal": 1040,
+  "recording_samples_each": 10689600,
+  "installed": false,
+  "local_audio_or_native_execution": false,
+  "new_tracking_gain_measured": false,
+  "physical_device_live_guitar_verified": false,
+  "source_report": "build/github-results/batch-cell-lab-host-45171884366/report/batch-host-result/report/report.json",
+  "source_report_sha256": "e057ce7416b257a028122155464856a03322c9acae254dfa18fd92775aeb498e",
+  "state": "staged_uninstalled",
+  "final": true,
+  "result_note": "docs/recovery/CODEX-M3-BATCH-CELL-LAB-DELIVERY-20261123.md",
+  "directory": "build/deliverables/m3-batch-cell-lab-20261123",
+  "readme": "build/deliverables/m3-batch-cell-lab-20261123/README.md",
+  "manifest": "build/deliverables/m3-batch-cell-lab-20261123/manifest.json",
+  "package": "build/deliverables/m3-batch-cell-lab-20261123/M3_Batch_Cell_Lab.vst3.tar.gz",
+  "bundle": "build/deliverables/m3-batch-cell-lab-20261123/M3_Batch_Cell_Lab.vst3",
+  "collection_receipt": "build/github-results/batch-cell-lab-host-45171884366/bulk-collection.json",
+  "installed_output_changed": false,
+  "scoreboard_changed": false,
+  "next": "Tested lab build delivered, not installed. No more collection or build needed for this artifact. Live-device and tracking-quality gates remain open."
+}
