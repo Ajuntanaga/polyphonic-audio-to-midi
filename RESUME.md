@@ -21,6 +21,13 @@ No repoll, rerun or redownload of completed core jobs. Installed scores and
 acoustic re-pluck acceptance remain unchanged. Claude has resumed after its
 quota reset; its independent acoustic/tracking lane remains open.
 
+Peer acoustic follow-up **45152438887** is final/success and collected once.
+Read `docs/recovery/CODEX-M3-ACOUSTIC-COLLECTION-20261123.md` and
+`docs/recovery/github-suppressed-note-envelope-20261123.json`. Seven removed
+handoffs have flat/decaying nominal-pitch envelopes; this supports flicker but
+does not establish preservation of known re-plucks. No local audio transfer,
+new Codex dispatch or installed change; do not repeat this completed check.
+
 ## Batched cell bounded screen — final, passed
 
 Run **45109184192**, source **5c2d999**, worker **6b3e63b**, is final/success.

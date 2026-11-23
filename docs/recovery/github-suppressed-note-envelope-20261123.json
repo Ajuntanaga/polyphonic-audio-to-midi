@@ -1,0 +1,38 @@
+{
+  "schema": "m3_suppressed_note_acoustic_observation_v1",
+  "owner": "Claude",
+  "repository": "Ajuntanaga/m3-offload",
+  "workflow": "audio-envelope-check.yml",
+  "run_id": 45152438887,
+  "worker_sha": "485d77f85cac587963066684df3e7e6be1e3d93e",
+  "source_commit": "b839a31",
+  "source_commit_role": "result documentation; measurement implemented in worker workflow",
+  "state": "completed",
+  "final": true,
+  "conclusion": "success",
+  "run_url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45152438887",
+  "input_bundle_sha256": "adf6e36f2883538cfa3b0500ca0d936ed64fc6a1e12aeae3bd89e40dbf7c4254",
+  "report": "build/github-results/audio-envelope-45152438887/report/report.json",
+  "report_sha256": "3b072cc3216d364d7fa672d1dd5436aec6a2f5ffd01078f4714a46af6ca3493c",
+  "collection_receipt": "build/github-results/audio-envelope-45152438887/collection.json",
+  "collected_at": "2026-11-23T10:04:58.662122+00:00",
+  "artifact_id": 14807211661,
+  "artifact_bytes": 882,
+  "artifact_digest_verified": true,
+  "unique_removed_note_ons": 7,
+  "datasets": [
+    "constructed",
+    "physical-highmid",
+    "physical-high"
+  ],
+  "max_local_20ms_envelope_ratio_range": [
+    0.8895122569117677,
+    1.000307265686428
+  ],
+  "reading": "Post hoc nominal-pitch envelope is flat or decaying near the seven removed handoffs; supports lane flicker. Does not establish preservation of known physical re-plucks.",
+  "acoustic_repluck_preservation": "not measured",
+  "installed_output_changed": false,
+  "promotion_accepted": false,
+  "audio_downloaded_locally": false,
+  "next": "Do not duplicate this completed observation. A positive acoustic preservation claim still needs known re-attacks; current batched-cell VST3 run remains separately in progress."
+}
