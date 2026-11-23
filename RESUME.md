@@ -1,20 +1,20 @@
-## Active M3 checkpoint — original-teacher preservation running, 2026-11-23
+## Active M3 checkpoint — original-teacher preservation rejected, 2026-11-23
 
-Read `docs/recovery/CODEX-M3-TEACHER-PRESERVATION-RUNNING-20261123.md` and
+Read `docs/recovery/CODEX-M3-TEACHER-PRESERVATION-RESULT-20261123.md` and
 `docs/recovery/github-basic-pitch-teacher-adaptation-20261123.json` first.
-One CPU GitHub run **45191602866**, source **886caf2**, worker **8350641**.
-Frozen fit: original 4096/1024/1024 windows, two epochs, note-label BCE plus
-original-note and original-onset preservation KL, all coefficients one.
-Original, earlier rejected BCE epoch2 and new epoch2 share the same windows.
-Window screen only: no export or continuous replay in this job; no retry/tuning.
-Require test recall +5pp, no extras/silence/exact-frame regression by role,
-no newly missed occurrence, and present/longest loss <=25ms AND <=5% per
-source occurrence. Strict zero-loss and absolute targets reported separately.
-Local pure tests 17/17; actual TensorFlow gradient/optimizer checks run on GHA
-before fitting. Native/host/live gates are not measured by this window screen.
-Collect only the small report/log artifact once, bulk remains remote. Installed
-output, defaults and scoreboard unchanged. Claude's ordinary58 acoustic lane
-is independent and does not block this fit. No duplicate processing.
+Run **45191602866**, source **886caf2**, worker **8350641**, is final/success,
+small report collected once and digest verified. Scientific result:
+**REJECTED_WINDOW_SCREEN**. Test found 248985->253491/359633 (69.2331->70.4860%),
+a +1.2529pp gain against +5pp required; extras 133479->73034, but silence
+extras 363->447. Test occurrence budget fails 450/2638, including 93 newly
+entirely missed occurrences; all three roles fail silence and occurrence safety.
+All five integrity gates and 19 worker tests pass; restored original note,
+onset and contour arrays are bit-identical. Two epochs / 2048 batches complete.
+This exact setting is closed: no tuning, retry, export or continuous replay.
+Bulk 1.80GB remains remote; installed output, defaults and scoreboard unchanged.
+These are nominal model-window pitch frames, not string matches or live MIDI.
+Claude's ordinary58 acoustic lane remains independent. Reliable live use and
+acoustic re-pluck preservation remain unverified.
 
 ## Active M3 checkpoint — copied-excerpt attack observation closed, 2026-11-23
 

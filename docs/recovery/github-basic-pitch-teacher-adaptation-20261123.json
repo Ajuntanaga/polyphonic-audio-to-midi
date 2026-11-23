@@ -9,11 +9,11 @@
   "spec_path": "docs/recovery/basic-pitch-teacher-adaptation-20261123.json",
   "spec_sha256": "6836721dcb8fbcc2d4e799f8cbde4e91da5552799db23a7955b19cfb4d18caa9",
   "plan_path": "docs/recovery/CODEX-M3-TEACHER-PRESERVATION-PLAN-20261123.md",
-  "state": "in_progress",
-  "final": false,
+  "state": "completed",
+  "final": true,
   "prepared_at": "2026-11-23T14:11:46.301617+00:00",
   "dispatch_count": 1,
-  "collection_state": "not_available",
+  "collection_state": "collected_once_digest_verified",
   "authorization": "Standing user authorization for bounded M3 CPU GitHub work; peers may implement and dispatch independently.",
   "scope": "One frozen original-teacher fit and three-model window screen only; no continuous replay, export, native execution, installation or promotion.",
   "local_checks": {
@@ -25,7 +25,7 @@
   "installed_output_changed": false,
   "scoreboard_changed": false,
   "promotion_accepted": false,
-  "next": "Monitor one recorded job; collect small report/logs once; retain bulk remotely; no retry or tuning.",
+  "next": "Exact setting closed. No tuning, retry, export or continuous replay. Keep installed defaults and scores unchanged; distinct future design must meet the frozen safety and live-use gates.",
   "dispatched_at": "2026-11-23T14:11:53.515538+00:00",
   "dispatch_directory": "build/recovery/teacher-preservation-20261123",
   "dispatch_returncode": 0,
@@ -36,18 +36,17 @@
   "small_artifact_name": "m3-basic-pitch-teacher-adaptation-report-45191602866-1",
   "bulk_artifact_name": "m3-basic-pitch-teacher-adaptation-evidence-45191602866-1",
   "last_observed": {
-    "conclusion": "",
-    "createdAt": "2026-11-23T14:11:54Z",
+    "conclusion": "success",
     "databaseId": 45191602866,
     "headSha": "83506417e2ae5658ea572c83eb1a054a4ab9c93a",
     "jobs": [
       {
-        "completedAt": "0001-01-01T00:00:00Z",
-        "conclusion": "",
+        "completedAt": "2026-11-23T15:01:22Z",
+        "conclusion": "success",
         "databaseId": 137751110752,
         "name": "adaptation",
         "startedAt": "2026-11-23T14:11:59Z",
-        "status": "in_progress",
+        "status": "completed",
         "steps": [
           {
             "completedAt": "2026-11-23T14:12:01Z",
@@ -82,79 +81,1066 @@
             "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T14:12:28Z",
+            "conclusion": "success",
             "name": "Pin source and CPU dependencies",
             "number": 5,
             "startedAt": "2026-11-23T14:12:04Z",
-            "status": "in_progress"
+            "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T14:12:36Z",
+            "conclusion": "success",
             "name": "Verify frozen windows, scoring and remote guard",
             "number": 6,
-            "startedAt": "0001-01-01T00:00:00Z",
-            "status": "pending"
+            "startedAt": "2026-11-23T14:12:28Z",
+            "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T15:00:19Z",
+            "conclusion": "success",
             "name": "Fit once and score three models on identical windows",
             "number": 7,
-            "startedAt": "0001-01-01T00:00:00Z",
-            "status": "pending"
+            "startedAt": "2026-11-23T14:12:36Z",
+            "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T15:00:21Z",
+            "conclusion": "success",
             "name": "Retain small report and logs",
             "number": 8,
-            "startedAt": "0001-01-01T00:00:00Z",
-            "status": "pending"
+            "startedAt": "2026-11-23T15:00:19Z",
+            "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T15:01:19Z",
+            "conclusion": "success",
             "name": "Retain model checkpoints and evidence remotely",
             "number": 9,
-            "startedAt": "0001-01-01T00:00:00Z",
-            "status": "pending"
+            "startedAt": "2026-11-23T15:00:21Z",
+            "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T15:01:19Z",
+            "conclusion": "success",
             "name": "Post Run actions/setup-python@v7",
             "number": 17,
-            "startedAt": "0001-01-01T00:00:00Z",
-            "status": "pending"
+            "startedAt": "2026-11-23T15:01:19Z",
+            "status": "completed"
           },
           {
-            "completedAt": "0001-01-01T00:00:00Z",
-            "conclusion": "",
+            "completedAt": "2026-11-23T15:01:19Z",
+            "conclusion": "success",
             "name": "Post Run actions/checkout@v7",
             "number": 18,
-            "startedAt": "0001-01-01T00:00:00Z",
-            "status": "pending"
+            "startedAt": "2026-11-23T15:01:19Z",
+            "status": "completed"
+          },
+          {
+            "completedAt": "2026-11-23T15:01:19Z",
+            "conclusion": "success",
+            "name": "Complete job",
+            "number": 19,
+            "startedAt": "2026-11-23T15:01:19Z",
+            "status": "completed"
           }
         ],
         "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45191602866/job/137751110752"
       }
     ],
-    "status": "in_progress",
-    "updatedAt": "2026-11-23T14:12:00Z",
+    "status": "completed",
+    "updatedAt": "2026-11-23T15:01:23Z",
     "url": "https://github.com/Ajuntanaga/m3-offload/actions/runs/45191602866"
   },
-  "conclusion": "",
-  "last_checked_at": "2026-11-23T14:12:21.758858+00:00",
+  "conclusion": "success",
+  "last_checked_at": "2026-11-23T15:02:01.358806+00:00",
   "source_ci": [
     {
-      "conclusion": "",
+      "conclusion": "success",
       "databaseId": 45191462785,
       "headSha": "886caf279463eefbfad3081975d3f41cbd1f2ade",
-      "status": "in_progress",
+      "status": "completed",
       "url": "https://github.com/Ajuntanaga/polyphonic-audio-to-midi/actions/runs/45191462785",
       "workflowName": "Portable offline replay"
     }
-  ]
+  ],
+  "monitoring": {
+    "mode": "terminal_collected",
+    "further_polling": false
+  },
+  "scientific_verdict": "REJECTED_WINDOW_SCREEN",
+  "stage": "fixed window screen final; no continuous replay",
+  "collected_at": "2026-11-23T15:01:28.308557+00:00",
+  "result_note": "docs/recovery/CODEX-M3-TEACHER-PRESERVATION-RESULT-20261123.md",
+  "report_path": "build/github-results/basic-pitch-teacher-adaptation-45191602866/report/basic-pitch-teacher-adaptation-result/report/report.json",
+  "report_sha256": "103913a6190ee77e86bd98bf58c9b85332f1c40e1baa07c0696079c58c2f7c94",
+  "collection_receipt": "build/github-results/basic-pitch-teacher-adaptation-45191602866/collection.json",
+  "report_artifact": {
+    "id": 14830368304,
+    "node_id": "MDg6QXJ0aWZhY3QxNDgzMDM2ODMwNA==",
+    "name": "m3-basic-pitch-teacher-adaptation-report-45191602866-1",
+    "size_in_bytes": 168549,
+    "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14830368304",
+    "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14830368304/zip",
+    "expired": false,
+    "digest": "sha256:072d353db5bb240fdf2ef6868400c3bbe4c30491c8cdf15deb65a616e67d76e4",
+    "created_at": "2026-11-23T15:00:21Z",
+    "updated_at": "2026-11-23T15:00:21Z",
+    "expires_at": "2026-12-07T15:00:20Z",
+    "workflow_run": {
+      "id": 45191602866,
+      "repository_id": 1450767070,
+      "head_repository_id": 1450767070,
+      "head_branch": "main",
+      "head_sha": "83506417e2ae5658ea572c83eb1a054a4ab9c93a"
+    }
+  },
+  "bulk_artifacts": [
+    {
+      "id": 14831781597,
+      "node_id": "MDg6QXJ0aWZhY3QxNDgzMTc4MTU5Nw==",
+      "name": "m3-basic-pitch-teacher-adaptation-evidence-45191602866-1",
+      "size_in_bytes": 1798122907,
+      "url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14831781597",
+      "archive_download_url": "https://api.github.com/repos/Ajuntanaga/m3-offload/actions/artifacts/14831781597/zip",
+      "expired": false,
+      "digest": "sha256:8b5ae0c3ffeccf84397ee68bf7169a0d5fd5a28980d2d2e451ff4cc8699029e3",
+      "created_at": "2026-11-23T15:01:18Z",
+      "updated_at": "2026-11-23T15:01:18Z",
+      "expires_at": "2026-12-07T15:00:21Z",
+      "workflow_run": {
+        "id": 45191602866,
+        "repository_id": 1450767070,
+        "head_repository_id": 1450767070,
+        "head_branch": "main",
+        "head_sha": "83506417e2ae5658ea572c83eb1a054a4ab9c93a"
+      }
+    }
+  ],
+  "bulk_collected": false,
+  "screen": {
+    "complete": true,
+    "integrity_pass": true,
+    "role_gates": {
+      "train": {
+        "no_extra_growth": true,
+        "no_silence_extra_growth": false,
+        "exact_frames_preserved": true,
+        "occurrence_budget": false
+      },
+      "calibration": {
+        "no_extra_growth": true,
+        "no_silence_extra_growth": false,
+        "exact_frames_preserved": true,
+        "occurrence_budget": false
+      },
+      "test": {
+        "no_extra_growth": true,
+        "no_silence_extra_growth": false,
+        "exact_frames_preserved": true,
+        "occurrence_budget": false
+      }
+    },
+    "test_recall_gain_pp": 1.252943973439585,
+    "minimum_gain_pp": 5.0,
+    "window_advancement_pass": false,
+    "strict_original_occurrence_preservation": false,
+    "absolute_representation_target_met": false,
+    "verdict": "REJECTED_WINDOW_SCREEN",
+    "installed_output_changed": false,
+    "promotion_accepted": false,
+    "continuous_corpus_and_live_readiness": "not measured"
+  },
+  "integrity": {
+    "source_and_plan_pins": true,
+    "reference_weights": true,
+    "teacher_cache_unchanged": true,
+    "original_output_identity": true,
+    "original_weights_restored_at_end": true
+  },
+  "original_restore_output_identity": {
+    "onset": true,
+    "contour": true,
+    "note": true
+  },
+  "roles": {
+    "train": {
+      "original": {
+        "overall": {
+          "frames": 704512,
+          "expected_note_frames": 1742377,
+          "found_note_frames": 1172720,
+          "extra_note_frames": 330539,
+          "missing_note_frames": 569657,
+          "exact_frames": 248719,
+          "precision_percent": 78.01183960980775,
+          "recall_percent": 67.30575529865236,
+          "exact_set_percent": 35.30372797056686
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 47601,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 915,
+            "missing_note_frames": 0,
+            "exact_frames": 46864,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 98.45171319930253
+          },
+          "1": {
+            "frames": 170699,
+            "expected_note_frames": 170699,
+            "found_note_frames": 151257,
+            "extra_note_frames": 82593,
+            "missing_note_frames": 19442,
+            "exact_frames": 102731,
+            "precision_percent": 64.68120590121873,
+            "recall_percent": 88.61036092771486,
+            "exact_set_percent": 60.1825435415556
+          },
+          "2": {
+            "frames": 147171,
+            "expected_note_frames": 294342,
+            "found_note_frames": 224904,
+            "extra_note_frames": 75296,
+            "missing_note_frames": 69438,
+            "exact_frames": 56122,
+            "precision_percent": 74.9180546302465,
+            "recall_percent": 76.40907515746989,
+            "exact_set_percent": 38.133871482832895
+          },
+          "3": {
+            "frames": 147541,
+            "expected_note_frames": 442623,
+            "found_note_frames": 298570,
+            "extra_note_frames": 72132,
+            "missing_note_frames": 144053,
+            "exact_frames": 29365,
+            "precision_percent": 80.54178288760244,
+            "recall_percent": 67.45469620873746,
+            "exact_set_percent": 19.902942233006417
+          },
+          "4": {
+            "frames": 122787,
+            "expected_note_frames": 491148,
+            "found_note_frames": 302369,
+            "extra_note_frames": 63275,
+            "missing_note_frames": 188779,
+            "exact_frames": 10561,
+            "precision_percent": 82.69491636673924,
+            "recall_percent": 61.56372417275445,
+            "exact_set_percent": 8.601073403536205
+          },
+          "5": {
+            "frames": 68713,
+            "expected_note_frames": 343565,
+            "found_note_frames": 195620,
+            "extra_note_frames": 36328,
+            "missing_note_frames": 147945,
+            "exact_frames": 3076,
+            "precision_percent": 84.33786883266939,
+            "recall_percent": 56.93827951042743,
+            "exact_set_percent": 4.476591038085951
+          }
+        },
+        "silence_extra_note_frames": 915
+      },
+      "prior": {
+        "overall": {
+          "frames": 704512,
+          "expected_note_frames": 1742377,
+          "found_note_frames": 1500246,
+          "extra_note_frames": 154828,
+          "missing_note_frames": 242131,
+          "exact_frames": 434255,
+          "precision_percent": 90.64525211561538,
+          "recall_percent": 86.1034093080889,
+          "exact_set_percent": 61.63912041242733
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 47601,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 1478,
+            "missing_note_frames": 0,
+            "exact_frames": 46266,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 97.19543707064979
+          },
+          "1": {
+            "frames": 170699,
+            "expected_note_frames": 170699,
+            "found_note_frames": 165880,
+            "extra_note_frames": 33661,
+            "missing_note_frames": 4819,
+            "exact_frames": 138083,
+            "precision_percent": 83.13078515192366,
+            "recall_percent": 97.17690203223218,
+            "exact_set_percent": 80.89268244102192
+          },
+          "2": {
+            "frames": 147171,
+            "expected_note_frames": 294342,
+            "found_note_frames": 270862,
+            "extra_note_frames": 34080,
+            "missing_note_frames": 23480,
+            "exact_frames": 102511,
+            "precision_percent": 88.82410425589129,
+            "recall_percent": 92.0228849433652,
+            "exact_set_percent": 69.6543476636022
+          },
+          "3": {
+            "frames": 147541,
+            "expected_note_frames": 442623,
+            "found_note_frames": 382509,
+            "extra_note_frames": 34335,
+            "missing_note_frames": 60114,
+            "exact_frames": 79975,
+            "precision_percent": 91.76310562224717,
+            "recall_percent": 86.41869039792329,
+            "exact_set_percent": 54.20527175496981
+          },
+          "4": {
+            "frames": 122787,
+            "expected_note_frames": 491148,
+            "found_note_frames": 408397,
+            "extra_note_frames": 32147,
+            "missing_note_frames": 82751,
+            "exact_frames": 48710,
+            "precision_percent": 92.70288552335295,
+            "recall_percent": 83.15151441113473,
+            "exact_set_percent": 39.67032340557225
+          },
+          "5": {
+            "frames": 68713,
+            "expected_note_frames": 343565,
+            "found_note_frames": 272598,
+            "extra_note_frames": 19127,
+            "missing_note_frames": 70967,
+            "exact_frames": 18710,
+            "precision_percent": 93.44348273202502,
+            "recall_percent": 79.34393782835853,
+            "exact_set_percent": 27.229199714755577
+          }
+        },
+        "silence_extra_note_frames": 1478
+      },
+      "teacher": {
+        "overall": {
+          "frames": 704512,
+          "expected_note_frames": 1742377,
+          "found_note_frames": 1430917,
+          "extra_note_frames": 154199,
+          "missing_note_frames": 311460,
+          "exact_frames": 404997,
+          "precision_percent": 90.27206841644397,
+          "recall_percent": 82.12441968643985,
+          "exact_set_percent": 57.48617482739825
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 47601,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 1098,
+            "missing_note_frames": 0,
+            "exact_frames": 46628,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 97.95592529568707
+          },
+          "1": {
+            "frames": 170699,
+            "expected_note_frames": 170699,
+            "found_note_frames": 163134,
+            "extra_note_frames": 38058,
+            "missing_note_frames": 7565,
+            "exact_frames": 135584,
+            "precision_percent": 81.0837409042109,
+            "recall_percent": 95.56822242661059,
+            "exact_set_percent": 79.4287019841944
+          },
+          "2": {
+            "frames": 147171,
+            "expected_note_frames": 294342,
+            "found_note_frames": 263434,
+            "extra_note_frames": 36077,
+            "missing_note_frames": 30908,
+            "exact_frames": 97051,
+            "precision_percent": 87.95469949350775,
+            "recall_percent": 89.49928994163253,
+            "exact_set_percent": 65.94437762874479
+          },
+          "3": {
+            "frames": 147541,
+            "expected_note_frames": 442623,
+            "found_note_frames": 365886,
+            "extra_note_frames": 32638,
+            "missing_note_frames": 76737,
+            "exact_frames": 72163,
+            "precision_percent": 91.8102799329526,
+            "recall_percent": 82.66312414854175,
+            "exact_set_percent": 48.91047234328085
+          },
+          "4": {
+            "frames": 122787,
+            "expected_note_frames": 491148,
+            "found_note_frames": 384561,
+            "extra_note_frames": 30059,
+            "missing_note_frames": 106587,
+            "exact_frames": 39423,
+            "precision_percent": 92.75022912546429,
+            "recall_percent": 78.29839478120648,
+            "exact_set_percent": 32.10681912580322
+          },
+          "5": {
+            "frames": 68713,
+            "expected_note_frames": 343565,
+            "found_note_frames": 253902,
+            "extra_note_frames": 16269,
+            "missing_note_frames": 89663,
+            "exact_frames": 14148,
+            "precision_percent": 93.97825821424209,
+            "recall_percent": 73.90217280572817,
+            "exact_set_percent": 20.589990249297806
+          }
+        },
+        "silence_extra_note_frames": 1098
+      },
+      "paired": {
+        "original": {
+          "occurrence_count": 11358,
+          "occurrences_losing_presence": 698,
+          "occurrences_losing_longest": 710,
+          "no_occurrence_loss": false,
+          "budget": {
+            "pass_budget": false,
+            "occurrences": 11358,
+            "newly_missing": 52,
+            "failure_count": 445,
+            "nominal_frame_ms": 11.609977324263038,
+            "limits": {
+              "test_recall_gain_pp": 5.0,
+              "occurrence_loss_ms": 25.0,
+              "occurrence_loss_fraction": 0.05
+            }
+          }
+        },
+        "prior": {
+          "occurrence_count": 11358,
+          "occurrences_losing_presence": 6535,
+          "occurrences_losing_longest": 6505,
+          "no_occurrence_loss": false,
+          "budget": {
+            "pass_budget": false,
+            "occurrences": 11358,
+            "newly_missing": 190,
+            "failure_count": 3821,
+            "nominal_frame_ms": 11.609977324263038,
+            "limits": {
+              "test_recall_gain_pp": 5.0,
+              "occurrence_loss_ms": 25.0,
+              "occurrence_loss_fraction": 0.05
+            }
+          }
+        }
+      },
+      "representation_pass": false
+    },
+    "calibration": {
+      "original": {
+        "overall": {
+          "frames": 176128,
+          "expected_note_frames": 375035,
+          "found_note_frames": 258837,
+          "extra_note_frames": 67165,
+          "missing_note_frames": 116198,
+          "exact_frames": 74198,
+          "precision_percent": 79.39736566033338,
+          "recall_percent": 69.01675843587932,
+          "exact_set_percent": 42.12731649709303
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 14125,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 369,
+            "missing_note_frames": 0,
+            "exact_frames": 13823,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 97.86194690265488
+          },
+          "1": {
+            "frames": 62629,
+            "expected_note_frames": 62629,
+            "found_note_frames": 55763,
+            "extra_note_frames": 26741,
+            "missing_note_frames": 6866,
+            "exact_frames": 38398,
+            "precision_percent": 67.58823814602928,
+            "recall_percent": 89.03702757508502,
+            "exact_set_percent": 61.310255632374776
+          },
+          "2": {
+            "frames": 32587,
+            "expected_note_frames": 65174,
+            "found_note_frames": 49876,
+            "extra_note_frames": 12115,
+            "missing_note_frames": 15298,
+            "exact_frames": 13575,
+            "precision_percent": 80.45684050910616,
+            "recall_percent": 76.52744959646485,
+            "exact_set_percent": 41.65771626722313
+          },
+          "3": {
+            "frames": 30133,
+            "expected_note_frames": 90399,
+            "found_note_frames": 60890,
+            "extra_note_frames": 12798,
+            "missing_note_frames": 29509,
+            "exact_frames": 5712,
+            "precision_percent": 82.63217891651287,
+            "recall_percent": 67.35693978915695,
+            "exact_set_percent": 18.955961902233433
+          },
+          "4": {
+            "frames": 26437,
+            "expected_note_frames": 105748,
+            "found_note_frames": 64710,
+            "extra_note_frames": 9807,
+            "missing_note_frames": 41038,
+            "exact_frames": 2548,
+            "precision_percent": 86.83924473610048,
+            "recall_percent": 61.192646669440556,
+            "exact_set_percent": 9.63800733820025
+          },
+          "5": {
+            "frames": 10217,
+            "expected_note_frames": 51085,
+            "found_note_frames": 27598,
+            "extra_note_frames": 5335,
+            "missing_note_frames": 23487,
+            "exact_frames": 142,
+            "precision_percent": 83.80044332432514,
+            "recall_percent": 54.023686013506904,
+            "exact_set_percent": 1.3898404619751394
+          }
+        },
+        "silence_extra_note_frames": 369
+      },
+      "prior": {
+        "overall": {
+          "frames": 176128,
+          "expected_note_frames": 375035,
+          "found_note_frames": 327835,
+          "extra_note_frames": 32016,
+          "missing_note_frames": 47200,
+          "exact_frames": 120046,
+          "precision_percent": 91.10298429072033,
+          "recall_percent": 87.41450797925528,
+          "exact_set_percent": 68.15838481104652
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 14125,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 588,
+            "missing_note_frames": 0,
+            "exact_frames": 13606,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 96.32566371681416
+          },
+          "1": {
+            "frames": 62629,
+            "expected_note_frames": 62629,
+            "found_note_frames": 60695,
+            "extra_note_frames": 9866,
+            "missing_note_frames": 1934,
+            "exact_frames": 52588,
+            "precision_percent": 86.01777185697482,
+            "recall_percent": 96.91197368631146,
+            "exact_set_percent": 83.96749109837296
+          },
+          "2": {
+            "frames": 32587,
+            "expected_note_frames": 65174,
+            "found_note_frames": 60160,
+            "extra_note_frames": 5773,
+            "missing_note_frames": 5014,
+            "exact_frames": 23693,
+            "precision_percent": 91.24414178029211,
+            "recall_percent": 92.30674808972903,
+            "exact_set_percent": 72.70690766256482
+          },
+          "3": {
+            "frames": 30133,
+            "expected_note_frames": 90399,
+            "found_note_frames": 79126,
+            "extra_note_frames": 7017,
+            "missing_note_frames": 11273,
+            "exact_frames": 16855,
+            "precision_percent": 91.85424236444052,
+            "recall_percent": 87.52972931116494,
+            "exact_set_percent": 55.935353267182165
+          },
+          "4": {
+            "frames": 26437,
+            "expected_note_frames": 105748,
+            "found_note_frames": 88266,
+            "extra_note_frames": 5724,
+            "missing_note_frames": 17482,
+            "exact_frames": 10848,
+            "precision_percent": 93.90999042451324,
+            "recall_percent": 83.46824526232174,
+            "exact_set_percent": 41.033400158868254
+          },
+          "5": {
+            "frames": 10217,
+            "expected_note_frames": 51085,
+            "found_note_frames": 39588,
+            "extra_note_frames": 3048,
+            "missing_note_frames": 11497,
+            "exact_frames": 2456,
+            "precision_percent": 92.85111173656065,
+            "recall_percent": 77.49437212488989,
+            "exact_set_percent": 24.038367426837624
+          }
+        },
+        "silence_extra_note_frames": 588
+      },
+      "teacher": {
+        "overall": {
+          "frames": 176128,
+          "expected_note_frames": 375035,
+          "found_note_frames": 311939,
+          "extra_note_frames": 29795,
+          "missing_note_frames": 63096,
+          "exact_frames": 113874,
+          "precision_percent": 91.28123043068585,
+          "recall_percent": 83.17597024277734,
+          "exact_set_percent": 64.65411518895348
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 14125,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 476,
+            "missing_note_frames": 0,
+            "exact_frames": 13719,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 97.12566371681416
+          },
+          "1": {
+            "frames": 62629,
+            "expected_note_frames": 62629,
+            "found_note_frames": 59856,
+            "extra_note_frames": 10937,
+            "missing_note_frames": 2773,
+            "exact_frames": 51760,
+            "precision_percent": 84.55073241704689,
+            "recall_percent": 95.57233869293778,
+            "exact_set_percent": 82.64541985342252
+          },
+          "2": {
+            "frames": 32587,
+            "expected_note_frames": 65174,
+            "found_note_frames": 58393,
+            "extra_note_frames": 5135,
+            "missing_note_frames": 6781,
+            "exact_frames": 23084,
+            "precision_percent": 91.91695000629643,
+            "recall_percent": 89.5955442354313,
+            "exact_set_percent": 70.83806425875349
+          },
+          "3": {
+            "frames": 30133,
+            "expected_note_frames": 90399,
+            "found_note_frames": 75018,
+            "extra_note_frames": 5779,
+            "missing_note_frames": 15381,
+            "exact_frames": 15277,
+            "precision_percent": 92.8475067143582,
+            "recall_percent": 82.98543125477052,
+            "exact_set_percent": 50.698569674443306
+          },
+          "4": {
+            "frames": 26437,
+            "expected_note_frames": 105748,
+            "found_note_frames": 82191,
+            "extra_note_frames": 4574,
+            "missing_note_frames": 23557,
+            "exact_frames": 8484,
+            "precision_percent": 94.72828905664727,
+            "recall_percent": 77.72345576275674,
+            "exact_set_percent": 32.09138707115028
+          },
+          "5": {
+            "frames": 10217,
+            "expected_note_frames": 51085,
+            "found_note_frames": 36481,
+            "extra_note_frames": 2894,
+            "missing_note_frames": 14604,
+            "exact_frames": 1550,
+            "precision_percent": 92.65015873015874,
+            "recall_percent": 71.41235196241558,
+            "exact_set_percent": 15.17079377508075
+          }
+        },
+        "silence_extra_note_frames": 476
+      },
+      "paired": {
+        "original": {
+          "occurrence_count": 2455,
+          "occurrences_losing_presence": 129,
+          "occurrences_losing_longest": 131,
+          "no_occurrence_loss": false,
+          "budget": {
+            "pass_budget": false,
+            "occurrences": 2455,
+            "newly_missing": 4,
+            "failure_count": 75,
+            "nominal_frame_ms": 11.609977324263038,
+            "limits": {
+              "test_recall_gain_pp": 5.0,
+              "occurrence_loss_ms": 25.0,
+              "occurrence_loss_fraction": 0.05
+            }
+          }
+        },
+        "prior": {
+          "occurrence_count": 2455,
+          "occurrences_losing_presence": 1304,
+          "occurrences_losing_longest": 1294,
+          "no_occurrence_loss": false,
+          "budget": {
+            "pass_budget": false,
+            "occurrences": 2455,
+            "newly_missing": 42,
+            "failure_count": 779,
+            "nominal_frame_ms": 11.609977324263038,
+            "limits": {
+              "test_recall_gain_pp": 5.0,
+              "occurrence_loss_ms": 25.0,
+              "occurrence_loss_fraction": 0.05
+            }
+          }
+        }
+      },
+      "representation_pass": false
+    },
+    "test": {
+      "original": {
+        "overall": {
+          "frames": 176128,
+          "expected_note_frames": 359633,
+          "found_note_frames": 248985,
+          "extra_note_frames": 133479,
+          "missing_note_frames": 110648,
+          "exact_frames": 60426,
+          "precision_percent": 65.10024472891567,
+          "recall_percent": 69.23307927804179,
+          "exact_set_percent": 34.308003270348834
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 16996,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 363,
+            "missing_note_frames": 0,
+            "exact_frames": 16658,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 98.01129677571193
+          },
+          "1": {
+            "frames": 59160,
+            "expected_note_frames": 59160,
+            "found_note_frames": 45601,
+            "extra_note_frames": 41789,
+            "missing_note_frames": 13559,
+            "exact_frames": 26860,
+            "precision_percent": 52.18102757752603,
+            "recall_percent": 77.08079783637594,
+            "exact_set_percent": 45.40229885057471
+          },
+          "2": {
+            "frames": 34937,
+            "expected_note_frames": 69874,
+            "found_note_frames": 51137,
+            "extra_note_frames": 26958,
+            "missing_note_frames": 18737,
+            "exact_frames": 10111,
+            "precision_percent": 65.48050451373328,
+            "recall_percent": 73.18458940378396,
+            "exact_set_percent": 28.94066462489624
+          },
+          "3": {
+            "frames": 35649,
+            "expected_note_frames": 106947,
+            "found_note_frames": 72383,
+            "extra_note_frames": 34936,
+            "missing_note_frames": 34564,
+            "exact_frames": 4669,
+            "precision_percent": 67.44658448177863,
+            "recall_percent": 67.68118787810785,
+            "exact_set_percent": 13.097141574798732
+          },
+          "4": {
+            "frames": 23278,
+            "expected_note_frames": 93112,
+            "found_note_frames": 60475,
+            "extra_note_frames": 23132,
+            "missing_note_frames": 32637,
+            "exact_frames": 1999,
+            "precision_percent": 72.3324602007009,
+            "recall_percent": 64.94866397456826,
+            "exact_set_percent": 8.587507517827992
+          },
+          "5": {
+            "frames": 6108,
+            "expected_note_frames": 30540,
+            "found_note_frames": 19389,
+            "extra_note_frames": 6301,
+            "missing_note_frames": 11151,
+            "exact_frames": 129,
+            "precision_percent": 75.47294667185675,
+            "recall_percent": 63.487229862475445,
+            "exact_set_percent": 2.111984282907662
+          }
+        },
+        "silence_extra_note_frames": 363
+      },
+      "prior": {
+        "overall": {
+          "frames": 176128,
+          "expected_note_frames": 359633,
+          "found_note_frames": 247210,
+          "extra_note_frames": 73076,
+          "missing_note_frames": 112423,
+          "exact_frames": 82643,
+          "precision_percent": 77.18414167337941,
+          "recall_percent": 68.73952056680004,
+          "exact_set_percent": 46.922124818313954
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 16996,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 527,
+            "missing_note_frames": 0,
+            "exact_frames": 16495,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 97.05224758766768
+          },
+          "1": {
+            "frames": 59160,
+            "expected_note_frames": 59160,
+            "found_note_frames": 49228,
+            "extra_note_frames": 19820,
+            "missing_note_frames": 9932,
+            "exact_frames": 41083,
+            "precision_percent": 71.29533078438187,
+            "recall_percent": 83.21162947937796,
+            "exact_set_percent": 69.44388100067613
+          },
+          "2": {
+            "frames": 34937,
+            "expected_note_frames": 69874,
+            "found_note_frames": 54398,
+            "extra_note_frames": 15277,
+            "missing_note_frames": 15476,
+            "exact_frames": 16421,
+            "precision_percent": 78.07391460351633,
+            "recall_percent": 77.85156138191601,
+            "exact_set_percent": 47.001745999942756
+          },
+          "3": {
+            "frames": 35649,
+            "expected_note_frames": 106947,
+            "found_note_frames": 71347,
+            "extra_note_frames": 20214,
+            "missing_note_frames": 35600,
+            "exact_frames": 6802,
+            "precision_percent": 77.92291477812606,
+            "recall_percent": 66.71248375363498,
+            "exact_set_percent": 19.080479115823724
+          },
+          "4": {
+            "frames": 23278,
+            "expected_note_frames": 93112,
+            "found_note_frames": 55354,
+            "extra_note_frames": 13681,
+            "missing_note_frames": 37758,
+            "exact_frames": 1752,
+            "precision_percent": 80.18251611501412,
+            "recall_percent": 59.44883581063665,
+            "exact_set_percent": 7.5264197955150784
+          },
+          "5": {
+            "frames": 6108,
+            "expected_note_frames": 30540,
+            "found_note_frames": 16883,
+            "extra_note_frames": 3557,
+            "missing_note_frames": 13657,
+            "exact_frames": 90,
+            "precision_percent": 82.59784735812133,
+            "recall_percent": 55.28159790438769,
+            "exact_set_percent": 1.4734774066797642
+          }
+        },
+        "silence_extra_note_frames": 527
+      },
+      "teacher": {
+        "overall": {
+          "frames": 176128,
+          "expected_note_frames": 359633,
+          "found_note_frames": 253491,
+          "extra_note_frames": 73034,
+          "missing_note_frames": 106142,
+          "exact_frames": 81183,
+          "precision_percent": 77.63295306638082,
+          "recall_percent": 70.48602325148137,
+          "exact_set_percent": 46.09318223110465
+        },
+        "by_pitch_count": {
+          "0": {
+            "frames": 16996,
+            "expected_note_frames": 0,
+            "found_note_frames": 0,
+            "extra_note_frames": 447,
+            "missing_note_frames": 0,
+            "exact_frames": 16565,
+            "precision_percent": 0.0,
+            "recall_percent": null,
+            "exact_set_percent": 97.46410920216522
+          },
+          "1": {
+            "frames": 59160,
+            "expected_note_frames": 59160,
+            "found_note_frames": 48790,
+            "extra_note_frames": 21679,
+            "missing_note_frames": 10370,
+            "exact_frames": 38966,
+            "precision_percent": 69.23611800933745,
+            "recall_percent": 82.47126436781609,
+            "exact_set_percent": 65.86544962812711
+          },
+          "2": {
+            "frames": 34937,
+            "expected_note_frames": 69874,
+            "found_note_frames": 54094,
+            "extra_note_frames": 15916,
+            "missing_note_frames": 15780,
+            "exact_frames": 15405,
+            "precision_percent": 77.2661048421654,
+            "recall_percent": 77.41649254372156,
+            "exact_set_percent": 44.09365429201134
+          },
+          "3": {
+            "frames": 35649,
+            "expected_note_frames": 106947,
+            "found_note_frames": 73899,
+            "extra_note_frames": 19359,
+            "missing_note_frames": 33048,
+            "exact_frames": 7437,
+            "precision_percent": 79.24145917776491,
+            "recall_percent": 69.09871244635193,
+            "exact_set_percent": 20.86173525204073
+          },
+          "4": {
+            "frames": 23278,
+            "expected_note_frames": 93112,
+            "found_note_frames": 58408,
+            "extra_note_frames": 12710,
+            "missing_note_frames": 34704,
+            "exact_frames": 2615,
+            "precision_percent": 82.12829382153603,
+            "recall_percent": 62.728756766045194,
+            "exact_set_percent": 11.233782971045622
+          },
+          "5": {
+            "frames": 6108,
+            "expected_note_frames": 30540,
+            "found_note_frames": 18300,
+            "extra_note_frames": 2923,
+            "missing_note_frames": 12240,
+            "exact_frames": 195,
+            "precision_percent": 86.2272063327522,
+            "recall_percent": 59.921414538310415,
+            "exact_set_percent": 3.192534381139489
+          }
+        },
+        "silence_extra_note_frames": 447
+      },
+      "paired": {
+        "original": {
+          "occurrence_count": 2638,
+          "occurrences_losing_presence": 536,
+          "occurrences_losing_longest": 548,
+          "no_occurrence_loss": false,
+          "budget": {
+            "pass_budget": false,
+            "occurrences": 2638,
+            "newly_missing": 93,
+            "failure_count": 450,
+            "nominal_frame_ms": 11.609977324263038,
+            "limits": {
+              "test_recall_gain_pp": 5.0,
+              "occurrence_loss_ms": 25.0,
+              "occurrence_loss_fraction": 0.05
+            }
+          }
+        },
+        "prior": {
+          "occurrence_count": 2638,
+          "occurrences_losing_presence": 883,
+          "occurrences_losing_longest": 889,
+          "no_occurrence_loss": false,
+          "budget": {
+            "pass_budget": false,
+            "occurrences": 2638,
+            "newly_missing": 15,
+            "failure_count": 458,
+            "nominal_frame_ms": 11.609977324263038,
+            "limits": {
+              "test_recall_gain_pp": 5.0,
+              "occurrence_loss_ms": 25.0,
+              "occurrence_loss_fraction": 0.05
+            }
+          }
+        }
+      },
+      "representation_pass": false
+    }
+  },
+  "remote_tests": {
+    "passed": 19,
+    "elapsed_seconds": 5.918,
+    "log": "build/github-results/basic-pitch-teacher-adaptation-45191602866/report/basic-pitch-teacher-adaptation-logs/tests.log"
+  },
+  "epochs": 2,
+  "batches": 2048,
+  "changed_variable_count": 18,
+  "candidate_checkpoint": {
+    "file": "epoch-2.npz",
+    "bytes": 193295,
+    "sha256": "691a1e6765de8a942c4eb66c0fdd63a44cb55cade121d70b87216da7c0e0cd83"
+  },
+  "candidate_weight_fingerprint": "ec50e37a6d0fcd013aa3d1cb7883581e81dc109321c6d0193725ddcd1866eefa",
+  "elapsed_seconds": 2862.838804624,
+  "finished_at": "2026-11-23T15:00:19.180919+00:00",
+  "recorded_at": "2026-11-23T15:04:53.912448+00:00"
 }
